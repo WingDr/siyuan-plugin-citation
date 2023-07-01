@@ -1,10 +1,32 @@
 {
   "compilerOptions": {
-    "noImplicitAny": true,
-    "module": "commonjs",
-    "target": "es6"
+    "baseUrl": ".",
+    "inlineSourceMap": true,
+    "inlineSources": true,
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": [
+      "ES2020",
+      "DOM",
+      "DOM.Iterable",
+      "ES6",
+      "ScriptHost"
+    ],
+    "allowJs": true,
+    /* Bundler mode */
+    "moduleResolution": "Node",
+    "importHelpers": true,
+    // "allowImportingTsExtensions": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "types": [
+      "node"
+    ]
   },
   "include": [
     "src/**/*.ts"
   ],
+  "root": "."
 }

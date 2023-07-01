@@ -1,4 +1,4 @@
-.plugin-sample {
+.plugin-citation {
   &__custom-tab {
     background-color: var(--b3-theme-background);
     height: 100%;
@@ -12,5 +12,28 @@
     display: flex;
     justify-content: center;
     align-items: center;
+  }
+
+  &__search-tab {
+    &__input-container {
+      padding: 4px 8px;
+    }
+  }
+
+  &__search-item {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.b3-dialog__container {
+  .b3-dialog {
+    //弹窗标题
+    &__header {
+      // 自定义弹窗去掉无意义标题
+      &.fn__none-custom {
+        display: none;
+      }
+    }
   }
 }
