@@ -6,7 +6,7 @@
 
 Add citations to your note, which point to the literature note in specific directrory.
 
-![](./preview.png)
+![](./preview.png)
 
 ## Before usage
 
@@ -30,9 +30,9 @@ Add citations to your note, which point to the literature note in specific direc
    
    * command panel
 
-![](./assets/protyleslash.png)
+![](./assets/protyleslash.png)
 
-![](./assets/searchpanel.png)
+![](./assets/searchpanel.png)
 
 ## How to write templates
 
@@ -42,7 +42,7 @@ Add citations to your note, which point to the literature note in specific direc
 
 * In this version of editor, do not press `Enter`  when edting the textarea!
 
-在文献内容和引用的模板中可以使用如下变量：
+you can use following variables in the templates:
 
 ```markdown
 - {{citekey}} 
@@ -104,6 +104,8 @@ It will generate the author string in IEEE format like `Lin and Morse et al.`
 
 ## Sponsor
 
-![](./assets/weixin.jpg)
+![](.//assets/weixin.jpg)
 
-![](./assets/alipay.jpg)
+![](./assets/alipay.jpg)
+
+
