@@ -6,6 +6,7 @@
   "minAppVersion": "2.9.3",
   "backends": ["windows", "linux", "darwin"],
   "frontends": ["desktop"],
+  "i18n": ["en_US", "zh_CN"],
   "displayName": {
     "default": "Citation for SiYuan",
     "zh_CN": "文献引用"

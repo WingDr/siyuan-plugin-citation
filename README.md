@@ -1,4 +1,4 @@
-[中文](https://github.com/siyuan-note/plugin-sample/blob/main/README_zh_CN.md)
+[中文](https://github.com/WingDr/siyuan-plugin-citation/blob/main/README_zh_CN.md)
 
 # SiYuan plugin sample
 
@@ -31,10 +31,10 @@ In terms of internationalization, our main consideration is to support multiple 
 complete the following tasks:
 
 * Meta information about the plugin itself, such as plugin description and readme
-    * `description` and `readme` fields in plugin.json, and the corresponding README*.md file
+  * `description` and `readme` fields in plugin.json, and the corresponding README*.md file
 * Text used in the plugin, such as button text and tooltips
-    * src/i18n/*.json language configuration files
-    * Use `this.i18.key` to get the text in the code
+  * src/i18n/*.json language configuration files
+  * Use `this.i18.key` to get the text in the code
 * Finally, declare the language supported by the plugin in the `i18n` field in plugin.json
 
 It is recommended that the plugin supports at least English and Simplified Chinese, so that more people can use it more
@@ -96,19 +96,19 @@ conveniently.
   * `browser-mobile`: Mobile browser
   * `all`: All environments
 * `displayName`: Template display name, mainly used for display in the marketplace list, supports multiple languages
-    * `default`: Default language, must exist
-    * `zh_CN`, `en_US` and other languages: optional, it is recommended to provide at least Chinese and English
+  * `default`: Default language, must exist
+  * `zh_CN`, `en_US` and other languages: optional, it is recommended to provide at least Chinese and English
 * `description`: Plugin description, mainly used for display in the marketplace list, supports multiple languages
-    * `default`: Default language, must exist
-    * `zh_CN`, `en_US` and other languages: optional, it is recommended to provide at least Chinese and English
+  * `default`: Default language, must exist
+  * `zh_CN`, `en_US` and other languages: optional, it is recommended to provide at least Chinese and English
 * `readme`: readme file name, mainly used to display in the marketplace details page, supports multiple languages
-    * `default`: Default language, must exist
-    * `zh_CN`, `en_US` and other languages: optional, it is recommended to provide at least Chinese and English
+  * `default`: Default language, must exist
+  * `zh_CN`, `en_US` and other languages: optional, it is recommended to provide at least Chinese and English
 * `funding`: Plugin sponsorship information
-    * `openCollective`: Open Collective name
-    * `patreon`: Patreon name
-    * `github`: GitHub login name
-    * `custom`: Custom sponsorship link list
+  * `openCollective`: Open Collective name
+  * `patreon`: Patreon name
+  * `github`: GitHub login name
+  * `custom`: Custom sponsorship link list
 
 ## Package
 
