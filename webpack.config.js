@@ -34,6 +34,7 @@ module.exports = (env, argv) => {
                 {from: "src/i18n/", to: "./dist/i18n/"},
                 {from: "assets/", to: "./dist/assets/"},
                 {from: "data/sample.bib", to: "./dist/data/"},
+                {from: "data/sample.json", to: "./dist/data/"},
             ],
         }));
         plugins.push(new ZipPlugin({
