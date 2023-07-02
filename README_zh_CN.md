@@ -82,7 +82,8 @@
   使用`Better BibTatex` 插件，以`Better BibLaTex`或者`Better CSL JSON`的格式导出文献库（同时可以选择`Keep Update`）
 
 - 如果你使用的其它文献管理软件：
-  在`[工作空间]/data/siyuan-plugin-citation/data/`中提供了`sample.bib`用于参考，如果你使用的软件能够提供这样的导出，那么就可以使用
+  在`[工作空间]/data/siyuan-plugin-citation/data/`中提供了`sample.bib` 和 `sample.json` 用于参考，如果你使用的软件能够提供这样的导出，那么就可以使用
+  ***注意！在`.bib`和`.json`文件中，每个文献的`citekey/id`必须是唯一的***
 
 ## TODO
 

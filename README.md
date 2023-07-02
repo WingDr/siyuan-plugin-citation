@@ -74,9 +74,12 @@ It will generate the author string in IEEE format like `Lin and Morse et al.`
 
 ## How to get `bibtex` or `CSL-JSON` file
 
-* If you are using `Zotero`: use`Better BibTatex` plugin and export the library in `Better BibLaTex` or `Better CSL JSON`.
+* If you are using `Zotero`: 
+  Use`Better BibTatex` plugin and export the library in `Better BibLaTex` or `Better CSL JSON`.
 
-* If you are using other reference managers: there is `sample.bib` in `[workspace]/data/siyuan-plugin-citation/data/` for refering.
+* If you are using other reference managers: 
+  There are `sample.bib` and `sample.json` in `[workspace]/data/siyuan-plugin-citation/data/` for refering.
+  ***Caution! the `citekey/id` in `.bib` or `.json` file must be GLOBALLY UNIQUE!***
 
 ## TODO
 
