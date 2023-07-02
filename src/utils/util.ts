@@ -138,7 +138,7 @@ export async function loadLibrary(plugin: SiYuanPluginCitation): Promise<Library
       return library;
   }).then(library => {
     if (isDev) logger.info("成功载入文献库，数量=>", library.size);
-    noticer.info(`Successfully loaded library with ${library.size} entries.`);
+    noticer.info(plugin.i18n.loadLibrarySuccess.replace("${size}", library.size));
     plugin.library = library;
     return library;
   }).catch((e) => {
@@ -171,7 +171,7 @@ export async function loadLocalRef(plugin: SiYuanPluginCitation): Promise<any> {
   }
   if (isDev) logger.info("成功载入引用，id2ckDict=>", plugin.id2ckDict);
   if (isDev) logger.info("成功载入引用，ck2idDict=>", plugin.ck2idDict);
-  noticer.info(`Successfully loaded references with ${Object.keys(plugin.id2ckDict).length} files.`);
+  noticer.info(plugin.i18n.loadRefSuccess.replace("${size}", Object.keys(plugin.id2ckDict).length));
   return plugin.id2ckDict, plugin.ck2idDict;
 }
 

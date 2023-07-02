@@ -1,6 +1,6 @@
 [中文 README](https://github.com/WingDr/siyuan-plugin-citation/blob/main/README_zh_CN.md)
 
-# SiYuan Citation
+# Citation for SiYuan
 
 ## Functions
 
@@ -107,5 +107,3 @@ It will generate the author string in IEEE format like `Lin and Morse et al.`
 ![](.//assets/weixin.jpg)
 
 ![](./assets/alipay.jpg)
-
-

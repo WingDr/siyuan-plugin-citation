@@ -7,7 +7,30 @@
   "byePlugin": "Bye, Plugin!",
   "showDialog": "Show dialog",
   "removedData": "Data deleted",
-  "confirmRemove": "Confirm to delete the data in ${name}?",
   "addCitation": "Add an citation",
-  "refreshLibrary": "Refresh the citation library"
+  "refreshLibrary": "Refresh the citation library",
+  "loadLibrarySuccess": "Successfully loaded library with ${size} entries.",
+  "loadRefSuccess": "Successfully loaded literature notes with ${size} files.",
+  "settingTab": {
+    "notebookSelectorTitle": "Notebook",
+    "notebookSelectorDescription": "Select the notebook where the literature notes located",
+    "referencePathInputTitle": "Citation Directory",
+    "referencePathInputDescription": "The path should start with '/' such as '/References'",
+    "reloadBtnTitle": "Reload Library",
+    "reloadBtnDescription": "Reload the citation library with existing bibtex or csj-json files",
+    "reloadBtnText": "Reload",
+    "noteTempTexareaTitle": "Literature Note Template",
+    "noteTempTexareaDescription": "Input the template of literature note stored in citation directory",
+    "linkTempInputTitle": "Citation Link Template",
+    "linkTempInputDescription": "Input the template of citation link when adding to file",
+    "deleteDataBtnTitle": "Delete Data",
+    "deleteDataBtnDescription": "Delete all the storaged data of this plugin",
+    "confirmRemove": "Confirm to delete the data in ${name}?",
+    "deleteDataBtnText": "Delete"
+  },
+  "errors": {
+    "notebookUnselected": "Please select notebook in setting tab!",
+    "refPathInvalid": "Citation directory doesn't exist!",
+    "hotKeyUsage": "Please use this command with hotkey"
+  }
 }

@@ -7,7 +7,30 @@
   "byePlugin": "再见，插件！",
   "showDialog": "弹出一个对话框",
   "removedData": "数据已删除",
-  "confirmRemove": "确认删除 ${name} 中的数据？",
   "addCitation": "添加引用",
-  "refreshLibrary": "刷新文献库"
+  "refreshLibrary": "刷新文献库",
+  "loadLibrarySuccess": "文献库成功导入${size}个数据",
+  "loadRefSuccess": "成功导入${size}个文献引用",
+  "settingTab": {
+    "notebookSelectorTitle": "笔记本",
+    "notebookSelectorDescription": "选择文献库放置的笔记本",
+    "referencePathInputTitle": "文献库路径",
+    "referencePathInputDescription": "路径以'/'开头，例如'/References'",
+    "reloadBtnTitle": "重载文献",
+    "reloadBtnDescription": "重新从文件中加载文献",
+    "reloadBtnText": "重载",
+    "noteTempTexareaTitle": "文献内容模板",
+    "noteTempTexareaDescription": "设置在文献库中储存的文献文件的内容模板",
+    "linkTempInputTitle": "引用模板",
+    "linkTempInputDescription": "设置文件中添加的引用链接模板",
+    "deleteDataBtnTitle": "删除数据",
+    "deleteDataBtnDescription": "删除本插件的所有设置数据",
+    "confirmRemove": "确认删除 ${name} 中的数据？",
+    "deleteDataBtnText": "删除"
+  },
+  "errors": {
+    "notebookUnselected": "未选择笔记本！",
+    "refPathInvalid": "文献库路径不存在！",
+    "hotKeyUsage": "请使用快捷键执行此命令"
+  }
 }

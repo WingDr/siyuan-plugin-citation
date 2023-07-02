@@ -1,6 +1,6 @@
 [README English](https://github.com/WingDr/siyuan-plugin-citation/blob/main/README.md)
 
-# SiYuan Citation
+# Citation for SiYuan
 
 > 一个只实现了基础功能的引用插件，希望你的思源~~更像obsidian~~更加学术
 

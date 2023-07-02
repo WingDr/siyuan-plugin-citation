@@ -67,8 +67,8 @@ export class InteractionManager {
     // 默认笔记本为第一个打开的笔记本
     referenceNotebookSelector.value = this.plugin.data[STORAGE_NAME].referenceNotebook ?? notebooks[0].id;
     this.setting.addItem({
-        title: "Notebook",
-        description: "Select the note book where the literatures located",
+        title: this.plugin.i18n.settingTab.notebookSelectorTitle,
+        description: this.plugin.i18n.settingTab.notebookSelectorDescription,
         actionElement: referenceNotebookSelector,
     });
 
@@ -79,21 +79,21 @@ export class InteractionManager {
     // 默认路径为"/References/"
     referencePathInput.value = this.plugin.data[STORAGE_NAME].referencePath ?? "/References";
     this.setting.addItem({
-        title: "Citation Directory",
-        description: "The path should start with \"/\" such as '/References'",
+        title: this.plugin.i18n.settingTab.referencePathInputTitle,
+        description: this.plugin.i18n.settingTab.referencePathInputDescription,
         actionElement: referencePathInput,
     });
 
     //reload library button
     const reloadBtn = document.createElement("button");
     reloadBtn.className = "b3-button b3-button--outline fn__flex-center fn__size200";
-    reloadBtn.textContent = "Reload";
+    reloadBtn.textContent = this.plugin.i18n.settingTab.reloadBtnText;
     reloadBtn.addEventListener("click", () => {
         return loadLibrary(this.plugin).then(() => loadLocalRef(this.plugin));
     });
     this.setting.addItem({
-        title: "Reload Library",
-        description: "Reload the citation library with existing bibtex or csj-json files",
+        title: this.plugin.i18n.settingTab.reloadBtnTitle,
+        description: this.plugin.i18n.settingTab.reloadBtnDescription,
         actionElement: reloadBtn,
     });
 
@@ -130,8 +130,8 @@ export class InteractionManager {
       }
     });
     this.setting.addItem({
-      title: "Literature Note Template",
-      description: "Input the template of literature note stored in citation directory",
+      title: this.plugin.i18n.settingTab.noteTempTexareaTitle,
+      description: this.plugin.i18n.settingTab.noteTempTexareaDescription,
       actionElement: noteTempTexarea,
     });
 
@@ -141,17 +141,17 @@ export class InteractionManager {
     linkTempInput.placeholder = "Input the path";
     linkTempInput.value = this.plugin.data[STORAGE_NAME].linkTemplate ?? defaultLinkTemplate;
     this.setting.addItem({
-        title: "Literature Link Template",
-        description: "Input the template of literature link when adding to file",
+        title: this.plugin.i18n.settingTab.linkTempInputTitle,
+        description: this.plugin.i18n.settingTab.linkTempInputDescription,
         actionElement: linkTempInput,
     });
 
     //delete data button
     const deleteDataBtn = document.createElement("button");
     deleteDataBtn.className = "b3-button b3-button--outline fn__flex-center fn__size200";
-    deleteDataBtn.textContent = "Delete";
+    deleteDataBtn.textContent = this.plugin.i18n.settingTab.deleteDataBtnText;
     deleteDataBtn.addEventListener("click", () => {
-      confirm("⚠️", this.plugin.i18n.confirmRemove.replace("${name}", this.plugin.name), () => {
+      confirm("⚠️", this.plugin.i18n.settingTab.confirmRemove.replace("${name}", this.plugin.name), () => {
         this.plugin.removeData(STORAGE_NAME).then(() => {
             referenceNotebookSelector.value = "";
             referencePathInput.value = defaultReferencePath;
@@ -168,8 +168,8 @@ export class InteractionManager {
       });
     });
     this.setting.addItem({
-        title: "Delete Data",
-        description: "Delete all the storaged data of this plugin",
+        title: this.plugin.i18n.settingTab.deleteDataBtnTitle,
+        description: this.plugin.i18n.settingTab.deleteDataBtnDescription,
         actionElement: deleteDataBtn,
     });
 
@@ -189,11 +189,11 @@ export class InteractionManager {
       callback: async (protyle: Protyle) => {
         if (isDev) this.logger.info("Slash触发：add literature citation", protyle);
         if (this.plugin.data[STORAGE_NAME].referenceNotebook === "") {
-          this.plugin.noticer.error("Please select notebook in setting tab!");
+          this.plugin.noticer.error(this.plugin.i18n.errors.notebookUnselected);
           if (isDev) this.logger.error("未选择笔记本！");
         } else if (!this.plugin.isRefPathExist) {
           protyle.insert("", false, true);
-          this.plugin.noticer.error("Citation directory doesn't exist!");
+          this.plugin.noticer.error(this.plugin.i18n.errors.refPathInvalid);
           if (isDev) this.logger.error("文献库路径不存在！");
         } else {
           return this.plugin.insertModal.showSearching(protyle);
@@ -209,10 +209,10 @@ export class InteractionManager {
       editorCallback: (protyle: any) => {
         if (isDev) this.logger.info("指令触发：addCitation", protyle);
         if (this.plugin.data[STORAGE_NAME].referenceNotebook === "") {
-          this.plugin.noticer.error("Please select notebook in setting tab!");
+          this.plugin.noticer.error(this.plugin.i18n.errors.notebookUnselected);
           if (isDev) this.logger.error("未选择笔记本！");
         } else if (!this.plugin.isRefPathExist) {
-          this.plugin.noticer.error("Citation directory doesn't exist!");
+          this.plugin.noticer.error(this.plugin.i18n.errors.refPathInvalid);
           if (isDev) this.logger.error("文献库路径不存在！");
         } else {
           return this.plugin.insertModal.showSearching(protyle);
@@ -220,7 +220,7 @@ export class InteractionManager {
         return;
       },
       callback: () => {
-        this.plugin.noticer.error("Please use this command with hotkey");
+        this.plugin.noticer.error(this.plugin.i18n.errors.hotKeyUsage);
       },
     });
     this.plugin.addCommand({
