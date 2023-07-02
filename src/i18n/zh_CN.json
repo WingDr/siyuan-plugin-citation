@@ -1,5 +1,4 @@
 {
-  "addTopBarIcon": "使用插件添加一个顶栏按钮",
   "cancel": "取消",
   "save": "保存",
   "byeMenu": "再见，菜单！",
@@ -8,7 +7,8 @@
   "showDialog": "弹出一个对话框",
   "removedData": "数据已删除",
   "addCitation": "添加引用",
-  "refreshLibrary": "刷新文献库",
+  "refreshLibrary": "重新载入文献库",
+  "refreshCitation": "刷新引用",
   "loadLibrarySuccess": "文献库成功导入${size}个数据",
   "loadRefSuccess": "成功导入${size}个文献引用",
   "settingTab": {

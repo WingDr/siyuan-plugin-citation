@@ -76,6 +76,7 @@ export default class SiYuanPluginCitation extends Plugin {
         this.reference = new Reference(this);
         this.interactionManager = new InteractionManager(this);
 
+        this.interactionManager.eventBusReaction();
         await this.interactionManager.customSettingTab().then(setting => {
             this.setting = setting;
         });

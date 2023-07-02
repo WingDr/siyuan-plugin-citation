@@ -10,7 +10,7 @@ Add citations to your note, which point to the literature note in specific direc
 
 ## Before usage
 
-* Put any number of `csl-json` and `bibtex`  files in `[workspace]/data/siyuan-plugin-citation/data/`
+* Put any number of `csl-json` and `bibtex`  files in `[workspace]/data/storage/petal/siyuan-plugin-citation/references/`
 
 * In the setting tab of this plugin, select the notebook and directory where you want put the literature note
 
@@ -78,7 +78,7 @@ It will generate the author string in IEEE format like `Lin and Morse et al.`
   Use`Better BibTatex` plugin and export the library in `Better BibLaTex` or `Better CSL JSON`.
 
 * If you are using other reference managers: 
-  There are `sample.bib` and `sample.json` in `[workspace]/data/siyuan-plugin-citation/data/` for refering.
+  There are `sample.bib` and `sample.json` in `[workspace]/data/siyuan-plugin-citation/sample-data/` for refering.
   ***Caution! the `citekey/id` in `.bib` or `.json` file must be GLOBALLY UNIQUE!***
 
 ## TODO

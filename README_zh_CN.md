@@ -14,7 +14,7 @@
 
 ## 在使用前
 
-- 在`[工作空间]/data/siyuan-plugin-citation/data/`文件夹下，放置任意数量的`csl-json`和`bibtex`文件，其中包含你所想要引用的文献。
+- 在`[工作空间]/data/storage/petal/siyuan-plugin-citation/references/`文件夹下，放置任意数量的`csl-json`和`bibtex`文件，其中包含你所想要引用的文献。
 
 - 在插件的设置面板中，选择你想要放置文献库的笔记本和文件夹路径。
 
@@ -82,7 +82,7 @@
   使用`Better BibTatex` 插件，以`Better BibLaTex`或者`Better CSL JSON`的格式导出文献库（同时可以选择`Keep Update`）
 
 - 如果你使用的其它文献管理软件：
-  在`[工作空间]/data/siyuan-plugin-citation/data/`中提供了`sample.bib` 和 `sample.json` 用于参考，如果你使用的软件能够提供这样的导出，那么就可以使用
+  在`[工作空间]/data/siyuan-plugin-citation/sample-data/`中提供了`sample.bib` 和 `sample.json` 用于参考，如果你使用的软件能够提供这样的导出，那么就可以使用
   ***注意！在`.bib`和`.json`文件中，每个文献的`citekey/id`必须是唯一的***
 
 ## TODO

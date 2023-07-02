@@ -207,7 +207,7 @@ class KernelApi extends BaseApi {
 
   public async getCitedBlocks(fileId: string) {
     const params = {
-      "stmt": `SELECT * FROM blocks WHERE root_id like '${fileId}' and ial like '%custom-cited%'`
+      "stmt": `SELECT * FROM blocks WHERE root_id like '${fileId}' and content like '%((%))%'`
     };
     return await this.siyuanRequest("/api/query/sql", params);
   }
@@ -218,15 +218,7 @@ class KernelApi extends BaseApi {
       "data": md,
       "id": blockId
     };
-    const attrParams = {
-      "id": blockId,
-      "attrs": {
-        "custom-cited": "true"
-      }
-    };
-    return await this.siyuanRequest("/api/block/updateBlock", updateParams).then(async res => {
-      return await this.siyuanRequest("/api/attr/setBlockAttrs", attrParams), res;
-    });
+    return await this.siyuanRequest("/api/block/updateBlock", updateParams);
   }
 
   public async setBlockCited(blockId: string, isSet: boolean): Promise<SiyuanData> {

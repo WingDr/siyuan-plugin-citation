@@ -1,5 +1,4 @@
 {
-  "addTopBarIcon": "Add a top bar icon by plugin",
   "cancel": "Cancel",
   "save": "Save",
   "byeMenu": "Bye, Menu!",
@@ -9,6 +8,7 @@
   "removedData": "Data deleted",
   "addCitation": "Add an citation",
   "refreshLibrary": "Refresh the citation library",
+  "refreshCitation": "Refresh citation links",
   "loadLibrarySuccess": "Successfully loaded library with ${size} entries.",
   "loadRefSuccess": "Successfully loaded literature notes with ${size} files.",
   "settingTab": {

@@ -233,6 +233,21 @@ export class InteractionManager {
     });
   }
 
+  public eventBusReaction() {
+    // TODO 绑定eventBus的话this就跑飞了，看看要不要提issue
+    // this.plugin.eventBus.on("click-editortitleicon", this.customTitleIconMenu);
+  }
+
+  // private customTitleIconMenu(event: CustomEvent<any>) {
+  //   const label = this.plugin.i18n.refreshCitation;
+  //   const clickCallback = this.plugin.reference.updateLiteratureLink;
+  //   event.detail.menu.addItem({
+  //     iconHTML: "",
+  //     label: label,
+  //     click: () => {clickCallback(event.detail.data.id);}
+  //   });
+  // }
+
   public generateCiteRef(citeFileId: string, link: string) {
     return `<span data-type="block-ref" data-subtype="d" data-id="${citeFileId}">${link}</span>`;
   }

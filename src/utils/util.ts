@@ -26,7 +26,7 @@ export const DISALLOWED_FILENAME_CHARACTERS_RE = /[*"\\/<>:|?]/g;
  * search all the .json and .bib file
  */
 export async function fileSearch(dirPath: string): Promise<string[]> {
-  const absPluginPath = path.resolve(dataDir, "./plugins/siyuan-plugin-citation/");
+  const absPluginPath = path.resolve(dataDir, "./storage/petal/siyuan-plugin-citation");
   const absDirPath = path.join(absPluginPath, dirPath);
   const files = await fsReadDir(absDirPath);
   const promises = files.map(file => {
