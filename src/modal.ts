@@ -53,7 +53,7 @@ class SearchModal {
     input.placeholder = "Searching literature";
     if (isDev) this.logger.info("打开搜索界面");
     this.searchDialog = new Dialog({
-        content: '<div class="plugin-citation__search-tab__input-container fn-block" id="input-container"></div><div class="search__layout" id="result-container"><ul></ul></div>',
+        content: '<div class="plugin-citation__search-tab__input-container fn-block" id="input-container"></div><div class="search__layout plugin-citation__search-tab__result-container" id="result-container"><ul></ul></div>',
         width: this.plugin.isMobile ? "120vw" : "520px",
         height: "40vh"
     });
@@ -101,14 +101,31 @@ class SearchModal {
         literatureContent.className = "plugin-citation__search-item";
         literatureContent.setAttribute("data-type", "search-item");
         literatureContent.setAttribute("data-search-id", res.item.id);
-        const item = this.plugin.library.getTemplateVariablesForCitekey(res.item.id);
-        literatureContent.innerHTML = `<div class="b3-list-item__text" style="font-weight:bold"> ${item.title}</div> <div class="b3-list-item__text">${item.year} ${item.authorString}</div>`;
+        const itemContent = this.matchHighlight(res.matches[0]);
+        literatureContent.innerHTML = `<div class="b3-list-item__text" style="font-weight:bold"> ${itemContent.title}</div> <div class="b3-list-item__text">${itemContent.year} ${itemContent.authorString}</div>`;
         singleRes.className = "b3-list-item";
         singleRes.appendChild(literatureContent);
         content.appendChild(singleRes);
         singleRes.addEventListener("click", (ev) => this.clickReaction(ev));
     });
     return content;
+  }
+
+  private matchHighlight(match) {
+    // if (isDev) this.logger.info("搜索匹配=>", match);
+    let contentString = match.value as string;
+    const indices = (match.indices as number[][]).sort((a,b) => b[0] - a[0]);
+    indices.forEach(indice => {
+      contentString = contentString.slice(0, indice[0]) + "<mark>" 
+                    + contentString.slice(indice[0], indice[1]+1) + "</mark>"
+                    + contentString.slice(indice[1]+1);
+    });
+    const content = contentString.split("\n");
+    return {
+      title: content[0],
+      year: content[1],
+      authorString: content[2]
+    };
   }
 
   private clickReaction(ev: MouseEvent) {

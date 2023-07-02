@@ -176,11 +176,10 @@ export async function loadLocalRef(plugin: SiYuanPluginCitation): Promise<any> {
 }
 
 export function generateFileLinks(files: string[]) {
-  console.log(files);
-  return files.map(file => {
+  return files ? files.map(file => {
     const fileName = file.split("\\").slice(-1)[0];
     return `[${fileName}]` + "\(file://" + file.replace(/\\(.?)/g, (m, p1) => p1) + "\)";
-  }).join("\n");
+  }).join("\n") : files;
 }
 
 export function generateFromTemplate(template: string, params: object) {
