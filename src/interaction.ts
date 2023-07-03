@@ -178,12 +178,12 @@ export class InteractionManager {
 
   public async customProtyleSlash() {
     return {
-      filter: ["插入文献引用", "add literature citation", "charuwenxianyinyong"],
+      filter: [this.plugin.i18n.addCitation, "插入文献引用", "add an citation", "charuwenxianyinyong"],
       html: `<div class = "b3-list-item__first">
         <svg class="b3-list-item__graphic">
           <use xlink:href="#iconRef"></use>
         </svg>
-        <span class="b3-list-item__text">插入文献引用</span>
+        <span class="b3-list-item__text">${this.plugin.i18n.addCitation}</span>
       </div>`,
       id: "add-literature-citation",
       callback: async (protyle: Protyle) => {

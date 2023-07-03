@@ -6,6 +6,7 @@
   "byePlugin": "Bye, Plugin!",
   "showDialog": "Show dialog",
   "removedData": "Data deleted",
+  "prefix": "Ciation: ",
   "addCitation": "Add an citation",
   "refreshLibrary": "Refresh the citation library",
   "refreshCitation": "Refresh citation links",
