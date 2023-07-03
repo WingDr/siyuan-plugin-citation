@@ -85,7 +85,9 @@ It will generate the author string in IEEE format like `Lin and Morse et al.`
 
 * [ ] Zotero integration
 
-* [ ] exportation support LATEX
+* [ ] Exportation support LATEX
+* [ ] Support Equation citation and automatic numbering
+- [ ] Support adding Remarks, Lemmas and etc.
 
 * [ ] Better UI
 
