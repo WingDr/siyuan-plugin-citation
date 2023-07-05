@@ -4,6 +4,7 @@
 
 > 一个只实现了基础功能的引用插件，希望你的思源~~更像obsidian~~更加学术
 
+**目前已经支持集成Zotero，可以直接从Zotero或者Juris-M中获取文献了！**
 
 
 ## 功能
@@ -14,21 +15,26 @@
 
 ## 在使用前
 
-- 在`[工作空间]/data/storage/petal/siyuan-plugin-citation/references/`文件夹下，放置任意数量的`csl-json`和`bibtex`文件，其中包含你所想要引用的文献。
-
 - 在插件的设置面板中，选择你想要放置文献库的笔记本和文件夹路径。
 
 - 在插件的设置面板中，自定义文献内容和引用的模板。
 
 - 设置改完记得点`保存`
 
+### 如果你使用BibTex文件和CSL-JSON文件作为文献库
+
+- 在`[工作空间]/data/storage/petal/siyuan-plugin-citation/references/`文件夹下，放置任意数量的`csl-json`和`bibtex`文件，其中包含你所想要引用的文献。
+- 在插件的设置面板中，数据库类型处选择`BibTex and CSL-JSON`。
+
+### 如果你使用Zotero或者Juris-M作为文献库
+
+- 在插件的设置面板中，数据库类型处选择`Zotero`或者`Juris-M`。
+
 ## 目前有什么功能
 
 1. 添加引用：
    
    - 斜杠菜单
-   
-   - 命令面板/快捷键
 
 2. 刷新文献库（当你的`.bib`或者`.json`文件更新了）：
    
@@ -38,18 +44,20 @@
 
 ![](./assets/searchpanel.png)
 
+![](./assets/zoteroIntegration.png)
+
 ## 怎么写模板
 
 - 语法使用的是markdown语法
 
 - 想要被变量替换的部分用`{{ }}`包裹，例如`{{title}}`
 
-- 目前在文本框中按下`Enter`键就会保存，等更新
+- 目前在文本框中按下`Enter`键就会保存，尽量在外部写好复制进去，等更新
 
 在文献内容和引用的模板中可以使用如下变量：
 
 ```markdown
-- {{citekey}}
+- {{citekey}}：文献的唯一标识，建议用zotero的better biblatex插件生成
 - {{abstract}}
 - {{authorString}}
 - {{containerTitle}}
@@ -65,7 +73,8 @@
 - {{URL}}
 - {{year}}
 - {{files}}
-- {{zoteroSelectURI}}
+- {{zoteroSelectURI}}：可以直接跳转到Zotero对应的条目
+- {{note}}：在Zotero中做的笔记，其中的链接支持直接跳转到Zotero
 ```
 
 此外，在引用中还可以使用下面的变量：
@@ -87,7 +96,7 @@
 
 ## TODO
 
-- [ ] Zotero 集成 `长期`
+- [x] Zotero 集成 `长期`
 
 - [ ] 导出支持LATEX `长期`
 - [ ] 支持公式引用和自动编号 `长期`
@@ -112,6 +121,8 @@
 [obsidian-citation-plugin](https://github.com/hans/obsidian-citation-plugin)
 
 [siyuan-plugin-importer](https://github.com/terwer/siyuan-plugin-importer)
+
+[obsidian-zotero-integration](https://github.com/mgmeyers/obsidian-zotero-integration)
 
 ## 赞助
 

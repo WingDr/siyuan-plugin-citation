@@ -5,28 +5,20 @@ import {
 } from "siyuan";
 
 import KernelApi from "./api/kernel-api";
-import { 
-    Library,
-} from "./library";
-import {
-    insertCiteLink
-} from "./modal";
+import { Database, DatabaseType } from "./database/database";
 import {
     Reference
 } from "./reference";
 import {
     InteractionManager
 } from "./interaction";
-import{
-    loadLibrary,
-    loadLocalRef
-} from "./utils/util";
 import {
     isDev,
     STORAGE_NAME,
     defaultLinkTemplate,
     defaultNoteTemplate,
-    defaultReferencePath
+    defaultReferencePath,
+    databaseType
 } from "./utils/constants";
 import {
     createLogger,
@@ -44,10 +36,9 @@ export default class SiYuanPluginCitation extends Plugin {
     public ck2idDict: {[ck: string]: string};
     public id2ckDict: {[id: string]: string};
 
-    public library: Library;
+    public database: Database;
     public reference: Reference;
     public interactionManager: InteractionManager;
-    public insertModal: insertCiteLink;
     public kernelApi: KernelApi;
 
     public noticer: INoticer;
@@ -62,6 +53,7 @@ export default class SiYuanPluginCitation extends Plugin {
         this.data[STORAGE_NAME] = {
             referenceNotebook: "",
             referencePath: defaultReferencePath,
+            database: databaseType[0],
             noteTemplate: defaultNoteTemplate,
             linkTemplate: defaultLinkTemplate
         };
@@ -73,6 +65,8 @@ export default class SiYuanPluginCitation extends Plugin {
         if (isDev) this.logger.info("读取本地数据");
         await this.loadData(STORAGE_NAME);
         this.kernelApi = new KernelApi();
+        this.database = new Database(this);
+        this.database.buildDatabase(this.data[STORAGE_NAME].database as DatabaseType);
         this.reference = new Reference(this);
         this.interactionManager = new InteractionManager(this);
 
@@ -82,15 +76,6 @@ export default class SiYuanPluginCitation extends Plugin {
         });
         await this.interactionManager.customCommand();
         this.protyleSlash.push(await this.interactionManager.customProtyleSlash());
-    }
-
-    onLayoutReady(): void {
-        if (isDev) this.logger.info("从本地文件载入文献库");
-        loadLibrary(this).then(() => {
-            this.insertModal = new insertCiteLink(this);
-        });
-        if (isDev) this.logger.info("载入引用");
-        loadLocalRef(this);
     }
 
     onunload() {

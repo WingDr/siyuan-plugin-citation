@@ -8,16 +8,14 @@ import SiYuanPluginCitation from "./index";
 import {
   STORAGE_NAME,
   hiddenNotebook,
+  databaseType,
   defaultNoteTemplate,
   defaultLinkTemplate,
   defaultReferencePath,
   isDev
 } from "./utils/constants";
-import {
-  loadLibrary,
-  loadLocalRef
-} from "./utils/util";
 import { createLogger, ILogger } from "./utils/simple-logger";
+import { DatabaseType } from "./database/database";
 
 export class InteractionManager {
   public plugin: SiYuanPluginCitation;
@@ -42,10 +40,19 @@ export class InteractionManager {
             const settingData = {
                 referenceNotebook: referenceNotebookSelector.value,
                 referencePath: referencePathInput.value,
+                database: databaseSelector.value,
                 noteTemplate: noteTempTexarea.value,
                 linkTemplate: linkTempInput.value
             };
-            this.plugin.saveData(STORAGE_NAME, settingData);
+            let refresh = false;
+            // 改变了笔记本和数据库类型之后都要刷新数据库
+            if (settingData.referenceNotebook != this.plugin.data[STORAGE_NAME].referenceNotebook || settingData.database != this.plugin.data[STORAGE_NAME].database) refresh = true;
+            this.plugin.saveData(STORAGE_NAME, settingData).then(() => {
+              if (refresh) {
+                this.plugin.database.buildDatabase(settingData.database as DatabaseType);
+                this.plugin.reference.checkRefDirExist();
+              } 
+            });
         }
     });
 
@@ -84,12 +91,28 @@ export class InteractionManager {
         actionElement: referencePathInput,
     });
 
+    //select the using type of database
+    const databaseSelector = document.createElement("select");
+    databaseSelector.className = "b3-select fn__flex-center fn__size200";
+    databaseType.forEach(database => {
+      const option = document.createElement("option");
+      option.value = database;
+      option.text = database;
+      databaseSelector.appendChild(option);
+    });
+    databaseSelector.value = this.plugin.data[STORAGE_NAME].database ?? databaseType[0];
+    this.setting.addItem({
+      title: this.plugin.i18n.settingTab.databaseSelectorTitle,
+      description: this.plugin.i18n.settingTab.databaseSelectorDescription,
+      actionElement: databaseSelector,
+    });
+
     //reload library button
     const reloadBtn = document.createElement("button");
     reloadBtn.className = "b3-button b3-button--outline fn__flex-center fn__size200";
     reloadBtn.textContent = this.plugin.i18n.settingTab.reloadBtnText;
     reloadBtn.addEventListener("click", () => {
-        return loadLibrary(this.plugin).then(() => loadLocalRef(this.plugin));
+        return this.plugin.database.buildDatabase(databaseSelector.value as DatabaseType);
     });
     this.setting.addItem({
         title: this.plugin.i18n.settingTab.reloadBtnTitle,
@@ -196,7 +219,7 @@ export class InteractionManager {
           this.plugin.noticer.error(this.plugin.i18n.errors.refPathInvalid);
           if (isDev) this.logger.error("文献库路径不存在！");
         } else {
-          return this.plugin.insertModal.showSearching(protyle);
+          return this.plugin.database.insertCiteLink(protyle);
         }
       }
     };
@@ -204,49 +227,33 @@ export class InteractionManager {
 
   public async customCommand() {
     this.plugin.addCommand({
-      langKey: "addCitation",
-      hotkey: "⇧⌘M",
-      editorCallback: (protyle: any) => {
-        if (isDev) this.logger.info("指令触发：addCitation", protyle);
-        if (this.plugin.data[STORAGE_NAME].referenceNotebook === "") {
-          this.plugin.noticer.error(this.plugin.i18n.errors.notebookUnselected);
-          if (isDev) this.logger.error("未选择笔记本！");
-        } else if (!this.plugin.isRefPathExist) {
-          this.plugin.noticer.error(this.plugin.i18n.errors.refPathInvalid);
-          if (isDev) this.logger.error("文献库路径不存在！");
-        } else {
-          return this.plugin.insertModal.showSearching(protyle);
-        }
-        return;
-      },
-      callback: () => {
-        this.plugin.noticer.error(this.plugin.i18n.errors.hotKeyUsage);
-      },
-    });
-    this.plugin.addCommand({
       langKey: "refreshLibrary",
       hotkey: "",
       callback: () => {
         this.logger.info("指令触发：refreshLibrary");
-        return loadLibrary(this.plugin).then(() => loadLocalRef(this.plugin));
+        return this.plugin.database.buildDatabase(this.plugin.data[STORAGE_NAME].database as DatabaseType);
       }
     });
   }
 
   public eventBusReaction() {
     // TODO 绑定eventBus的话this就跑飞了，看看要不要提issue
-    // this.plugin.eventBus.on("click-editortitleicon", this.customTitleIconMenu);
+    this.plugin.eventBus.on("click-editortitleicon", this.customTitleIconMenu.bind(this));
+    this.plugin.eventBus.on("click-blockicon", this.customTitleIconMenu.bind(this));
+    // this.plugin.eventBus.on("click-editorcontent", this.customTitleIconMenu);
   }
 
-  // private customTitleIconMenu(event: CustomEvent<any>) {
-  //   const label = this.plugin.i18n.refreshCitation;
-  //   const clickCallback = this.plugin.reference.updateLiteratureLink;
-  //   event.detail.menu.addItem({
-  //     iconHTML: "",
-  //     label: label,
-  //     click: () => {clickCallback(event.detail.data.id);}
-  //   });
-  // }
+  private customTitleIconMenu(event: CustomEvent<any>) {
+    console.log(event);
+    console.log(this);
+    const label = this.plugin?.i18n.refreshCitation ?? "刷新引用";
+    const clickCallback = this.plugin?.reference.updateLiteratureLink ?? console.log;
+    event.detail.menu.addItem({
+      iconHTML: "",
+      label: label,
+      click: () => {clickCallback(event.detail.data.id);}
+    });
+  }
 
   public generateCiteRef(citeFileId: string, link: string) {
     return `<span data-type="block-ref" data-subtype="d" data-id="${citeFileId}">${link}</span>`;

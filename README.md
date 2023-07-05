@@ -2,6 +2,8 @@
 
 # Citation for SiYuan
 
+**The `Citation` plugin is now support Zotero integration, you can use Zotero or Juris-M directly as the literature library**
+
 ## Functions
 
 Add citations to your note, which point to the literature note in specific directrory.
@@ -10,21 +12,26 @@ Add citations to your note, which point to the literature note in specific direc
 
 ## Before usage
 
-* Put any number of `csl-json` and `bibtex`  files in `[workspace]/data/storage/petal/siyuan-plugin-citation/references/`
-
 * In the setting tab of this plugin, select the notebook and directory where you want put the literature note
 
 * In the setting tab of this plugin, set up your own template for both the citation and the content of literature notes
 
 * Remember to click `save` after change the setting
 
-## 目前有什么功能
+### If you use BibTex and CSL-JSON files as the library
+
+* Put any number of `csl-json` and `bibtex`  files in `[workspace]/data/storage/petal/siyuan-plugin-citation/references/`
+* Select `BibTex and CSL-JSON` at the "Type of Database" in the setting tab.
+
+### If you use Zotero or Juris-M as the library
+
+* Select `Zotero` or `Juris-M` (depending on the software you use) at the "Type of Database" in the setting tab.
+
+## Existing functions
 
 1. add citation：
    
    * slash menu
-   
-   * command panel / shortcut
 
 2. refresh library (after update you`.bib` or `.json` files）：
    
@@ -33,6 +40,8 @@ Add citations to your note, which point to the literature note in specific direc
 ![](./assets/protyleslash.png)
 
 ![](./assets/searchpanel.png)
+
+![](./assets/zoteroIntegration.png)
 
 ## How to write templates
 
@@ -45,7 +54,7 @@ Add citations to your note, which point to the literature note in specific direc
 you can use following variables in the templates:
 
 ```markdown
-- {{citekey}} 
+- {{citekey}}: The globally unique sign of the literature
 - {{abstract}} 
 - {{authorString}} 
 - {{containerTitle}} 
@@ -61,7 +70,8 @@ you can use following variables in the templates:
 - {{URL}} 
 - {{year}} 
 - {{files}} 
-- {{zoteroSelectURI}}
+- {{zoteroSelectURI}}: You can jump to the specific item in Zotero with this link
+- {{note}}: The notes in Zotero, where the links point to Zotero directly
 ```
 
 Additionaly, you can use following variable in citation link:
@@ -83,7 +93,7 @@ It will generate the author string in IEEE format like `Lin and Morse et al.`
 
 ## TODO
 
-* [ ] Zotero integration
+* [x] Zotero integration
 
 * [ ] Exportation support LATEX
 * [ ] Support Equation citation and automatic numbering
@@ -106,6 +116,8 @@ It will generate the author string in IEEE format like `Lin and Morse et al.`
 [obsidian-citation-plugin](https://github.com/hans/obsidian-citation-plugin)
 
 [siyuan-plugin-importer](https://github.com/terwer/siyuan-plugin-importer)
+
+[obsidian-zotero-integration](https://github.com/mgmeyers/obsidian-zotero-integration)
 
 ## Sponsor
 

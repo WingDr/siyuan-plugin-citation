@@ -2,22 +2,24 @@ import SiYuanPluginCitation from "./index";
 import { SiyuanData } from "./api/base-api";
 import {
   Author
-} from "./library";
+} from "./database/filesLibrary";
 import {
-  STORAGE_NAME
+  STORAGE_NAME, isDev
 } from "./utils/constants";
 import {
-  generateFileLinks,
   generateFromTemplate
 } from "./utils/util";
+import { ILogger, createLogger } from "./utils/simple-logger";
 
 // 根据输入更新文献库和引用文档，并维护本文档中的引用次序
 export class Reference {
   plugin: SiYuanPluginCitation;
+  private logger: ILogger;
 
   constructor(plugin: SiYuanPluginCitation) {
     this.plugin = plugin;
     this.checkRefDirExist();
+    this.logger = createLogger("reference");
   }
 
   public async initializeReferenceDir() {
@@ -32,8 +34,13 @@ export class Reference {
     const noteTemplate = this.plugin.data[STORAGE_NAME].noteTemplate as string;
     const res = await this.plugin.kernelApi.searchFileInSpecificPath(notebookId, refPath + `/${citekey}`);
     const data = res.data as any[];
-    const entry = this.plugin.library.getTemplateVariablesForCitekey(citekey);
-    entry.files = generateFileLinks(entry.files);
+    const entry = await this.plugin.database.getContentByCitekey(citekey);
+    if (isDev) this.logger.info("从database中获得文献内容 =>", entry);
+    if (!entry) {
+      if (isDev) this.logger.error("找不到文献数据");
+      this.plugin.noticer.error(this.plugin.i18n.getLiteratureFailed);
+      return null;
+    }
     const literatureNote = generateFromTemplate(noteTemplate, entry);
     if (data.length) {
       const literatureId = data[0].root_id;
@@ -74,6 +81,7 @@ export class Reference {
         if (idx != -1) {
           isCited = true;
           const link = this.generateCiteLink(this.plugin.id2ckDict[key], idx);
+          if (!link) return match;
           if (anchor != "'" + link + "'") {
             isModified = true;
           }
@@ -93,8 +101,8 @@ export class Reference {
         });
       }
     });
-    console.log(cancelCiteList);
-    console.log(writeList);
+    if (isDev) this.logger.info("取消引用列表 =>", cancelCiteList);
+    if (isDev) this.logger.info("写入引用列表 =>", writeList);
     const update = writeList.map(witem => {
       return this.plugin.kernelApi.updateCitedBlock(witem.blockId, witem.content);
     });
@@ -117,7 +125,7 @@ export class Reference {
     const data = res.data as any;
     const fileContent = data.kramdown as string;
     // 获取所有可以引用的citekey，用于筛选在文件中的引用
-    const citekeys = Object.keys(this.plugin.library.entries);
+    const citekeys = await this.plugin.database.getTotalCitekeys();
     return citekeys.map(key => {
       return {
         citekey: key as string,
@@ -132,9 +140,14 @@ export class Reference {
 
   }
 
-  public generateCiteLink(citekey: string, index: number) {
+  public async generateCiteLink(citekey: string, index: number) {
     const linkTemplate = this.plugin.data[STORAGE_NAME].linkTemplate as string;
-    const entry = this.plugin.library.getTemplateVariablesForCitekey(citekey);
+    const entry = await this.plugin.database.getContentByCitekey(citekey);
+    if (!entry) {
+      if (isDev) this.logger.error("找不到文献数据");
+      this.plugin.noticer.error(this.plugin.i18n.getLiteratureFailed);
+      return null;
+    }
     const shortAuthor = entry.author ? this.generateShortAuthor(entry.author, 2) : "";
     return generateFromTemplate(linkTemplate, {
       index,

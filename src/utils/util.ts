@@ -1,17 +1,7 @@
 import SiYuanPluginCitation from "../index";
-import {
-  Library,
-  loadEntries,
-  Entry,
-  EntryData,
-  EntryBibLaTeXAdapter,
-  EntryCSLAdapter,
-  IIndexable
-} from "../library";
 import { 
   dataDir,
   isDev,
-  REF_DIR_PATH,
   STORAGE_NAME
 } from "./constants";
 import { createLogger } from "./simple-logger";
@@ -28,6 +18,7 @@ export const DISALLOWED_FILENAME_CHARACTERS_RE = /[*"\\/<>:|?]/g;
 export async function fileSearch(dirPath: string): Promise<string[]> {
   const absPluginPath = path.resolve(dataDir, "./storage/petal/siyuan-plugin-citation");
   const absDirPath = path.join(absPluginPath, dirPath);
+  // TODO 如果没有这个文件夹就新建
   const files = await fsReadDir(absDirPath);
   const promises = files.map(file => {
     return fsStat(path.join(absDirPath, file));
@@ -78,73 +69,6 @@ function fsStat(path: string) {
       if (err) reject(err);
       resolve(stat);
     });
-  });
-}
-
-export async function loadLibrary(plugin: SiYuanPluginCitation): Promise<Library> {
-  const logger = createLogger("load library");
-  const noticer = createNoticer();
-  const files = await fileSearch(REF_DIR_PATH);
-  const fs = window.require("fs");
-  const fileContents = files.map(filePath => {
-      return fs.readFileSync(filePath, "utf-8");
-  });
-  if (isDev) logger.info("本地文献文件检索，数量=>", fileContents.length);
-  plugin.library = null;
-  const promises = files.map(filePath => {
-      const sName = filePath.split(".");
-      const type = sName[sName.length - 1];
-      if (type == "json") {
-          return {
-              entries: loadEntries(
-                  fileContents[files.indexOf(filePath)],
-                  "csl-json"),
-              type: "csl-json"
-          };
-      } else if (type == "bib") {
-          return {
-              entries: loadEntries(
-                  fileContents[files.indexOf(filePath)],
-                  "biblatex"),
-              type: "biblatex"
-          };
-      }
-  });
-  return Promise.all(promises).then((res) => {
-      let adapter: new (data: EntryData) => Entry;
-      let idKey: string;
-
-      const entries: any[] = [];
-      res.forEach(fileEntries => {
-          entries.push(...fileEntries.entries.map((e) => {
-              switch (fileEntries.type) {
-                  case "biblatex":
-                    adapter = EntryBibLaTeXAdapter;
-                    idKey = "key";
-                    break;
-                  case "csl-json":
-                    adapter = EntryCSLAdapter;
-                    idKey = "id";
-                    break;
-                }
-              return [(e as IIndexable)[idKey], new adapter(e)];
-          }));
-      });
-      const library = new Library(
-          Object.fromEntries(
-              entries
-          ),
-      );
-      return library;
-  }).then(library => {
-    if (isDev) logger.info("成功载入文献库，数量=>", library.size);
-    noticer.info(plugin.i18n.loadLibrarySuccess.replace("${size}", library.size));
-    plugin.library = library;
-    return library;
-  }).catch((e) => {
-    if (isDev) logger.error("载入文献库失败，错误信息=>", e);
-    noticer.error(e);
-    return null;
   });
 }
 

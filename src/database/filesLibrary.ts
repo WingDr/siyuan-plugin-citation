@@ -9,8 +9,8 @@ export interface IIndexable {
   [key: string]: any;
 }
 
-const databaseTypes = ["csl-json", "biblatex"] as const;
-export type DatabaseType = typeof databaseTypes[number];
+const fileTypes = ["csl-json", "biblatex"] as const;
+export type LiteratureFileType = typeof fileTypes[number];
 
 export const TEMPLATE_VARIABLES = {
   citekey: "Unique citekey",
@@ -86,13 +86,13 @@ export class Library {
  */
 export function loadEntries(
   databaseRaw: string,
-  databaseType: DatabaseType,
+  fileType: LiteratureFileType,
 ): EntryData[] {
   let libraryArray: EntryData[];
 
-  if (databaseType == "csl-json") {
+  if (fileType == "csl-json") {
     libraryArray = JSON.parse(databaseRaw);
-  } else if (databaseType == "biblatex") {
+  } else if (fileType == "biblatex") {
     const options: BibTeXParser.ParserOptions = {
       errorHandler: (err) => {
         console.warn(
@@ -195,7 +195,7 @@ export abstract class Entry {
 
   public get note(): string {
     return this._note
-      ?.map((el) => el.replace(/(zotero:\/\/.+)/g, "[Link]($1)"))
+      ?.map((el) => el.replace(/\\herf\{(zotero:\/\/.+)\}/g, "[Link]($1)"))
       .join("\n\n");
   }
 
