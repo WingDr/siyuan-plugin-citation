@@ -348,7 +348,7 @@ export class ZoteroModal extends DataModal {
   }
 
   public getTotalCitekeys(): string[] {
-    return [];
+    return Object.keys(this.plugin.ck2idDict);
   }
 
   private getPort(type: ZoteroType): "23119" | "24119" {

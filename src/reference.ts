@@ -70,23 +70,32 @@ export class Reference {
     const literatureEnum = await this.getLiteratureEnum(fileId);
     const writeList:{content: string, blockId: string}[] = [];
     const cancelCiteList:{blockId: string}[] = [];
-    citedBlocks.forEach(block => {
+    const generatePromise = citedBlocks.map(async block => {
       const reg = /\(\((.*?)\)\)/g;
       let isModified = false;
       let isCited = false;
-      const newContent = block.content.replace(reg, (match, p1) => {
-        const key = p1.split(" ")[0];
-        const anchor = p1.split(" ")[1];
+      // 因为replace只能同步使用，所以先构建替换表
+      const matchRes = block.content.matchAll(reg);
+      const replaceList: {[key: string]: string} = {};
+      for (const match of matchRes) {
+        const key = match[1].split(" ")[0];
+        const anchor = match[1].slice(key.length + 1);
         const idx = literatureEnum.indexOf(key);
         if (idx != -1) {
           isCited = true;
-          const link = this.generateCiteLink(this.plugin.id2ckDict[key], idx);
-          if (!link) return match;
+          const link = await this.generateCiteLink(this.plugin.id2ckDict[key], idx);
+          console.log(link);
+          if (!link) continue;
           if (anchor != "'" + link + "'") {
             isModified = true;
           }
-          return `((${key} '`+ link +"'))";
+          replaceList[key] = `((${key} '`+ link +"'))";
         }
+        console.log(key, anchor);
+      }
+      const newContent = block.content.replace(reg, (match, p1) => {
+        const key = p1.split(" ")[0];
+        if (Object.keys(replaceList).indexOf(key) != -1) return replaceList[key];
         return match;
       });
       if (!isCited) {
@@ -101,6 +110,7 @@ export class Reference {
         });
       }
     });
+    await Promise.all(generatePromise);
     if (isDev) this.logger.info("取消引用列表 =>", cancelCiteList);
     if (isDev) this.logger.info("写入引用列表 =>", writeList);
     const update = writeList.map(witem => {
@@ -125,7 +135,7 @@ export class Reference {
     const data = res.data as any;
     const fileContent = data.kramdown as string;
     // 获取所有可以引用的citekey，用于筛选在文件中的引用
-    const citekeys = await this.plugin.database.getTotalCitekeys();
+    const citekeys = this.plugin.database.getTotalCitekeys();
     return citekeys.map(key => {
       return {
         citekey: key as string,

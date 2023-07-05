@@ -60,8 +60,8 @@ export class Database {
     return content;
   }
 
-  public async getTotalCitekeys() {
-    return await this.dataModal.getTotalCitekeys();
+  public getTotalCitekeys() {
+    return this.dataModal.getTotalCitekeys();
   }
 
   private async insertCiteLinkBySelection(citekey: string) {
