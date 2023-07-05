@@ -22,12 +22,15 @@ import {
 import { createLogger, ILogger } from "../utils/simple-logger";
 import { isDev, REF_DIR_PATH } from "../utils/constants";
 import { fileSearch, generateFileLinks } from "../utils/util";
+import { timingSafeEqual } from "crypto";
+import { runInThisContext } from "vm";
 
 export abstract class DataModal {
   public logger: ILogger;
   public plugin: SiYuanPluginCitation;
   public protyle: Protyle;
   public onSelection: (citekey: string) => void;
+  public abstract buildModal();
   public abstract getContentFromCitekey(citekey: string);
   public abstract showSearching(protyle:Protyle, onSelection: (citekey: string) => void);
   public abstract getTotalCitekeys(): string[];
@@ -43,6 +46,12 @@ export class FilesModal extends DataModal {
 
   constructor(plugin: SiYuanPluginCitation) {
     super();
+    this.plugin = plugin;
+    this.logger = createLogger("files modal");
+    if (isDev) this.logger.info("从本地文件载入文献库");
+  }
+
+  public async buildModal() {
     const options = {
       // isCaseSensitive: false,
       includeScore: true,
@@ -61,18 +70,17 @@ export class FilesModal extends DataModal {
         {name: "keystring", getFn: entry => entry.title + "\n" + entry.year + "\n" + entry.authorString}
       ]
     };
-    this.plugin = plugin;
-    this.logger = createLogger("files modal");
-    if (isDev) this.logger.info("从本地文件载入文献库");
-    this.loadLibrary().then(library => {
+    return this.loadLibrary().then(library => {
       if (library) {
         this.plugin.noticer.info(this.plugin.i18n.loadLibrarySuccess.replace("${size}", library.size));
         this.library = library;
         this.fuse = new Fuse(library.entryList, options);
+        if (isDev) this.logger.info("Build file modal successfully");
       } else {
         this.plugin.noticer.error(this.plugin.i18n.loadLibraryFailed);
         this.library = null;
         this.fuse = null;
+        if (isDev) this.logger.error("Build file modal failed");
       }
     });
   }
@@ -293,6 +301,10 @@ export class ZoteroModal extends DataModal {
     this.type = zoteroType;
     this.logger = createLogger(`zotero modal: ${zoteroType}`);
     this.jsonrpcUrl = `http://127.0.0.1:${this.getPort(this.type)}/better-bibtex/json-rpc`;
+  }
+
+  public async buildModal() {
+      if (isDev) this.logger.info(`Build ${this.type} modal successfully`);
   }
 
   /**

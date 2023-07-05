@@ -65,17 +65,21 @@ export default class SiYuanPluginCitation extends Plugin {
         if (isDev) this.logger.info("读取本地数据");
         await this.loadData(STORAGE_NAME);
         this.kernelApi = new KernelApi();
-        this.database = new Database(this);
-        this.database.buildDatabase(this.data[STORAGE_NAME].database as DatabaseType);
-        this.reference = new Reference(this);
-        this.interactionManager = new InteractionManager(this);
 
+        this.interactionManager = new InteractionManager(this);
         this.interactionManager.eventBusReaction();
         await this.interactionManager.customSettingTab().then(setting => {
             this.setting = setting;
         });
         await this.interactionManager.customCommand();
         this.protyleSlash.push(await this.interactionManager.customProtyleSlash());
+        return ;
+    }
+
+    async onLayoutReady() {
+        this.database = new Database(this);
+        await this.database.buildDatabase(this.data[STORAGE_NAME].database as DatabaseType);
+        this.reference = new Reference(this);
     }
 
     onunload() {

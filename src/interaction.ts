@@ -237,17 +237,13 @@ export class InteractionManager {
   }
 
   public eventBusReaction() {
-    // TODO 绑定eventBus的话this就跑飞了，看看要不要提issue
     this.plugin.eventBus.on("click-editortitleicon", this.customTitleIconMenu.bind(this));
-    this.plugin.eventBus.on("click-blockicon", this.customTitleIconMenu.bind(this));
     // this.plugin.eventBus.on("click-editorcontent", this.customTitleIconMenu);
   }
 
   private customTitleIconMenu(event: CustomEvent<any>) {
-    console.log(event);
-    console.log(this);
-    const label = this.plugin?.i18n.refreshCitation ?? "刷新引用";
-    const clickCallback = this.plugin?.reference.updateLiteratureLink ?? console.log;
+    const label = this.plugin.i18n.refreshCitation;
+    const clickCallback = this.plugin.reference.updateLiteratureLink.bind(this.plugin.reference);
     event.detail.menu.addItem({
       iconHTML: "",
       label: label,

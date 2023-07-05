@@ -46,7 +46,7 @@ export class Database {
         break;
       }
     }
-
+    await this.dataModal.buildModal();
     if (isDev) this.logger.info("载入引用");
     loadLocalRef(this.plugin);
   }
