@@ -4,6 +4,7 @@
 
 > 一个只实现了基础功能的引用插件，希望你的思源~~更像 obsidian ~~更加学术
 
+**使用0.0.1版本的用户，请将你的.bib和.json文件移动到`[工作空间]/data/storage/petal/siyuan-plugin-citation/references/`中，新版本已经更换了储存的位置**
 **目前已经支持集成 Zotero ，可以直接从 Zotero 或者 Juris-M 中获取文献了！**
 
 ## 功能
