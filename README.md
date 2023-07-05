@@ -2,7 +2,7 @@
 
 # Citation for SiYuan
 
-**The `Citation` plugin is now support Zotero integration, you can use Zotero or Juris-M directly as the literature library**
+**The `Citation` plugin is now support Zotero integration, you can use Zotero or Juris-M directly as the literature library!**
 
 ## Functions
 

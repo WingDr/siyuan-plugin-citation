@@ -14,11 +14,11 @@ export const defaultReferencePath = "/References";
 export const defaultNoteTemplate = `
 ---
 
-Title:\t{{title}}
+**Title**:\t{{title}}
 
-Author:\t{{authorString}}
+**Author**:\t{{authorString}}
 
-Year:\t{{year}}
+**Year**:\t{{year}}
 
 ---
 
@@ -33,5 +33,9 @@ Year:\t{{year}}
 # Files
 
 {{files}}
+
+# Note
+
+{{note}}
 `;
 export const defaultLinkTemplate = "({{shortAuthor}} {{year}})";

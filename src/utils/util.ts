@@ -5,7 +5,7 @@ import {
   STORAGE_NAME
 } from "./constants";
 import { createLogger } from "./simple-logger";
-import { createNoticer } from "./noticer";
+import { createNoticer, INoticer } from "./noticer";
 const fs = window.require("fs");
 const path = window.require("path");
 
@@ -15,11 +15,22 @@ export const DISALLOWED_FILENAME_CHARACTERS_RE = /[*"\\/<>:|?]/g;
  * Reading the given directory and 
  * search all the .json and .bib file
  */
-export async function fileSearch(dirPath: string): Promise<string[]> {
-  const absPluginPath = path.resolve(dataDir, "./storage/petal/siyuan-plugin-citation");
-  const absDirPath = path.join(absPluginPath, dirPath);
+export async function fileSearch(dirPath: string, noticer: INoticer): Promise<string[]> {
+  const absStoragePath = path.resolve(dataDir, "./storage/petal/siyuan-plugin-citation");
+  const absDirPath = path.join(absStoragePath, dirPath);
   // TODO 如果没有这个文件夹就新建
-  const files = await fsReadDir(absDirPath);
+  const files = await fsReadDir(absDirPath).catch((error: Error) => {
+    if (error.message.split(":")[0] === "ENOENT") {
+      //ENOENT错误说明没有文件夹，新建references文件夹
+      fs.mkdirSync(absDirPath);
+    } else {
+      // 如果是其它错误就报错
+      noticer.error(error.message);
+      return null;
+    }
+    return [];
+  });
+  if (!files) return null;
   const promises = files.map(file => {
     return fsStat(path.join(absDirPath, file));
   });
@@ -31,7 +42,7 @@ export async function fileSearch(dirPath: string): Promise<string[]> {
     const isFile = fileStat.isFile();
     const isDir = fileStat.isDirectory();
     if (isDir) {
-      return fileSearch(datas.files[datas.stats.indexOf(fileStat)]);
+      return fileSearch(datas.files[datas.stats.indexOf(fileStat)], noticer);
     }
     if (isFile) {
       const filePath = datas.files[datas.stats.indexOf(fileStat)];

@@ -213,7 +213,7 @@ export class FilesModal extends DataModal {
   private async loadLibrary(): Promise<Library> {
     const logger = createLogger("load library");
     const noticer = this.plugin.noticer;
-    const files = await fileSearch(REF_DIR_PATH);
+    const files = await fileSearch(REF_DIR_PATH, this.plugin.noticer);
     const fs = window.require("fs");
     const fileContents = files.map(filePath => {
         return fs.readFileSync(filePath, "utf-8");
