@@ -2,16 +2,15 @@
 
 # Citation for SiYuan
 
-> 一个只实现了基础功能的引用插件，希望你的思源~~更像obsidian~~更加学术
+> 一个只实现了基础功能的引用插件，希望你的思源~~更像 obsidian ~~更加学术
 
-**目前已经支持集成Zotero，可以直接从Zotero或者Juris-M中获取文献了！**
-
+**目前已经支持集成 Zotero ，可以直接从 Zotero 或者 Juris-M 中获取文献了！**
 
 ## 功能
 
 在你的笔记中添加文献引用，该引用指向在你指定的文件夹下生成的文献内容，如下图所示：
 
-![](./preview.png)
+![ ](./preview.png)
 
 ## 在使用前
 
@@ -33,22 +32,22 @@
 ## 目前有什么功能
 
 1. 添加引用：
-   
+
    - 斜杠菜单
 
 2. 刷新文献库（当你的`.bib`或者`.json`文件更新了）：
-   
+
    - 命令面板
 
-![](./assets/protyleslash.png)
+![ ](./assets/protyleslash.png)
 
-![](./assets/searchpanel.png)
+![ ](./assets/searchpanel.png)
 
-![](./assets/zoteroIntegration.png)
+![ ](./assets/zoteroIntegration.png)
 
 ## 怎么写模板
 
-- 语法使用的是markdown语法
+- 语法使用的是 Markdown 语法
 
 - 想要被变量替换的部分用`{{ }}`包裹，例如`{{title}}`
 
@@ -98,9 +97,9 @@
 
 - [x] Zotero 集成 `长期`
 
-- [ ] 导出支持LATEX `长期`
+- [ ] 导出支持 LATEX `长期`
 - [ ] 支持公式引用和自动编号 `长期`
-- [ ] 支持添加Remark、Lemma等LATEX定义块 `长期`
+- [ ] 支持添加 Remark, Lemma 等 LATEX 定义块 `长期`
 
 - [ ] 美化界面 `脑子要炸`
 
@@ -109,7 +108,7 @@
   - [ ] 更宽松的模板/路径格式限制 `多给我提issue`
   - [ ] 更好的 Template 处理 `好难写`
   - [ ] 命令面板中去掉无效功能 `等V姐更新`
-  - [ ] 支持citation link中使用index `等V姐更新`
+  - [ ] 支持 citation link 中使用 index `等V姐更新`
   - [ ] 适配移动端 `有没有大哥先试试`
 
 ## 感谢
@@ -126,8 +125,8 @@
 
 ## 赞助
 
-> 咱就放个收款码在这，其实大家随便白嫖下就好了，多提issue看到更多人用才是对我最大的鼓励
+> 咱就放个收款码在这，其实大家随便白嫖下就好了，多提 issue 看到更多人用才是对我最大的鼓励
 
-![](./assets/weixin.jpg)
+![ ](./assets/weixin.jpg)
 
-![](./assets/alipay.jpg)
+![ ](./assets/alipay.jpg)

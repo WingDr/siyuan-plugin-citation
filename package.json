@@ -1,7 +1,7 @@
 {
   "name": "siyuan-plugin-citation",
-  "version": "0.0.0",
-  "description": "This is a citation plugin for Siyuan (https://b3log.org/siyuan)",
+  "version": "0.0.3",
+  "description": "This is a citation plugin (https://github.com/WingDr/siyuan-plugin-citation) for Siyuan (https://b3log.org/siyuan)",
   "main": ".src/index.js",
   "scripts": {
     "lint": "eslint . --fix --cache",
