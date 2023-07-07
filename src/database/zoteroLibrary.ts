@@ -125,7 +125,6 @@ export class EntryZoteroAdapter extends Entry {
         }
       },
     );
-    console.log(this.issuedDate);
   }
 
   get id() {

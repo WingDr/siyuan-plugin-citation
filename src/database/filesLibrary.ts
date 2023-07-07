@@ -188,7 +188,7 @@ export abstract class Entry {
   public get year(): number {
     return this._year
       ? parseInt(this._year)
-      : this.issuedDate?.getUTCFullYear();
+      : this.issuedDate?.getFullYear();
   }
 
   protected _note?: string[];

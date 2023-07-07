@@ -72,7 +72,9 @@ export default class SiYuanPluginCitation extends Plugin {
             this.setting = setting;
         });
         await this.interactionManager.customCommand();
-        this.protyleSlash.push(await this.interactionManager.customProtyleSlash());
+        (await this.interactionManager.customProtyleSlash()).forEach(slash => {
+            this.protyleSlash.push(slash);
+        });
         return ;
     }
 

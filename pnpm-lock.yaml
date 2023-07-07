@@ -59,8 +59,8 @@ devDependencies:
     specifier: ^12.6.0
     version: 12.6.0(sass@1.63.5)(webpack@5.87.0)
   siyuan:
-    specifier: 0.7.5
-    version: 0.7.5
+    specifier: ^0.7.6
+    version: 0.7.6
   ts-node:
     specifier: ^10.9.1
     version: 10.9.1(@types/node@20.3.1)(typescript@4.7.4)
@@ -2339,8 +2339,8 @@ packages:
     resolution: {integrity: sha512-wnD2ZE+l+SPC/uoS0vXeE9L1+0wuaMqKlfz9AMUo38JsyLSBWSFcHR1Rri62LZc12vLr1gb3jl7iwQhgwpAbGQ==}
     dev: false
 
-  /siyuan@0.7.5:
-    resolution: {integrity: sha512-Ea/Waisy1KSo9uOGJAFKyS9BB8fYacRKBB5z9HRp9wnAlAS674WKf/5y/RY3/fFJaqkCvlFTbb6Kr6xl8HXdQw==}
+  /siyuan@0.7.6:
+    resolution: {integrity: sha512-1UljRK3kOgTb7+gXeJiZLOX9SeR6Xbw9lshbotQIli5ycv7oCDFJMnLyUSLLOFho5Ea3hnH5xK34qACMZCv8wQ==}
     dev: true
 
   /slash@3.0.0:

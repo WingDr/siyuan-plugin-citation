@@ -166,15 +166,33 @@ export class Reference {
     });
   }
 
-  public async insertCiteLink(protyle, content: string) {
+  public async insertContent(protyle, content: string) {
     const blockId = protyle.protyle.breadcrumb.id;
     const rootId = protyle.protyle.block.rootID;
     console.log(blockId, rootId);
-    protyle.insert(content, false, true);
+    await protyle.insert(content, false, true);
     // TODO 等待前后端联动API更新再更新文档标号
+    // if (isDev) this.getCursorOffsetInBlock(blockId);
     // await this.plugin.kernelApi.setBlockCited(blockId, true);
     // await this.plugin.reference.updateLiteratureLink(rootId);
   }
+
+  // private getCursorOffsetInBlock(blockId: string) {
+  //   const selection = window.getSelection();
+  //   const range = selection.getRangeAt(0);
+  //   const refText = range.commonAncestorContainer.textContent;
+  //   const refRange = document.createRange();
+  //   refRange.selectNode(range.commonAncestorContainer);
+  //   const block = document.querySelector(`div[data-node-id="${blockId}"]`);
+  //   let offset = 0;
+  //   const refReg = new RegExp(refText, "g")
+  //   const matchRes = block.textContent.matchAll(refReg)
+  //   console.log(block)
+  //   for (const match of matchRes) {
+  //     console.log(match);
+  //     console.log(refRange.isPointInRange(block.firstChild, 200))
+  //   }
+  // }
 
   private generateShortAuthor(author: Author[], limit: number): string {
     let shortAuthor = "";

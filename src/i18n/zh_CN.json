@@ -8,6 +8,7 @@
   "removedData": "数据已删除",
   "prefix": "Citation: ",
   "addCitation": "插入文献引用",
+  "addNotes": "插入文献笔记",
   "refreshLibrary": "重新载入文献库",
   "refreshCitation": "刷新引用",
   "loadLibrarySuccess": "文献库成功导入${size}个数据",

@@ -139,17 +139,6 @@ export class InteractionManager {
                 + noteTempTexarea.value.substring(end);
         noteTempTexarea.setSelectionRange(start + indent.length, start
                 + selected.length);
-      } else if (ev.key === "Enter") {
-        console.log(ev);
-        ev.preventDefault();
-        const indent = "\n";
-        const start = noteTempTexarea.selectionStart;
-        const end = noteTempTexarea.selectionEnd;
-        noteTempTexarea.value = noteTempTexarea.value.substring(0, start) + indent
-                + noteTempTexarea.value.substring(end);
-        noteTempTexarea.setSelectionRange(start + indent.length, start
-                + indent.length);
-        return false;
       }
     });
     this.setting.addItem({
@@ -200,7 +189,7 @@ export class InteractionManager {
   }
 
   public async customProtyleSlash() {
-    return {
+    return [{
       filter: [this.plugin.i18n.addCitation, "插入文献引用", "add an citation", "charuwenxianyinyong"],
       html: `<div class = "b3-list-item__first">
         <svg class="b3-list-item__graphic">
@@ -222,7 +211,21 @@ export class InteractionManager {
           return this.plugin.database.insertCiteLink(protyle);
         }
       }
-    };
+    },
+    {
+      filter: [this.plugin.i18n.addNotes, "插入文献笔记", "add notes of literature", "插入文献笔记"],
+      html: `<div class = "b3-list-item__first">
+        <svg class="b3-list-item__graphic">
+          <use xlink:href="#iconRef"></use>
+        </svg>
+        <span class="b3-list-item__text">${this.plugin.i18n.addNotes}</span>
+      </div>`,
+      id: "add-literature-notes",
+      callback: async (protyle: Protyle) => {
+        if (isDev) this.logger.info("Slash触发：add literature citation", protyle);
+        return this.plugin.database.insertNotes(protyle);
+      }
+    }];
   }
 
   public async customCommand() {

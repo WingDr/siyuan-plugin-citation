@@ -8,6 +8,7 @@
   "removedData": "Data deleted",
   "prefix": "Ciation: ",
   "addCitation": "Add an citation",
+  "addNotes": "Add notes of literature",
   "refreshLibrary": "Refresh the citation library",
   "refreshCitation": "Refresh citation links",
   "loadLibrarySuccess": "Successfully loaded library with ${size} entries.",

@@ -55,6 +55,10 @@ export class Database {
     this.dataModal.showSearching(protyle, this.insertCiteLinkBySelection);
   }
 
+  public insertNotes(protyle:Protyle) {
+    this.dataModal.showSearching(protyle, this.insertCollectedNotesBySelection);
+  }
+
   public async getContentByCitekey(citekey: string) {
     const content = await this.dataModal.getContentFromCitekey(citekey);
     return content;
@@ -79,7 +83,11 @@ export class Database {
       } else {
         link = await this.plugin.reference.generateCiteLink(citekey, idx);
       }
-      this.plugin.reference.insertCiteLink(this.protyle, this.plugin.interactionManager.generateCiteRef(citeId, link));
+      this.plugin.reference.insertContent(this.protyle, this.plugin.interactionManager.generateCiteRef(citeId, link));
     }
+  }
+
+  private async insertCollectedNotesBySelection(citekey: string) {
+    this.plugin.reference.insertContent(this.protyle, await this.plugin.database.dataModal.getCollectedNotesFromCitekey(citekey));
   }
 }

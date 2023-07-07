@@ -22,8 +22,6 @@ import {
 import { createLogger, ILogger } from "../utils/simple-logger";
 import { isDev, REF_DIR_PATH } from "../utils/constants";
 import { fileSearch, generateFileLinks } from "../utils/util";
-import { timingSafeEqual } from "crypto";
-import { runInThisContext } from "vm";
 
 export abstract class DataModal {
   public logger: ILogger;
@@ -32,6 +30,7 @@ export abstract class DataModal {
   public onSelection: (citekey: string) => void;
   public abstract buildModal();
   public abstract getContentFromCitekey(citekey: string);
+  public abstract getCollectedNotesFromCitekey(citekey: string);
   public abstract showSearching(protyle:Protyle, onSelection: (citekey: string) => void);
   public abstract getTotalCitekeys(): string[];
 }
@@ -124,6 +123,11 @@ export class FilesModal extends DataModal {
     const entry = this.library.getTemplateVariablesForCitekey(citekey);
     if (entry.files) entry.files = generateFileLinks(entry.files);
     return entry;
+  }
+
+  public getCollectedNotesFromCitekey(citekey: string) {
+    const entry = this.library.getTemplateVariablesForCitekey(citekey);
+    return entry.note;
   }
 
   public getTotalCitekeys(): string[] {
@@ -288,7 +292,7 @@ const defaultHeaders = {
   "Content-Type": "application/json",
   "Accept": "application/json"
 };
-const translator = "36a3b0b5-bad0-4a04-b79b-441c7cef77db";
+const contentTranslator = "36a3b0b5-bad0-4a04-b79b-441c7cef77db";
 
 
 export class ZoteroModal extends DataModal {
@@ -317,7 +321,7 @@ export class ZoteroModal extends DataModal {
       if (isDev) this.logger.info(`${this.type}已运行`);
       const res = await axios({
         method: "get",
-        url: `http://127.0.0.1:${this.getPort(this.type)}/better-bibtex/cayw?format=translate&translator=${translator}&exportNotes=true`,
+        url: `http://127.0.0.1:${this.getPort(this.type)}/better-bibtex/cayw?format=translate&translator=${contentTranslator}&exportNotes=true`,
         headers: defaultHeaders
       });
       if (isDev) this.logger.info(`从${this.type}接收到数据 =>`, res.data);
@@ -337,7 +341,7 @@ export class ZoteroModal extends DataModal {
       data: JSON.stringify({
         jsonrpc: "2.0",
         method: "item.export",
-        params: [[citekey], translator]
+        params: [[citekey], contentTranslator]
       })
     });
     if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, JSON.parse(res.data.result[2]));
@@ -345,6 +349,21 @@ export class ZoteroModal extends DataModal {
     const entry = getTemplateVariablesForZoteroEntry(zoteroEntry);
     if (entry.files) entry.files = entry.files.join("\n");
     return entry;
+  }
+
+  public async getCollectedNotesFromCitekey(citekey: string) {
+    const res = await axios({
+      method: "post",
+      url: this.jsonrpcUrl,
+      headers: defaultHeaders,
+      data: JSON.stringify({
+        jsonrpc: "2.0",
+        method: "item.notes",
+        params: [[citekey]]
+      })
+    });
+    if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, res.data.result[citekey]);
+    return res.data.result[citekey];
   }
 
   public getTotalCitekeys(): string[] {
