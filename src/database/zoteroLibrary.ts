@@ -197,8 +197,9 @@ export class EntryZoteroAdapter extends Entry {
 
   get note(): string {
     return this._note?.map(singleNote => {
-      return singleNote.note;
-    }).join("");
+      console.log(singleNote);
+      return singleNote.note.replace(/\\(.?)/g, (m, p1) => p1);
+    }).join("\n\n");
   }
 }
 

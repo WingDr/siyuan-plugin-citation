@@ -73,7 +73,6 @@ export class Reference {
     const generatePromise = citedBlocks.map(async block => {
       const reg = /\(\((.*?)\)\)/g;
       let isModified = false;
-      let isCited = false;
       // 因为replace只能同步使用，所以先构建替换表
       const matchRes = block.content.matchAll(reg);
       const replaceList: {[key: string]: string} = {};
@@ -82,27 +81,25 @@ export class Reference {
         const anchor = match[1].slice(key.length + 1);
         const idx = literatureEnum.indexOf(key);
         if (idx != -1) {
-          isCited = true;
-          const link = await this.generateCiteLink(this.plugin.id2ckDict[key], idx);
-          console.log(link);
+          let link = "";
+          if (this.plugin.data[STORAGE_NAME].customCiteText) {
+            link = await this.generateOnlyCiteLink(this.plugin.id2ckDict[key], idx);
+          } else {
+            link = await this.generateCiteLink(this.plugin.id2ckDict[key], idx);
+          }
+          if (isDev) this.logger.info("更新文献引用 =>", link);
           if (!link) continue;
           if (anchor != "'" + link + "'") {
             isModified = true;
           }
           replaceList[key] = `((${key} '`+ link +"'))";
         }
-        console.log(key, anchor);
       }
       const newContent = block.content.replace(reg, (match, p1) => {
         const key = p1.split(" ")[0];
         if (Object.keys(replaceList).indexOf(key) != -1) return replaceList[key];
         return match;
       });
-      if (!isCited) {
-        cancelCiteList.push({
-          blockId: block.id as string
-        });
-      }
       if (isModified) {
         writeList.push({
           content: newContent,
@@ -116,10 +113,7 @@ export class Reference {
     const update = writeList.map(witem => {
       return this.plugin.kernelApi.updateCitedBlock(witem.blockId, witem.content);
     });
-    const cancel = cancelCiteList.map(citem => {
-      return this.plugin.kernelApi.setBlockCited(citem.blockId, false);
-    });
-    return Promise.all(update).then(() => Promise.all(cancel));
+    return Promise.all(update);
   }
 
   public async checkRefDirExist() {
@@ -162,19 +156,61 @@ export class Reference {
     return generateFromTemplate(linkTemplate, {
       index,
       shortAuthor,
+      citeFileID: this.plugin.ck2idDict[citekey],
       ...entry
     });
+  }
+
+  public async generateOnlyCiteLink(citekey: string, index: number) {
+    const linkTemplate = this.plugin.data[STORAGE_NAME].linkTemplate as string;
+    const linkReg = /\(\((.*?)\'(.*?)\'\)\)/g;
+    const matchRes = linkTemplate.matchAll(linkReg);
+    console.log(matchRes);
+    let modifiedTemplate = "";
+    for (const match of matchRes) {
+      if (match[1].indexOf("{{citeFileID}}") != -1) {
+        modifiedTemplate = match[2];
+      }
+    }
+    if (isDev) this.logger.info("仅包含链接的模板 =>", modifiedTemplate);
+    const entry = await this.plugin.database.getContentByCitekey(citekey);
+    if (!entry) {
+      if (isDev) this.logger.error("找不到文献数据");
+      this.plugin.noticer.error(this.plugin.i18n.getLiteratureFailed);
+      return null;
+    }
+    const shortAuthor = entry.author ? this.generateShortAuthor(entry.author, 2) : "";
+    return generateFromTemplate(modifiedTemplate, {
+      index,
+      shortAuthor,
+      citeFileID: this.plugin.ck2idDict[citekey],
+      ...entry
+    });
+  }
+
+  public generateCiteRef(citeFileId: string, link: string) {
+    if (this.plugin.data[STORAGE_NAME].customCiteText) {
+      return link;
+    } else {
+      return `((${citeFileId} '${link}'))`;
+    }
   }
 
   public async insertContent(protyle, content: string) {
     const blockId = protyle.protyle.breadcrumb.id;
     const rootId = protyle.protyle.block.rootID;
-    console.log(blockId, rootId);
+    if (isDev) this.logger.info("Protyle块ID =>", blockId);
+    if (isDev) this.logger.info("Protyle文档ID =>", rootId);
     await protyle.insert(content, false, true);
     // TODO 等待前后端联动API更新再更新文档标号
     // if (isDev) this.getCursorOffsetInBlock(blockId);
     // await this.plugin.kernelApi.setBlockCited(blockId, true);
     // await this.plugin.reference.updateLiteratureLink(rootId);
+  }
+
+  public async copyContent(content: string) {
+    navigator.clipboard.writeText(content);
+    this.plugin.noticer.info(this.plugin.i18n.copyCiteLinkSuccess);
   }
 
   // private getCursorOffsetInBlock(blockId: string) {

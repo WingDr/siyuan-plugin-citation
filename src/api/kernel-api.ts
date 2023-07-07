@@ -207,7 +207,7 @@ class KernelApi extends BaseApi {
 
   public async getCitedBlocks(fileId: string) {
     const params = {
-      "stmt": `SELECT * FROM blocks WHERE root_id like '${fileId}' and markdown like '%((%))%'`
+      "stmt": `SELECT * FROM blocks WHERE root_id like '${fileId}' and type like 'p' and markdown like '%((%))%'`
     };
     return await this.siyuanRequest("/api/query/sql", params);
   }

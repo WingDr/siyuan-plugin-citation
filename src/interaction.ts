@@ -42,7 +42,8 @@ export class InteractionManager {
                 referencePath: referencePathInput.value,
                 database: databaseSelector.value,
                 noteTemplate: noteTempTexarea.value,
-                linkTemplate: linkTempInput.value
+                linkTemplate: linkTempInput.value,
+                customCiteText: CustomCiteTextSwitch.checked
             };
             let refresh = false;
             // 改变了笔记本和数据库类型之后都要刷新数据库
@@ -147,6 +148,18 @@ export class InteractionManager {
       actionElement: noteTempTexarea,
     });
 
+    // 切换能否完全自定义引用文本的开关
+    const CustomCiteTextSwitch = document.createElement("input");
+    CustomCiteTextSwitch.className = "b3-switch fn__flex-center";
+    CustomCiteTextSwitch.type = "checkbox";
+    // 默认关闭
+    CustomCiteTextSwitch.checked = this.plugin.data[STORAGE_NAME].customCiteText ?? false;
+    this.setting.addItem({
+      title: this.plugin.i18n.settingTab.CustomCiteTextSwitchTitle,
+      description: this.plugin.i18n.settingTab.CustomCiteTextSwitchDescription,
+      actionElement: CustomCiteTextSwitch,
+  });
+
     //edit literature link
     const linkTempInput = document.createElement("input");
     linkTempInput.className = "b3-text-field fn__size200";
@@ -190,7 +203,7 @@ export class InteractionManager {
 
   public async customProtyleSlash() {
     return [{
-      filter: [this.plugin.i18n.addCitation, "插入文献引用", "add an citation", "charuwenxianyinyong"],
+      filter: [this.plugin.i18n.addCitation, "插入文献引用", "addcitation", "charuwenxianyinyong"],
       html: `<div class = "b3-list-item__first">
         <svg class="b3-list-item__graphic">
           <use xlink:href="#iconRef"></use>
@@ -237,6 +250,14 @@ export class InteractionManager {
         return this.plugin.database.buildDatabase(this.plugin.data[STORAGE_NAME].database as DatabaseType);
       }
     });
+    this.plugin.addCommand({
+      langKey: "copyCiteLink",
+      hotkey: "",
+      callback: () => {
+        this.logger.info("指令触发：copyCiteLink");
+        return this.plugin.database.copyCiteLink();
+      }
+    });
   }
 
   public eventBusReaction() {
@@ -252,9 +273,5 @@ export class InteractionManager {
       label: label,
       click: () => {clickCallback(event.detail.data.id);}
     });
-  }
-
-  public generateCiteRef(citeFileId: string, link: string) {
-    return `<span data-type="block-ref" data-subtype="d" data-id="${citeFileId}">${link}</span>`;
   }
 }

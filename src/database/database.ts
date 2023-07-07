@@ -59,6 +59,10 @@ export class Database {
     this.dataModal.showSearching(protyle, this.insertCollectedNotesBySelection);
   }
 
+  public copyCiteLink() {
+    this.dataModal.showSearching(null, this.copyCiteLinkBySelection);
+  }
+
   public async getContentByCitekey(citekey: string) {
     const content = await this.dataModal.getContentFromCitekey(citekey);
     return content;
@@ -83,11 +87,23 @@ export class Database {
       } else {
         link = await this.plugin.reference.generateCiteLink(citekey, idx);
       }
-      this.plugin.reference.insertContent(this.protyle, this.plugin.interactionManager.generateCiteRef(citeId, link));
+      this.plugin.reference.insertContent(this.protyle, this.plugin.reference.generateCiteRef(citeId, link));
     }
   }
 
   private async insertCollectedNotesBySelection(citekey: string) {
     this.plugin.reference.insertContent(this.protyle, await this.plugin.database.dataModal.getCollectedNotesFromCitekey(citekey));
+  }
+
+  private async copyCiteLinkBySelection(citekey: string) {
+    await this.plugin.reference.checkRefDirExist();
+    if (this.plugin.isRefPathExist) {
+      const existNotes = Object.keys(this.plugin.ck2idDict);
+      const idx = existNotes.indexOf(citekey);
+      await this.plugin.reference.updateLiteratureNote(citekey);
+      const citeId = this.plugin.ck2idDict[citekey];
+      const link = await this.plugin.reference.generateCiteLink(citekey, idx);
+      this.plugin.reference.copyContent(this.plugin.reference.generateCiteRef(citeId, link));
+    }
   }
 }

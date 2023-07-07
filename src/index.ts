@@ -55,7 +55,8 @@ export default class SiYuanPluginCitation extends Plugin {
             referencePath: defaultReferencePath,
             database: databaseType[0],
             noteTemplate: defaultNoteTemplate,
-            linkTemplate: defaultLinkTemplate
+            linkTemplate: defaultLinkTemplate,
+            CustomCiteText: false
         };
 
         const frontEnd = getFrontend();

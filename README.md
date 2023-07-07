@@ -3,6 +3,7 @@
 # Citation for SiYuan
 
 **If you are using version 0.0.1, please move your .bib and .json files to `[workspace]/data/storage/petal/siyuan-plugin-citation/references/`, since the new version changes the storage directory**
+
 **The `Citation` plugin is now support Zotero integration, you can use Zotero or Juris-M directly as the literature library!**
 
 ## Functions

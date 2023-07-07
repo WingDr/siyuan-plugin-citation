@@ -17,6 +17,8 @@
   "loadRefFailed": "文献引用导入失败",
   "zoteroNotRunning": "${type}没有在运行",
   "getLiteratureFailed": "获得引用文献失败",
+  "copyCiteLink": "复制文献引用",
+  "copyCiteLinkSuccess": "引用链接已在剪贴板",
   "settingTab": {
     "notebookSelectorTitle": "笔记本",
     "notebookSelectorDescription": "选择文献库放置的笔记本",
@@ -29,6 +31,8 @@
     "reloadBtnText": "重载",
     "noteTempTexareaTitle": "文献内容模板",
     "noteTempTexareaDescription": "设置在文献库中储存的文献文件的内容模板",
+    "CustomCiteTextSwitchTitle": "自定义引用",
+    "CustomCiteTextSwitchDescription": "完全自定义引用的格式，引用链接模板生成的内容不再为锚文本，而是将直接插入文档<br>⚠️<b>注意：开关开启后请确保你的模板中包含\"...(( {{citeFileID}} '...'))...\"否则生成的链接将无法引用</b><br>查找引用链接的正则表达式为/\\(\\((.*?)\\'(.*?)\\'\\)\\)/g'，请据此把握好您的模板格式",
     "linkTempInputTitle": "引用模板",
     "linkTempInputDescription": "设置文件中添加的引用链接模板",
     "deleteDataBtnTitle": "删除数据",
