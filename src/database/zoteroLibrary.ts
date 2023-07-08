@@ -1,5 +1,6 @@
 import moment from "moment";
 import { Entry, Author, IIndexable } from "./filesLibrary";
+import { htmlNotesProcess } from "../utils/notes";
 
 interface Creator {
   firstName: string,
@@ -197,8 +198,7 @@ export class EntryZoteroAdapter extends Entry {
 
   get note(): string {
     return this._note?.map(singleNote => {
-      console.log(singleNote);
-      return singleNote.note.replace(/\\(.?)/g, (m, p1) => p1);
+      return htmlNotesProcess(singleNote.note.replace(/\\(.?)/g, (m, p1) => p1));
     }).join("\n\n");
   }
 }

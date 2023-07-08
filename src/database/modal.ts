@@ -122,6 +122,7 @@ export class FilesModal extends DataModal {
   public getContentFromCitekey (citekey: string) {
     const entry = this.library.getTemplateVariablesForCitekey(citekey);
     if (entry.files) entry.files = generateFileLinks(entry.files);
+    if (isDev) this.logger.info("文献内容 =>", entry);
     return entry;
   }
 
@@ -348,6 +349,7 @@ export class ZoteroModal extends DataModal {
     const zoteroEntry = new EntryZoteroAdapter(JSON.parse(res.data.result[2]).items[0] as EntryDataZotero);
     const entry = getTemplateVariablesForZoteroEntry(zoteroEntry);
     if (entry.files) entry.files = entry.files.join("\n");
+    if (isDev) this.logger.info("文献内容 =>", entry);
     return entry;
   }
 
