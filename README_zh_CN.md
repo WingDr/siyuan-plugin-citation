@@ -107,7 +107,7 @@
 - {{publisher}}：出版商
 - {{publisherPlace}}：出版商所在地
 - {{title}}：标题
-- {{titleShort}}：简写标题，很多文献不存在间歇标题
+- {{titleShort}}：简写标题，很多文献不存在简写标题
 - {{URL}}：文献的访问网址
 - {{year}}：文献的发表年份
 - {{files}}：文献的附件
