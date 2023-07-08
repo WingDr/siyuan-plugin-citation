@@ -1,8 +1,7 @@
 const blockLabels = [
   "h1", "h2", "h3", "h4", "h5", "h6",
   "blockquote",
-  "table", "ol", "ul",
-  "p",
+  "table", "ol", "ul"
 ];
 
 const requireEnterLabels = [
@@ -33,7 +32,6 @@ function removeWrapDiv(content: string): string {
   }
 }
 
-
 function processBlocks(blockList: htmlBlock[], labelIndex: number) {
   if (labelIndex == blockLabels.length) {
     return blockList.filter(block => {
@@ -63,7 +61,6 @@ function processBlocks(blockList: htmlBlock[], labelIndex: number) {
       newList.push(...blocks);
     }
   });
-  console.log(newList, reg);
   return processBlocks(newList, labelIndex + 1);
 }
 

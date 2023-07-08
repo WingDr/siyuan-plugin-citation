@@ -237,16 +237,16 @@ export class Reference {
     }
     for (let i = 0; i < limit && i < author.length; i++) {
       if (i == 0) {
-        shortAuthor += author[i].family;
+        shortAuthor += author[i].family ?? "";
       } else if (i == limit - 1) {
-        shortAuthor += " and " + author[i].family;
+        shortAuthor += author[i].family ? " and " + author[i].family : "";
         if (limit < author.length) {
-          shortAuthor +=  " et al.";
+          shortAuthor +=  shortAuthor.length ? " et al." : "";
         }
       } else if (author.length < limit && i == author.length - 1) {
-        shortAuthor += " and " + author[i].family;
+        shortAuthor += author[i].family ? " and " + author[i].family : "";
       } else {
-        shortAuthor += ", " + author[i].family;
+        shortAuthor += author[i].family ? ", " + author[i].family : "";
       }
     }
     return shortAuthor;

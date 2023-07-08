@@ -177,6 +177,7 @@ export class EntryZoteroAdapter extends Entry {
     if (this.issued) {
       switch (this.issued.length) {
         case 4: return moment(this.issued, "YYYY").toDate();
+        case 6: return moment(this.issued, "M/YYYY").toDate();
         case 7: return moment(this.issued, "MM/YYYY").toDate();
         case 10: return moment(this.issued, "YYYY-MM-DD").toDate();
         default: return null;
