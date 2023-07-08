@@ -32,7 +32,7 @@ export class Reference {
     const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
     const refPath = this.plugin.data[STORAGE_NAME].referencePath as string;
     const noteTemplate = this.plugin.data[STORAGE_NAME].noteTemplate as string;
-    const res = await this.plugin.kernelApi.searchFileInSpecificPath(notebookId, refPath + `/${citekey}`);
+    const res = await this.plugin.kernelApi.searchFileWithName(notebookId, refPath, citekey);
     const data = res.data as any[];
     const entry = await this.plugin.database.getContentByCitekey(citekey);
     if (isDev) this.logger.info("从database中获得文献内容 =>", entry);
@@ -48,9 +48,11 @@ export class Reference {
       return await this.plugin.kernelApi.updateBlockContent(literatureId, literatureNote);
     } else {
       //文件不存在就新建文件
-      return await this.plugin.kernelApi.createDocWithMd(notebookId, refPath + `/${citekey}`, literatureNote).then(res => {
-        // 新建文件之后也要更新对应字典
+      return await this.plugin.kernelApi.createDocWithMd(notebookId, refPath + `/${citekey}`, literatureNote).then(async res => {
         const id  = String(res.data);
+        // 新建文件之后要设定命名
+        await this.plugin.kernelApi.setNameOfBlock(id, citekey);
+        // 新建文件之后也要更新对应字典
         this.plugin.ck2idDict[citekey] = id;
         this.plugin.id2ckDict[id] = citekey;
       });

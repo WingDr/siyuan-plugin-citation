@@ -4,6 +4,8 @@
 
 > A citation plugin that implements basic functionality, hoping to make your SiYuan more academically oriented.
 
+**In version 0.05, the indexing method of documents in the literature library has been changed from document titles to document names. After updating, the plugin will automatically update the names of unnamed literature note documents during the first startup. Please restart SiYuan afterwards to ensure that the literature notes count in the top right corner matches the number of documents in the library. When a document is created, its title will be set as the literature's citekey, and it can be changed later as desired. However, please do not change the document name in the document properties.**
+
 **In version 0.04, a switch for "Customize Citation Link" has been added to the settings tab. If you are not an experienced user familiar with regular expression searching and SiYuan reference logic, please do not enable it.**
 
 **In SiYuan version 2.9.4, you can use `Shift/Ctrl+Enter` to create line breaks in the "Literature Note Template" in the settings panel.**
@@ -23,7 +25,7 @@ Add citations to your notes, which refer to literature note generated in a speci
 1. **Notebook**: Refers to a notebook in the SiYuan note document tree. The library can only be placed in one of the open notebooks. If you switch to another notebook for the library, the previously selected notebook's library will become invalid.
 2. **Database**: The original data source of the literature, currently supports three types: data files (BibTeX and CSL-JSON), Zotero, and Juris-M. The data files are reimported every time the software is launched, but if the files themselves change during use, you need to **"Reload the Database"** (through the settings panel or command) or **"Restart the SiYuan software"** for the changes to take effect.
 3. **Library**: The location where the inserted citation links point to the literature note. It is essentially a *document located at a specific path*. Its sub-documents are all literature note that has been referenced. The content of this document itself will not be modified, but it will be updated and refreshed when citations are inserted.
-4. **Literature Note**: A document generated based on the original data of the literature and the "Literature Note Template" filled in the settings panel. The *document title is the citekey of the literature*. Currently, this document is refreshed every time the corresponding literature is referenced. ***Please do not include personal content in this document***. There are plans to support user-customized area in future versions.
+4. **Literature Note**: A document generated based on the original data of the literature and the "Literature Note Template" filled in the settings panel. *The title and name of a newly created document are set as the literature's citekey.* Currently, the document is refreshed every time the corresponding literature is cited. *Please do not place personal content in the document and do not modify the document's name in the document properties. However, you can freely modify the title.*  There are plans to support user-customized area in future versions.
 5. **Citation Link**: The reference link inserted in the document (or copied to the clipboard), which points to the corresponding literature note in the library. The anchor text of the link is generated based on the literature's original data and the "Citation Link Template" filled in the settings panel.
 
 ## Preparation before Use
@@ -56,13 +58,13 @@ Add citations to your notes, which refer to literature note generated in a speci
 ## Current Features
 
 - Slash menu:
-  - Insert Citation: Open the literature search panel, select a literature, and insert its [citation link](#glossary) at the cursor position, updating the library.
+  - Add Citation: Open the literature search panel, select a literature, and insert its [citation link](#glossary) at the cursor position, updating the library.
 
-    You can access this option in the slash menu by typing "插入文献引用," "insertcitation," or "charuwenxianyinyong."
+    You can access this option in the slash menu by typing "插入文献引用," "addcitation," or "charuwenxianyinyong."
 
-  - Insert Notes of Literature: Open the literature search panel, select a literature, and insert its note at the cursor position (this operation does not update the library). This is equivalent to copying and inserting the note from Zotero/Juris-M into the current cursor position.
+  - Add Notes of Literature: Open the literature search panel, select a literature, and insert its note at the cursor position (this operation does not update the library). This is equivalent to copying and inserting the note from Zotero/Juris-M into the current cursor position.
 
-    You can access this option in the slash menu by typing "插入文献笔记," "insertnotesofliterature," or "charuwenxianbiji."
+    You can access this option in the slash menu by typing "插入文献笔记," "addnotesofliterature," or "charuwenxianbiji."
 
 - Commands (can be searched and executed directly in the `Plugin Button - Command Panel` or set shortcuts in `Settings - Shortcuts - Plugin - Citation for SiYuan`):
   - Reload the Database: Reload the [database](#glossary) and reindex the [library](#glossary) based on the source of the literature. This command also updates the library.
@@ -154,9 +156,15 @@ Please check if the [notebook](#configure-the-plugin) option in the settings pan
 
 Please check if the [library](#glossary) document exists. To prevent users from unintentionally disrupting their document hierarchy, the plugin does not automatically create a document in the document tree. When the library document does not exist, the plugin's functionality cannot be used.
 
+After creating the document, you need to [reload the database](#current-features). Although it is not necessary, it is **highly recommended restarting the SiYuan** to ensure the effectiveness of setting.
+
 ### Zotero/Juris-M Is Not Running
 
 Please check the status of your Zotero/Juris-M and ensure that you have installed the [Better BibTeX](https://github.com/retorquere/zotero-better-bibtex) plugin in Zotero/Juris-M. This plugin relies on the Better BibTeX plugin to run. There are plans to directly access zotero.sqlite without relying on this plugin in the future.
+
+### All These Problems Are Not Included
+
+It is welcomed to raise an [issue](https://github.com/WingDr/siyuan-plugin-citation/issues)
 
 ## TODO
 

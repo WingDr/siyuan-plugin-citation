@@ -98,9 +98,16 @@ export async function loadLocalRef(plugin: SiYuanPluginCitation): Promise<any> {
       if ((res.data as any[]).length < limit) {
           cont = false;
       }
-      (res.data as any[]).forEach(file => {
+      (res.data as any[]).forEach(async file => {
+        if (file.name != "") {
+          plugin.id2ckDict[file.id] = file.name;
+          plugin.ck2idDict[file.name] = file.id;
+        } else {
+          //命名为空，那么就把标题赋给命名
+          await plugin.kernelApi.setNameOfBlock(file.id, file.content);
           plugin.id2ckDict[file.id] = file.content;
           plugin.ck2idDict[file.content] = file.id;
+        }
       });
       offset += limit;
   }

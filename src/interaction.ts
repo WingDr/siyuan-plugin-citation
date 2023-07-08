@@ -112,8 +112,9 @@ export class InteractionManager {
     const reloadBtn = document.createElement("button");
     reloadBtn.className = "b3-button b3-button--outline fn__flex-center fn__size200";
     reloadBtn.textContent = this.plugin.i18n.settingTab.reloadBtnText;
-    reloadBtn.addEventListener("click", () => {
-        return this.plugin.database.buildDatabase(databaseSelector.value as DatabaseType);
+    reloadBtn.addEventListener("click", async () => {
+        await this.plugin.database.buildDatabase(databaseSelector.value as DatabaseType);
+        return await this.plugin.reference.checkRefDirExist();
     });
     this.setting.addItem({
         title: this.plugin.i18n.settingTab.reloadBtnTitle,
@@ -203,7 +204,7 @@ export class InteractionManager {
 
   public async customProtyleSlash() {
     return [{
-      filter: [this.plugin.i18n.addCitation, "插入文献引用", "insertcitation", "charuwenxianyinyong"],
+      filter: [this.plugin.i18n.addCitation, "插入文献引用", "addcitation", "charuwenxianyinyong"],
       html: `<div class = "b3-list-item__first">
         <svg class="b3-list-item__graphic">
           <use xlink:href="#iconRef"></use>
@@ -226,7 +227,7 @@ export class InteractionManager {
       }
     },
     {
-      filter: [this.plugin.i18n.addNotes, "插入文献笔记", "insertnotesofliterature", "charuwenxianbiji"],
+      filter: [this.plugin.i18n.addNotes, "插入文献笔记", "addnotesofliterature", "charuwenxianbiji"],
       html: `<div class = "b3-list-item__first">
         <svg class="b3-list-item__graphic">
           <use xlink:href="#iconRef"></use>
@@ -247,7 +248,8 @@ export class InteractionManager {
       hotkey: "",
       callback: () => {
         this.logger.info("指令触发：reloadDatabase");
-        return this.plugin.database.buildDatabase(this.plugin.data[STORAGE_NAME].database as DatabaseType);
+        this.plugin.database.buildDatabase(this.plugin.data[STORAGE_NAME].database as DatabaseType);
+        return this.plugin.reference.checkRefDirExist();
       }
     });
     this.plugin.addCommand({

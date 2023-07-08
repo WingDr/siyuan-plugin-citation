@@ -182,6 +182,13 @@ class KernelApi extends BaseApi {
     return await this.siyuanRequest("/api/query/sql", params);
   }
 
+  public async searchFileWithName(notebook: string, hpath: string, name: string): Promise<SiyuanData> {
+    const params = {
+      "stmt": `SELECT * FROM blocks WHERE box LIKE'${notebook}' and hpath LIKE'${hpath}%' and name LIKE'${name}' and type LIKE'd'`
+    };
+    return await this.siyuanRequest("/api/query/sql", params);
+  }
+
   public async getFileTitleInPath(notebook: string, dir_hpath: string, offset: number, limit: number): Promise<SiyuanData> {
     const params = {
       "stmt": `SELECT * FROM blocks WHERE box LIKE'${notebook}' and hpath LIKE'${dir_hpath}%' and type LIKE'd' limit ${offset}, ${limit}`
@@ -226,6 +233,16 @@ class KernelApi extends BaseApi {
       "id": blockId,
       "attrs": {
         "custom-cited": isSet ? "true" : ""
+      }
+    };
+    return await this.siyuanRequest("/api/attr/setBlockAttrs", attrParams);
+  }
+
+  public async setNameOfBlock(blockId: string, name:string){
+    const attrParams = {
+      "id": blockId,
+      "attrs": {
+        "name": name
       }
     };
     return await this.siyuanRequest("/api/attr/setBlockAttrs", attrParams);
