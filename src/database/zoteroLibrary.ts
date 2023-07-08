@@ -137,7 +137,7 @@ export class EntryZoteroAdapter extends Entry {
 
   get files(): string[] {
     const attachments =  this.data.attachments ?? [];
-    return attachments.filter(a => !!a.path?.endsWith(".pdf")).map(attach => {
+    return attachments.map(attach => {
       const fileName = attach.title;
       return `[${fileName}]` + "\(file://" + attach.path + "\)";
     });
@@ -198,8 +198,8 @@ export class EntryZoteroAdapter extends Entry {
   }
 
   get note(): string {
-    return this._note?.map(singleNote => {
-      return htmlNotesProcess(singleNote.note.replace(/\\(.?)/g, (m, p1) => p1));
+    return this._note?.map((singleNote, index) => {
+      return `\n\n---\n\n###### Note No.${index+1}\t[[Locate]](zotero://select/items/0_${singleNote.key}/)\t[[Open]](zotero://note/u/${singleNote.key}/)\n\n\n\n` + htmlNotesProcess(singleNote.note.replace(/\\(.?)/g, (m, p1) => p1));
     }).join("\n\n");
   }
 }

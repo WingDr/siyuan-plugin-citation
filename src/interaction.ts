@@ -203,7 +203,7 @@ export class InteractionManager {
 
   public async customProtyleSlash() {
     return [{
-      filter: [this.plugin.i18n.addCitation, "插入文献引用", "addcitation", "charuwenxianyinyong"],
+      filter: [this.plugin.i18n.addCitation, "插入文献引用", "insertcitation", "charuwenxianyinyong"],
       html: `<div class = "b3-list-item__first">
         <svg class="b3-list-item__graphic">
           <use xlink:href="#iconRef"></use>
@@ -226,7 +226,7 @@ export class InteractionManager {
       }
     },
     {
-      filter: [this.plugin.i18n.addNotes, "插入文献笔记", "add notes of literature", "插入文献笔记"],
+      filter: [this.plugin.i18n.addNotes, "插入文献笔记", "insertnotesofliterature", "charuwenxianbiji"],
       html: `<div class = "b3-list-item__first">
         <svg class="b3-list-item__graphic">
           <use xlink:href="#iconRef"></use>
@@ -243,10 +243,10 @@ export class InteractionManager {
 
   public async customCommand() {
     this.plugin.addCommand({
-      langKey: "refreshLibrary",
+      langKey: "reloadDatabase",
       hotkey: "",
       callback: () => {
-        this.logger.info("指令触发：refreshLibrary");
+        this.logger.info("指令触发：reloadDatabase");
         return this.plugin.database.buildDatabase(this.plugin.data[STORAGE_NAME].database as DatabaseType);
       }
     });

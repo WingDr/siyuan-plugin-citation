@@ -76,7 +76,7 @@ export class FilesModal extends DataModal {
         this.fuse = new Fuse(library.entryList, options);
         if (isDev) this.logger.info("Build file modal successfully");
       } else {
-        this.plugin.noticer.error(this.plugin.i18n.loadLibraryFailed);
+        this.plugin.noticer.error(this.plugin.i18n.errors.loadLibraryFailed);
         this.library = null;
         this.fuse = null;
         if (isDev) this.logger.error("Build file modal failed");
@@ -330,7 +330,7 @@ export class ZoteroModal extends DataModal {
         this.onSelection(citekey);
       });
     } else {
-      this.plugin.noticer.error((this.plugin.i18n.zoteroNotRunning as string).replace("${type}", this.type));
+      this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string).replace("${type}", this.type));
     }
   }
 

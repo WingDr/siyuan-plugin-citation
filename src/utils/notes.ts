@@ -1,7 +1,8 @@
 const blockLabels = [
   "h1", "h2", "h3", "h4", "h5", "h6",
   "blockquote",
-  "table", "ol", "ul"
+  "table", "ol", "ul",
+  "p"
 ];
 
 const requireEnterLabels = [
@@ -17,16 +18,14 @@ export function htmlNotesProcess(note: string) {
   return processBlocks([{
     content: removeWrapDiv(note),
     isSeparated: false
-  }] as htmlBlock[], 0).map(b => b.content).join("\n\n");
+  }] as htmlBlock[], 0).map(b => "<div>\n"+b.content+"\n</div>").join("\n\n");
 }
 
 function removeWrapDiv(content: string): string {
   const trimContent = content.trim();
   if (trimContent.search(/<div.*?>/) == -1 || trimContent.search(/<div.*?>/) != 0) {
-    console.log("no div");
     return trimContent;
   } else {
-    console.log("is div");
     const noDivContent = trimContent.replace(/<div.*?>/, "");
     return noDivContent.slice(0, noDivContent.length - "</div>".length);
   }

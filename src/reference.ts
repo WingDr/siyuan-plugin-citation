@@ -38,7 +38,7 @@ export class Reference {
     if (isDev) this.logger.info("从database中获得文献内容 =>", entry);
     if (!entry) {
       if (isDev) this.logger.error("找不到文献数据");
-      this.plugin.noticer.error(this.plugin.i18n.getLiteratureFailed);
+      this.plugin.noticer.error(this.plugin.i18n.errors.getLiteratureFailed);
       return null;
     }
     const literatureNote = generateFromTemplate(noteTemplate, entry);
@@ -149,7 +149,7 @@ export class Reference {
     const entry = await this.plugin.database.getContentByCitekey(citekey);
     if (!entry) {
       if (isDev) this.logger.error("找不到文献数据");
-      this.plugin.noticer.error(this.plugin.i18n.getLiteratureFailed);
+      this.plugin.noticer.error(this.plugin.i18n.errors.getLiteratureFailed);
       return null;
     }
     const shortAuthor = entry.author ? this.generateShortAuthor(entry.author, 2) : "";
@@ -176,7 +176,7 @@ export class Reference {
     const entry = await this.plugin.database.getContentByCitekey(citekey);
     if (!entry) {
       if (isDev) this.logger.error("找不到文献数据");
-      this.plugin.noticer.error(this.plugin.i18n.getLiteratureFailed);
+      this.plugin.noticer.error(this.plugin.i18n.errors.getLiteratureFailed);
       return null;
     }
     const shortAuthor = entry.author ? this.generateShortAuthor(entry.author, 2) : "";
