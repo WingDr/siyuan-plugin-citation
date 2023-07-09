@@ -66,8 +66,10 @@ export class Library {
       page: entry.page,
       publisher: entry.publisher,
       publisherPlace: entry.publisherPlace,
+      tags: entry.tags,
       title: entry.title,
       titleShort: entry.titleShort,
+      type: entry.type,
       URL: entry.URL,
       year: entry.year?.toString(),
       files: entry.files,
@@ -169,6 +171,7 @@ export abstract class Entry {
    * Page or page range of the reference.
    */
   public abstract page?: string;
+  public abstract tags?: string;
   public abstract title?: string;
   public abstract titleShort?: string;
   public abstract URL?: string;
@@ -327,6 +330,10 @@ export class EntryCSLAdapter extends Entry {
   get URL() {
     return this.data.URL;
   }
+
+  get tags() {
+    return "";
+  }
 }
 
 const BIBLATEX_PROPERTY_MAPPING: Record<string, string> = {
@@ -469,5 +476,9 @@ export class EntryBibLaTeXAdapter extends Entry {
       given: a.firstName,
       family: a.lastName,
     }));
+  }
+
+  get tags(): string {
+    return this.data.fields.keywords?.join(", ");
   }
 }

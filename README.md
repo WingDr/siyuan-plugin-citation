@@ -104,8 +104,10 @@ The following variables can be used in the literature note and citation template
 - {{page}}: The page number of the literature.
 - {{publisher}}: The publisher of the literature.
 - {{publisherPlace}}: The location of the publisher.
+- {{tags}}: A the tags connected with ", " (It is not exist in CSL-JSON file)
 - {{title}}: The title of the literature.
 - {{titleShort}}: The abbreviated title of the literature. Many literature do not have abbreviated titles.
+- {{type}}: The type of literature. (It might be different between accessed through Zotero directly and the exported BibTex and CSL-JSON files)
 - {{URL}}: The URL of the literature.
 - {{year}}: The publication year of the literature.
 - {{files}}: The attachments of the literature.

@@ -112,6 +112,7 @@ export class EntryZoteroAdapter extends Entry {
   URL?: string;
   declare _year?: string;
   declare _note?: any[];
+  declare _tags?: any[];
 
   constructor(private data: EntryDataZotero) {
     super();
@@ -202,6 +203,10 @@ export class EntryZoteroAdapter extends Entry {
       return `\n\n---\n\n###### Note No.${index+1}\t[[Locate]](zotero://select/items/0_${singleNote.key}/)\t[[Open]](zotero://note/u/${singleNote.key}/)\n\n\n\n` + htmlNotesProcess(singleNote.note.replace(/\\(.?)/g, (m, p1) => p1));
     }).join("\n\n");
   }
+
+  get tags(): string {
+    return this._tags?.map(tag => tag.tag).join(", ");
+  }
 }
 
 /**
@@ -224,8 +229,10 @@ export function getTemplateVariablesForZoteroEntry(entry: EntryZoteroAdapter): R
     page: entry.page,
     publisher: entry.publisher,
     publisherPlace: entry.publisherPlace,
+    tags: entry.tags,
     title: entry.title,
     titleShort: entry.titleShort,
+    type: entry.type,
     URL: entry.URL,
     year: entry.year?.toString(),
     files: entry.files,
