@@ -8,7 +8,7 @@ import {
 } from "./utils/constants";
 import {
   generateFromTemplate
-} from "./utils/util";
+} from "./utils/templates";
 import { ILogger, createLogger } from "./utils/simple-logger";
 
 const refReg = /\(\((.*?)\)\)/g;
@@ -157,10 +157,8 @@ export class Reference {
       this.plugin.noticer.error(this.plugin.i18n.errors.getLiteratureFailed);
       return null;
     }
-    const shortAuthor = entry.author ? this.generateShortAuthor(entry.author, 2) : "";
     return generateFromTemplate(linkTemplate, {
       index,
-      shortAuthor,
       citeFileID: this.plugin.ck2idDict[citekey],
       ...entry
     });
@@ -183,10 +181,8 @@ export class Reference {
       this.plugin.noticer.error(this.plugin.i18n.errors.getLiteratureFailed);
       return null;
     }
-    const shortAuthor = entry.author ? this.generateShortAuthor(entry.author, 2) : "";
     return generateFromTemplate(modifiedTemplate, {
       index,
-      shortAuthor,
       citeFileID: this.plugin.ck2idDict[citekey],
       ...entry
     });
@@ -233,28 +229,6 @@ export class Reference {
   //     console.log(refRange.isPointInRange(block.firstChild, 200))
   //   }
   // }
-
-  private generateShortAuthor(author: Author[], limit: number): string {
-    let shortAuthor = "";
-    if (author.length == 0) {
-      return "";
-    }
-    for (let i = 0; i < limit && i < author.length; i++) {
-      if (i == 0) {
-        shortAuthor += author[i].family ?? "";
-      } else if (i == limit - 1) {
-        shortAuthor += author[i].family ? " and " + author[i].family : "";
-        if (limit < author.length) {
-          shortAuthor +=  shortAuthor.length ? " et al." : "";
-        }
-      } else if (author.length < limit && i == author.length - 1) {
-        shortAuthor += author[i].family ? " and " + author[i].family : "";
-      } else {
-        shortAuthor += author[i].family ? ", " + author[i].family : "";
-      }
-    }
-    return shortAuthor;
-  }
 
   /**
    * Translate the human readable path to siyuan path

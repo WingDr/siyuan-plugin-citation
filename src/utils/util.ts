@@ -123,10 +123,3 @@ export function generateFileLinks(files: string[]) {
     return `[${fileName}]` + "\(file://" + file.replace(/\\(.?)/g, (m, p1) => p1) + "\)";
   }).join("\n") : files;
 }
-
-export function generateFromTemplate(template: string, params: object) {
-  const reg = /\{\{(.*?)\}\}/g;
-  return template.replace(reg, (match, pname) => {
-    return params[pname] ?? "";
-  });
-}

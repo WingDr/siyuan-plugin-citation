@@ -70,6 +70,7 @@ export class Library {
       title: entry.title,
       titleShort: entry.titleShort,
       type: entry.type,
+      shortAuthor: entry.shortAuthor,
       URL: entry.URL,
       year: entry.year?.toString(),
       files: entry.files,
@@ -148,6 +149,7 @@ export abstract class Entry {
    * A comma-separated list of authors, each of the format `<firstname> <lastname>`.
    */
   public abstract authorString?: string;
+  public abstract shortAuthor?: string;
 
   /**
    * The name of the container for this reference -- in the case of a book
@@ -279,6 +281,31 @@ export class EntryCSLAdapter extends Entry {
     return this.data.author
       ? this.data.author.map((a) => `${a.given} ${a.family}`).join(", ")
       : null;
+  }
+
+  get shortAuthor(): string {
+    const limit = 2;
+    let shortAuthor = "";
+    const author = this.data.author;
+    if (author.length == 0) {
+      return "";
+    }
+    for (let i = 0; i < limit && i < author.length; i++) {
+      const name = author[i].family;
+      if (i == 0) {
+        shortAuthor += name ?? "";
+      } else if (i == limit - 1) {
+        shortAuthor += name ? " and " + name : "";
+        if (limit < author.length) {
+          shortAuthor +=  shortAuthor.length ? " et al." : "";
+        }
+      } else if (author.length < limit && i == author.length - 1) {
+        shortAuthor += name ? " and " + name : "";
+      } else {
+        shortAuthor += name ? ", " + name : "";
+      }
+    }
+    return shortAuthor;
   }
 
   get containerTitle() {
@@ -451,6 +478,34 @@ export class EntryBibLaTeXAdapter extends Entry {
     } else {
       return this.data.fields.author?.join(", ");
     }
+  }
+
+  get shortAuthor(): string {
+    const limit = 2;
+    let shortAuthor = "";
+    const author = this.data.creators.author;
+    if (author.length == 0) {
+      return "";
+    }
+    for (let i = 0; i < limit && i < author.length; i++) {
+      let name = "";
+      if (author[i].literal) name = author[i].literal;
+      else name = author[i].lastName;
+      
+      if (i == 0) {
+        shortAuthor += name ?? "";
+      } else if (i == limit - 1) {
+        shortAuthor += name ? " and " + name : "";
+        if (limit < author.length) {
+          shortAuthor +=  shortAuthor.length ? " et al." : "";
+        }
+      } else if (author.length < limit && i == author.length - 1) {
+        shortAuthor += name ? " and " + name : "";
+      } else {
+        shortAuthor += name ? ", " + name : "";
+      }
+    }
+    return shortAuthor;
   }
 
   get containerTitle() {

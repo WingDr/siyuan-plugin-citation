@@ -3,10 +3,11 @@ import { Entry, Author, IIndexable } from "./filesLibrary";
 import { htmlNotesProcess } from "../utils/notes";
 
 interface Creator {
-  firstName: string,
-  lastName: string,
-  prefix: string,
-  suffix: string,
+  firstName?: string,
+  lastName?: string,
+  prefix?: string,
+  suffix?: string,
+  name?: string,
   creatorType: string
 }
 
@@ -148,14 +149,43 @@ export class EntryZoteroAdapter extends Entry {
     const authors = this.data.creators?.filter(c => c.creatorType === "author");
     if (authors) {
       const names = authors.map((name) => {
-        const parts = [name.firstName, name.prefix, name.lastName, name.suffix];
-        // Drop any null parts and join
-        return parts.filter((x) => x).join(" ");
+        if (name.name) {
+          return name.name;
+        } else {
+          const parts = [name.firstName, name.prefix, name.lastName, name.suffix];
+          // Drop any null parts and join
+          return parts.filter((x) => x).join(" ");
+        }
       });
       return names.join(", ");
     } else {
       return "";
     }
+  }
+
+  get shortAuthor(): string {
+    const limit = 2;
+    let shortAuthor = "";
+    const author = this.data.creators?.filter(c => c.creatorType === "author");
+    if (author.length == 0) {
+      return "";
+    }
+    for (let i = 0; i < limit && i < author.length; i++) {
+      const name = author[i].lastName ? author[i].lastName: author[i].name;
+      if (i == 0) {
+        shortAuthor += name ?? "";
+      } else if (i == limit - 1) {
+        shortAuthor += name ? " and " + name : "";
+        if (limit < author.length) {
+          shortAuthor +=  shortAuthor.length ? " et al." : "";
+        }
+      } else if (author.length < limit && i == author.length - 1) {
+        shortAuthor += name ? " and " + name : "";
+      } else {
+        shortAuthor += name ? ", " + name : "";
+      }
+    }
+    return shortAuthor;
   }
 
   get containerTitle() {
@@ -189,10 +219,19 @@ export class EntryZoteroAdapter extends Entry {
   get author(): Author[] {
     const authors = this.data.creators?.filter(c => c.creatorType === "author");
     if (authors) {
-      return authors.map((a) => ({
-        given: a.firstName,
-        family: a.lastName,
-      }));
+      return authors.map((a) => {
+        if (a.name) {
+          return {
+            given: "",
+            family: a.name
+          };
+        } else {
+          return {
+            given: a.firstName,
+            family: a.lastName,
+          };
+        }
+      });
     } else {
       return [];
     }
@@ -233,6 +272,7 @@ export function getTemplateVariablesForZoteroEntry(entry: EntryZoteroAdapter): R
     title: entry.title,
     titleShort: entry.titleShort,
     type: entry.type,
+    shortAuthor: entry.shortAuthor,
     URL: entry.URL,
     year: entry.year?.toString(),
     files: entry.files,
