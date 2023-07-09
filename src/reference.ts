@@ -4,12 +4,15 @@ import {
   Author
 } from "./database/filesLibrary";
 import {
-  STORAGE_NAME, isDev
+  STORAGE_NAME, isDev, citeLink
 } from "./utils/constants";
 import {
   generateFromTemplate
 } from "./utils/util";
 import { ILogger, createLogger } from "./utils/simple-logger";
+
+const refReg = /\(\((.*?)\)\)/g;
+const refRegInTemplate = /\(\((.*?)\"(.*?)\"\)\)/g;
 
 // 根据输入更新文献库和引用文档，并维护本文档中的引用次序
 export class Reference {
@@ -73,7 +76,7 @@ export class Reference {
     const writeList:{content: string, blockId: string}[] = [];
     const cancelCiteList:{blockId: string}[] = [];
     const generatePromise = citedBlocks.map(async block => {
-      const reg = /\(\((.*?)\)\)/g;
+      const reg = refReg;
       let isModified = false;
       // 因为replace只能同步使用，所以先构建替换表
       const matchRes = block.content.matchAll(reg);
@@ -91,10 +94,10 @@ export class Reference {
           }
           if (isDev) this.logger.info("更新文献引用 =>", link);
           if (!link) continue;
-          if (anchor != "'" + link + "'") {
+          if (anchor != `"${link}"`) {
             isModified = true;
           }
-          replaceList[key] = `((${key} '`+ link +"'))";
+          replaceList[key] = citeLink.replace("${id}", key).replace("${link}", link);
         }
       }
       const newContent = block.content.replace(reg, (match, p1) => {
@@ -165,9 +168,8 @@ export class Reference {
 
   public async generateOnlyCiteLink(citekey: string, index: number) {
     const linkTemplate = this.plugin.data[STORAGE_NAME].linkTemplate as string;
-    const linkReg = /\(\((.*?)\'(.*?)\'\)\)/g;
+    const linkReg = refRegInTemplate;
     const matchRes = linkTemplate.matchAll(linkReg);
-    console.log(matchRes);
     let modifiedTemplate = "";
     for (const match of matchRes) {
       if (match[1].indexOf("{{citeFileID}}") != -1) {
@@ -194,7 +196,7 @@ export class Reference {
     if (this.plugin.data[STORAGE_NAME].customCiteText) {
       return link;
     } else {
-      return `((${citeFileId} '${link}'))`;
+      return citeLink.replace("${id}", citeFileId).replace("${link}", link);
     }
   }
 

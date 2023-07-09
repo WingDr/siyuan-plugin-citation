@@ -137,10 +137,10 @@ export class EntryZoteroAdapter extends Entry {
 
   get files(): string[] {
     const attachments =  this.data.attachments ?? [];
-    return attachments.map(attach => {
+    return ["", ...attachments.map(attach => {
       const fileName = attach.title;
-      return `[${fileName}]` + "\(file://" + attach.path + "\)";
-    });
+      return `|[[Located]](${attach.select})\t|\t[${fileName}](file://${attach.path})|`;
+    })];
   }
 
   get authorString() {

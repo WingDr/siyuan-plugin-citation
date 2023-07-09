@@ -19,6 +19,7 @@ import {
   EntryZoteroAdapter,
   getTemplateVariablesForZoteroEntry
  } from "./zoteroLibrary";
+import { htmlNotesProcess } from "../utils/notes";
 import { createLogger, ILogger } from "../utils/simple-logger";
 import { isDev, REF_DIR_PATH } from "../utils/constants";
 import { fileSearch, generateFileLinks } from "../utils/util";
@@ -365,7 +366,9 @@ export class ZoteroModal extends DataModal {
       })
     });
     if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, res.data.result[citekey]);
-    return res.data.result[citekey];
+    return (res.data.result[citekey] as string[]).map((singleNote, index) => {
+      return `\n\n---\n\n###### Note No.${index+1}\n\n\n\n` + htmlNotesProcess(singleNote.replace(/\\(.?)/g, (m, p1) => p1));
+    }).join("\n\n");
   }
 
   public getTotalCitekeys(): string[] {

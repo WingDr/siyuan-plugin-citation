@@ -5,6 +5,8 @@ export const isDev = process.env.NODE_ENV === "development";
 export const siyuanApiUrl = "";
 export const siyuanApiToken = "";
 
+export const citeLink = "(( ${id} \"${link}\"))";
+
 export const databaseType = ["BibTex and CSL-JSON", "Zotero", "Juris-M"] as const;
 export const REF_DIR_PATH = "./references/";
 // 用户指南不应该作为可以写入的笔记本

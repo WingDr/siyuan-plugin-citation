@@ -136,9 +136,9 @@ In addition, the following variables can be used in citation links:
 
 The [citation link template](#configure-the-plugin) will be fully customized, meaning that the template will no longer generate anchor text, but will be **directly inserted into the document**. In this case, to avoid affecting your own content, the refresh citation feature of the plugin will **not maintain the non-link parts (outside the double brackets)**.
 
-**The regular expression for finding citation links is /\\(\\((.\*?)\\'(.\*?)\\'\\)\\)/g. Please make sure your template format conforms to this expression.**
+**The regular expression for finding citation links is /\\(\\((.\*?)\\\"(.\*?)\\\"\\)\\)/g. Please make sure your template format conforms to this expression.**
 
-⚠️**Note: After enabling the switch, please make sure your template includes `...(( {{citeFileID}} '...'))...`, otherwise the generated links will not be able to reference the literature note.**
+⚠️**Note: After enabling the switch, please make sure your template includes `...(( {{citeFileID}} "..."))...`, otherwise the generated links will not be able to reference the literature note.**
 
 ## What Happens When I Click the "Delete Data" Button?
 

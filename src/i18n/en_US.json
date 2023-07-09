@@ -28,7 +28,7 @@
     "noteTempTexareaTitle": "Literature Note Template",
     "noteTempTexareaDescription": "Input the template of literature note stored in library directory",
     "CustomCiteTextSwitchTitle": "Customize Citation Link",
-    "CustomCiteTextSwitchDescription": "Totally customize the format of citation link. The generated text will directly inserted into your document but not be regarded as anchor text. <br>⚠️<b>Caution: please make sure that the citation link template contains \"...(( {{citeFileID}} '...' ))...\"or the generated text will not able to link</b><br>The regular expression used to search the link in template is /\\(\\((.*?)\\'(.*?)\\'\\)\\)/g'. Please set your template based on it",
+    "CustomCiteTextSwitchDescription": "Totally customize the format of citation link. The generated text will directly inserted into your document but not be regarded as anchor text. <br>⚠️<b>Caution: please make sure that the citation link template contains \"...(( {{citeFileID}} \"...\"))...\"or the generated text will not able to link</b><br>The regular expression used to search the link in template is /\\(\\((.*?)\\\"(.*?)\\\"\\)\\)/g'. Please set your template based on it",
     "linkTempInputTitle": "Citation Link Template",
     "linkTempInputDescription": "Input the template of citation link when adding to file",
     "deleteDataBtnTitle": "Delete Data",
