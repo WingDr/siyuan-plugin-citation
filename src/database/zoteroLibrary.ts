@@ -141,7 +141,7 @@ export class EntryZoteroAdapter extends Entry {
     const attachments =  this.data.attachments ?? [];
     return ["", ...attachments.map(attach => {
       const fileName = attach.title;
-      return `|[[Located]](${attach.select})\t|\t[${fileName}](file://${attach.path})|`;
+      return `[[Located]](${attach.select})\t|\t[${fileName}](file://${attach.path})`;
     })];
   }
 

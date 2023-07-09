@@ -13,6 +13,7 @@ export const REF_DIR_PATH = "./references/";
 export const hiddenNotebook: Set<string> = new Set(["思源笔记用户指南", "SiYuan User Guide"]);
 export const STORAGE_NAME = "menu-config";
 export const defaultReferencePath = "/References";
+export const defaultTitleTemplate = "{{citekey}}";
 export const defaultNoteTemplate = `
 ---
 

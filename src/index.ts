@@ -18,7 +18,8 @@ import {
     defaultLinkTemplate,
     defaultNoteTemplate,
     defaultReferencePath,
-    databaseType
+    databaseType,
+    defaultTitleTemplate
 } from "./utils/constants";
 import {
     createLogger,
@@ -54,6 +55,7 @@ export default class SiYuanPluginCitation extends Plugin {
             referenceNotebook: "",
             referencePath: defaultReferencePath,
             database: databaseType[0],
+            titleTemplate: defaultTitleTemplate,
             noteTemplate: defaultNoteTemplate,
             linkTemplate: defaultLinkTemplate,
             CustomCiteText: false

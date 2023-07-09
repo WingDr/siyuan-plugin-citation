@@ -13,6 +13,8 @@
   "refreshCitation": "Refresh citation links",
   "loadLibrarySuccess": "Successfully loaded library with ${size} entries.",
   "loadRefSuccess": "Successfully loaded literature notes with ${size} files.",
+  "refreshLiteratureNotesTitle": "Refresh all literature note document titles",
+  "refreshTitleSuccess": "Successfully refresh titles of ${size} literature notes",
   "copyCiteLink": "Copy Citation",
   "copyCiteLinkSuccess": "The citation link is on your clipboard",
   "settingTab": {
@@ -25,6 +27,8 @@
     "reloadBtnTitle": "Reload Database",
     "reloadBtnDescription": "Reload the database with existing bibtex or csj-json files",
     "reloadBtnText": "Reload",
+    "titleTemplateInputTitle": "Title Template for Literature Note Documents",
+    "titleTemplateInputDescription": "Set the title template for generating literature note documents (modifications made by the user will <b>not</b> be refreshed, you can regenerate the titles by using 'Refresh All Literature Note Document Titles').",
     "noteTempTexareaTitle": "Literature Note Template",
     "noteTempTexareaDescription": "Input the template of literature note stored in library directory",
     "CustomCiteTextSwitchTitle": "Customize Citation Link",

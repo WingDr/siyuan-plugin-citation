@@ -26,8 +26,14 @@ dependencies:
   path:
     specifier: ^0.12.7
     version: 0.12.7
+  template_js:
+    specifier: ^2.4.0
+    version: 2.4.0
 
 devDependencies:
+  '@types/ejs':
+    specifier: ^3.1.2
+    version: 3.1.2
   '@types/node':
     specifier: ^20.3.1
     version: 20.3.1
@@ -87,6 +93,13 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       core-js-pure: 3.31.0
+      regenerator-runtime: 0.13.11
+    dev: false
+
+  /@babel/runtime@7.22.6:
+    resolution: {integrity: sha512-wDb5pWm4WDdF6LFUde3Jl8WzPA+3ZbxYqkC6xAXuD3irdEHN1k0NfTRrJD8ZD378SJ61miMLCqIOXYhd8x+AJQ==}
+    engines: {node: '>=6.9.0'}
+    dependencies:
       regenerator-runtime: 0.13.11
     dev: false
 
@@ -410,6 +423,29 @@ packages:
       '@jridgewell/sourcemap-codec': 1.4.15
     dev: true
 
+  /@jsmini/extend@0.3.3:
+    resolution: {integrity: sha512-kR8IOP+cwS1f+RF/GFO4pzODqGtubE0XsqAoYDYsK6JGQ8YLsrGuY2ZolpjvwrzjR/vOpuaYpeS9RUfvowSJjA==}
+    engines: {node: '>= 0.12.0'}
+    dependencies:
+      '@babel/runtime': 7.22.6
+      '@jsmini/is': 0.8.5
+    dev: false
+
+  /@jsmini/is@0.8.5:
+    resolution: {integrity: sha512-YVyM6emY6JT/b9D53Nsk32dyccwk2JC7brrh+g+HcWLqa/YLcct7/jbSubIM5jb4ziZfRiygep1hCfL4Wd7XQg==}
+    engines: {node: '>= 0.12.0'}
+    dependencies:
+      '@babel/runtime': 7.22.6
+      '@jsmini/type': 0.9.2
+    dev: false
+
+  /@jsmini/type@0.9.2:
+    resolution: {integrity: sha512-fTsXi1wQQOfSy3KjowGIZE4rrr1U8RpsHG0m/4lxB0s7OD5ghX51PaRL/2heAGD4uDaJzeHYcW9aAwF/v5kUkg==}
+    engines: {node: '>= 0.12.0'}
+    dependencies:
+      '@babel/runtime': 7.22.6
+    dev: false
+
   /@nodelib/fs.scandir@2.1.5:
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
     engines: {node: '>= 8'}
@@ -438,6 +474,24 @@ packages:
       xregexp: 5.1.1
     dev: false
 
+  /@templatejs/parser@2.4.0:
+    resolution: {integrity: sha512-tcv2c7GcDudIF3NemwtO0LhIsFjWyv/NMUn9t2iWzGskbA12QWwck6ucHjsU4APHu2Cx92rqKVU0hMkzToqfsw==}
+    engines: {node: '>= 0.12.0'}
+    dependencies:
+      '@babel/runtime': 7.22.6
+      '@jsmini/extend': 0.3.3
+    dev: false
+
+  /@templatejs/runtime@2.4.0:
+    resolution: {integrity: sha512-fhnxE4BqOhmkYvNs5PRireRenZnxsfYQlWzNZX5Fb7muJM9+fehgoNOsgGmwYbCdB65lTlnypQKohDuQz365Lw==}
+    engines: {node: '>= 0.12.0'}
+    dependencies:
+      '@babel/runtime': 7.22.6
+      '@jsmini/extend': 0.3.3
+      '@jsmini/type': 0.9.2
+      '@templatejs/parser': 2.4.0
+    dev: false
+
   /@tsconfig/node10@1.0.9:
     resolution: {integrity: sha512-jNsYVVxU8v5g43Erja32laIDHXeoNvFEpX33OK4d6hljo3jDhCBDhx5dhCCTMWUojscpAagGiRkBKxpdl9fxqA==}
     dev: true
@@ -452,6 +506,10 @@ packages:
 
   /@tsconfig/node16@1.0.4:
     resolution: {integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==}
+    dev: true
+
+  /@types/ejs@3.1.2:
+    resolution: {integrity: sha512-ZmiaE3wglXVWBM9fyVC17aGPkLo/UgaOjEiI2FXQfyczrCefORPxIe+2dVmnmk3zkVIbizjrlQzmPGhSYGXG5g==}
     dev: true
 
   /@types/eslint-scope@3.7.4:
@@ -2419,6 +2477,17 @@ packages:
     resolution: {integrity: sha512-GNzQvQTOIP6RyTfE2Qxb8ZVlNmw0n88vp1szwWRimP02mnTsx3Wtn5qRdqY9w2XduFNUgvOwhNnQsjwCp+kqaQ==}
     engines: {node: '>=6'}
     dev: true
+
+  /template_js@2.4.0:
+    resolution: {integrity: sha512-v/+rdh0HSkFGG+BpFMGnYIQd6F5+m+kB3EQrcmvAzVIP43nbAlpuY5Dgrb9jA0csvzfczEqFkLEOrtzw23mo8Q==}
+    engines: {node: '>= 0.12.0'}
+    dependencies:
+      '@babel/runtime': 7.22.6
+      '@jsmini/extend': 0.3.3
+      '@jsmini/type': 0.9.2
+      '@templatejs/parser': 2.4.0
+      '@templatejs/runtime': 2.4.0
+    dev: false
 
   /terser-webpack-plugin@5.3.9(webpack@5.87.0):
     resolution: {integrity: sha512-ZuXsqE07EcggTWQjXUj+Aot/OMcD0bMKGgF63f7UxYcu5/AJF53aIpK1YoP5xR9l6s/Hy2b+t1AM0bLNPRuhwA==}

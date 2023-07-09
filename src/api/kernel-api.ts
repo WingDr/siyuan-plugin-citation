@@ -228,6 +228,22 @@ class KernelApi extends BaseApi {
     return await this.siyuanRequest("/api/block/updateBlock", updateParams);
   }
 
+  public async getBlock(blockId: string): Promise<SiyuanData> {
+    const params = {
+      "stmt": `SELECT * FROM blocks WHERE id like '${blockId}'`
+    };
+    return await this.siyuanRequest("/api/query/sql", params);
+  }
+
+  public async renameDoc(notebook: string, path: string, title: string) {
+    const params = {
+      "notebook": notebook,
+      "path": path,
+      "title": title
+    };
+    return await this.siyuanRequest("/api/filetree/renameDoc", params);
+  }
+
   public async setBlockCited(blockId: string, isSet: boolean): Promise<SiyuanData> {
     const attrParams = {
       "id": blockId,

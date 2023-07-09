@@ -9,6 +9,7 @@ import {
   STORAGE_NAME,
   hiddenNotebook,
   databaseType,
+  defaultTitleTemplate,
   defaultNoteTemplate,
   defaultLinkTemplate,
   defaultReferencePath,
@@ -41,6 +42,7 @@ export class InteractionManager {
                 referenceNotebook: referenceNotebookSelector.value,
                 referencePath: referencePathInput.value,
                 database: databaseSelector.value,
+                titleTemplate: titleTemplateInput.value,
                 noteTemplate: noteTempTexarea.value,
                 linkTemplate: linkTempInput.value,
                 customCiteText: CustomCiteTextSwitch.checked
@@ -122,6 +124,17 @@ export class InteractionManager {
         actionElement: reloadBtn,
     });
 
+    // 文献内容标题模板
+    const titleTemplateInput = document.createElement("input");
+    titleTemplateInput.className = "b3-text-field fn__size200";
+    titleTemplateInput.placeholder = "Input the path";
+    titleTemplateInput.value = this.plugin.data[STORAGE_NAME].titleTemplate ?? defaultTitleTemplate;
+    this.setting.addItem({
+        title: this.plugin.i18n.settingTab.titleTemplateInputTitle,
+        description: this.plugin.i18n.settingTab.titleTemplateInputDescription,
+        actionElement: titleTemplateInput,
+    });
+
     //edit note template
     const noteTempTexarea = document.createElement("textarea");
     noteTempTexarea.className = "b3-text-field fn__block";
@@ -159,7 +172,7 @@ export class InteractionManager {
       title: this.plugin.i18n.settingTab.CustomCiteTextSwitchTitle,
       description: this.plugin.i18n.settingTab.CustomCiteTextSwitchDescription,
       actionElement: CustomCiteTextSwitch,
-  });
+    });
 
     //edit literature link
     const linkTempInput = document.createElement("input");
@@ -250,6 +263,14 @@ export class InteractionManager {
         this.logger.info("指令触发：reloadDatabase");
         this.plugin.database.buildDatabase(this.plugin.data[STORAGE_NAME].database as DatabaseType);
         return this.plugin.reference.checkRefDirExist();
+      }
+    });
+    this.plugin.addCommand({
+      langKey: "refreshLiteratureNotesTitle",
+      hotkey: "",
+      callback: () => {
+        this.logger.info("指令触发：refreshLiteratureNotesTitle");
+        return this.plugin.reference.refreshLiteratureNoteTitles();
       }
     });
     this.plugin.addCommand({

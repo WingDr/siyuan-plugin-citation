@@ -1,9 +1,6 @@
 import SiYuanPluginCitation from "./index";
 import { SiyuanData } from "./api/base-api";
 import {
-  Author
-} from "./database/filesLibrary";
-import {
   STORAGE_NAME, isDev, citeLink
 } from "./utils/constants";
 import {
@@ -34,6 +31,7 @@ export class Reference {
   public async updateLiteratureNote(citekey: string) {
     const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
     const refPath = this.plugin.data[STORAGE_NAME].referencePath as string;
+    const titleTemplate = this.plugin.data[STORAGE_NAME].titleTemplate as string;
     const noteTemplate = this.plugin.data[STORAGE_NAME].noteTemplate as string;
     const res = await this.plugin.kernelApi.searchFileWithName(notebookId, refPath, citekey);
     const data = res.data as any[];
@@ -44,6 +42,7 @@ export class Reference {
       this.plugin.noticer.error(this.plugin.i18n.errors.getLiteratureFailed);
       return null;
     }
+    const noteTitle = generateFromTemplate(titleTemplate, entry);
     const literatureNote = generateFromTemplate(noteTemplate, entry);
     if (data.length) {
       const literatureId = data[0].root_id;
@@ -51,7 +50,7 @@ export class Reference {
       return await this.plugin.kernelApi.updateBlockContent(literatureId, literatureNote);
     } else {
       //文件不存在就新建文件
-      return await this.plugin.kernelApi.createDocWithMd(notebookId, refPath + `/${citekey}`, literatureNote).then(async res => {
+      return await this.plugin.kernelApi.createDocWithMd(notebookId, refPath + `/${noteTitle}`, literatureNote).then(async res => {
         const id  = String(res.data);
         // 新建文件之后要设定命名
         await this.plugin.kernelApi.setNameOfBlock(id, citekey);
@@ -194,6 +193,28 @@ export class Reference {
     } else {
       return citeLink.replace("${id}", citeFileId).replace("${link}", link);
     }
+  }
+
+  public async refreshLiteratureNoteTitles() {
+    const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
+    const titleTemplate = this.plugin.data[STORAGE_NAME].titleTemplate as string;
+    Object.keys(this.plugin.ck2idDict).forEach(async citekey => {
+      const entry = await this.plugin.database.getContentByCitekey(citekey);
+      if (isDev) this.logger.info("从database中获得文献内容 =>", entry);
+      if (!entry) {
+        if (isDev) this.logger.error("找不到文献数据");
+        this.plugin.noticer.error(this.plugin.i18n.errors.getLiteratureFailed);
+        return null;
+      }
+      const noteTitle = generateFromTemplate(titleTemplate, entry);
+      // 不对的时候才更新
+      const res = await this.plugin.kernelApi.getBlock(this.plugin.ck2idDict[citekey]);
+      const title = res.data[0].content;
+      if (noteTitle != title) await this.plugin.kernelApi.renameDoc(notebookId, res.data[0].path , noteTitle);
+    });
+    if (isDev) this.logger.info("所有文件标题已更新");
+    this.plugin.noticer.info(this.plugin.i18n.refreshTitleSuccess.replace("${size}", Object.keys(this.plugin.ck2idDict).length));
+    return this.plugin.id2ckDict, this.plugin.ck2idDict;
   }
 
   public async insertContent(protyle, content: string) {

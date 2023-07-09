@@ -13,6 +13,8 @@
   "refreshCitation": "刷新引用",
   "loadLibrarySuccess": "文献库成功导入${size}个数据",
   "loadRefSuccess": "成功导入${size}个文献引用",
+  "refreshLiteratureNotesTitle": "刷新所有文献内容文档标题",
+  "refreshTitleSuccess": "成功刷新${size}篇文献内容文档标题",
   "copyCiteLink": "复制文献引用",
   "copyCiteLinkSuccess": "引用链接已在剪贴板",
   "settingTab": {
@@ -25,6 +27,8 @@
     "reloadBtnTitle": "重新载入数据库",
     "reloadBtnDescription": "重新从BibTex和CSL-JSON文件中加载数据库",
     "reloadBtnText": "重载",
+    "titleTemplateInputTitle": "文献内容文档标题模板",
+    "titleTemplateInputDescription": "设置文献内容文档的生成标题（用户修改后<b>不会</b>刷新，可以通过“刷新所有文献内容文档标题”重新生成标题）",
     "noteTempTexareaTitle": "文献内容模板",
     "noteTempTexareaDescription": "设置在文献库中储存的文献文档的内容模板",
     "CustomCiteTextSwitchTitle": "自定义引用",

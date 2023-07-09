@@ -1,9 +1,8 @@
+import template from "template_js";
 
-
-
-export function generateFromTemplate(template: string, params: object) {
+export function generateFromTemplate(contentTemplate: string, params: object) { 
   const reg = /\{\{(.*?)\}\}/g;
-  return template.replace(reg, (match, pname) => {
-    return params[pname] ?? "";
-  });
+  return template(contentTemplate.replace(reg, (match, pname) => {
+    return `<%= ${pname} %>`;
+  }), params);
 }
