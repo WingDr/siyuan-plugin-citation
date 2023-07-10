@@ -31,11 +31,11 @@ export abstract class DataModal {
   public logger: ILogger;
   public plugin: SiYuanPluginCitation;
   public protyle: Protyle;
-  public onSelection: (citekey: string) => void;
+  public onSelection: (citekeys: string[]) => void;
   public abstract buildModal();
   public abstract getContentFromCitekey(citekey: string);
   public abstract getCollectedNotesFromCitekey(citekey: string);
-  public abstract showSearching(protyle:Protyle, onSelection: (citekey: string) => void);
+  public abstract showSearching(protyle:Protyle, onSelection: (citekeys: string[]) => void);
   public abstract getTotalCitekeys(): string[];
 }
 
@@ -91,7 +91,7 @@ export class FilesModal extends DataModal {
   /**
    * show searching dialog
    */
-  public showSearching(protyle:Protyle, onSelection: (citekey: string) => void) {
+  public showSearching(protyle:Protyle, onSelection: (citekeys: string[]) => void) {
     this.protyle = protyle;
     this.onSelection = onSelection;
     const input = document.createElement("input");
@@ -195,7 +195,7 @@ export class FilesModal extends DataModal {
     const target = ev.currentTarget as HTMLElement;
     const id = target.children.item(0).getAttribute("data-search-id");
     this.searchDialog.destroy();
-    this.onSelection(id);
+    this.onSelection([id]);
   }
 
   private keyboardReaction(ev: KeyboardEvent) {
@@ -208,7 +208,7 @@ export class FilesModal extends DataModal {
     } else if (ev.key == "Enter") {
       const id = this.searchDialog.element.getElementsByTagName("li").item(this.selector).children.item(0).getAttribute("data-search-id");
       this.searchDialog.destroy();
-      this.onSelection(id);
+      this.onSelection([id]);
     }
   }
 
@@ -325,7 +325,7 @@ export class ZoteroModal extends DataModal {
   /**
    * show searching dialog
    */
-  public async showSearching(protyle:Protyle, onSelection: (citekey: string) => void) {
+  public async showSearching(protyle:Protyle, onSelection: (citekeys: string[]) => void) {
     this.protyle = protyle;
     this.onSelection = onSelection;
     if (await this.checkZoteroRunning()) {
@@ -336,9 +336,7 @@ export class ZoteroModal extends DataModal {
         headers: defaultHeaders
       });
       if (isDev) this.logger.info(`从${this.type}接收到数据 =>`, res.data);
-      this.getCitekeysFromZotero(res.data.items).forEach(citekey => {
-        this.onSelection(citekey);
-      });
+      this.onSelection(this.getCitekeysFromZotero(res.data.items));
     } else {
       this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string).replace("${type}", this.type));
     }

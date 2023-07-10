@@ -59,6 +59,8 @@ export class InteractionManager {
         }
     });
 
+    const eMail = "siyuan_citation@126.com";
+
     //notebook selector
     const referenceNotebookSelector = document.createElement("select");
     referenceNotebookSelector.className = "b3-select fn__flex-center fn__size200";
