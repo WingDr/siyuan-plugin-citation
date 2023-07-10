@@ -12,3 +12,4 @@ for (let id of ids) {
   Result.push(Zotero.Items.get(id).getField('title') + " | " + Zotero.Items.get(id).key);
 }
 return Result.join("\r\n");
+

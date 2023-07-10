@@ -139,9 +139,16 @@ export class EntryZoteroAdapter extends Entry {
 
   get files(): string[] {
     const attachments =  this.data.attachments ?? [];
-    return ["", ...attachments.map(attach => {
+    return [...attachments.map(attach => {
       const fileName = attach.title;
-      return `[[Located]](${attach.select})\t|\t[${fileName}](file://${attach.path})`;
+      const res = (attach.path as string).split(".");
+      const fileType = res[res.length - 1];
+      if (fileType === "pdf") {
+        const res = (attach.select as string).split("/");
+        const itemID = res[res.length - 1];
+        return `[[Open]](zotero://open-pdf/library/items/${itemID})\t|\t[${fileName}](file://${attach.path})`;
+      }
+      return `[[Locate]](${attach.select})\t|\t[${fileName}](file://${attach.path})`;
     })];
   }
 

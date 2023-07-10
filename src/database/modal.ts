@@ -411,15 +411,14 @@ export class ZoteroModal extends DataModal {
     });
   }
 
-  private async getAllItems() {
-    const jsContent = fs.readFileSync(path.join(this.absZoteroJSPath, "getAllItems.ts"), "utf-8");
+  private async callZoteroJS(filename: string) {
+    const jsContent = fs.readFileSync(path.join(this.absZoteroJSPath, filename+".ts"), "utf-8");
     const Result = await axios({
       method: "post",
       url: `http://127.0.0.1:${this.getPort(this.type)}/debug-bridge/execute?password=CTT`,
       headers: JSHeaders,
       data: jsContent
     });
-    console.log(Result);
     return JSON.parse(Result.data);
   }
 
