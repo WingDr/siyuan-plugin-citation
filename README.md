@@ -4,15 +4,15 @@
 
 > A citation plugin that implements basic functionality, hoping to make your SiYuan more academically oriented.
 
+**Special thanks to [Geo123abc](https://github.com/Geo123abc) for creating the [tutorial video](https://www.bilibili.com/video/BV17u411j79z/?vd_source=b4b4ca14b1a866918dcef4ca52896f03).**
+
+**In version 0.0.6, the template handling method has been expanded by incorporating the template engine template.js. The templates used previously can still be used in subsequent versions. If you want to use more advanced template syntax, please refer to [Advanced Template Syntax](#advanced-template-syntax).**
+
 **In version 0.05, the indexing method of documents in the literature library has been changed from document titles to document names. After updating, the plugin will automatically update the names of unnamed literature note documents during the first startup. Please restart SiYuan afterwards to ensure that the literature notes count in the top right corner matches the number of documents in the library. When a document is created, its title will be set as the literature's citekey, and it can be changed later as desired. However, please do not change the document name in the document properties.**
 
 **In version 0.04, a switch for "Customize Citation Link" has been added to the settings tab. If you are not an experienced user familiar with regular expression searching and SiYuan reference logic, please do not enable it.**
 
 **In SiYuan version 2.9.4, you can use `Shift/Ctrl+Enter` to create line breaks in the "Literature Note Template" in the settings panel.**
-
-**For users of version 0.0.1, please move your .bib and .json files to `[Workspace]/data/storage/petal/siyuan-plugin-citation/references/` as the storage location has been changed in the new version.**
-
-**Zotero Integration is now supported. You can directly import references from Zotero or Juris-M!**
 
 ## Features
 
@@ -36,11 +36,12 @@ Add citations to your notes, which refer to literature note generated in a speci
 2. Select the [notebook](#glossary) to store the [literature note](#glossary): Only notebooks that have been opened in the document tree can be selected from the drop-down list. If the previously selected notebook is not open in the current session, the plugin will be unable to function.
 3. Fill in the [library](#glossary) path: The path should start with `/`, for example, `/References` or `/Assets/References`. Note that this path is essentially the document's location, so do not include a trailing `/`. **Note: If you change the path of the library, the literature libraries on the previous path will become invalid. Additionally, please ensure that the document exists, as the plugin does not automatically create the library document if it does not exist.**
 4. Select the [database](#glossary) type: Choose the type of database you want to use. If you use data files, please refer to the section [Using Data Files as the Literature Data Source](#if-you-use-bibtex-and-csl-json-files-as-the-literature-data-source). If you use Zotero or Juris-M, please refer to the section [Using Zotero or Juris-M as the Literature Data Source](#if-you-use-zotero-or-juris-m-as-the-literature-data-source).
-5. Fill in the [literature note](#glossary) template: Fill in the template for generating the literature note document's text content. Refer to the section [Template Syntax](#how-to-write-templates) for specific template syntax.
-6. If you believe you are an experienced user familiar with regular expression searching and SiYuan citation logic and want to be compatible with workflows outside of SiYuan, you can choose to enable the "Customize Citation Link" switch. For the specific effect of enabling this switch, refer to the section [What Happens If I Enable the "Customize Citation Link" Switch?](#what-happens-if-i-enable-the-customize-citation-link-switch)
-7. Fill in the [citation link](#glossary) template: Fill in the template for generating the anchor text of the citation link. Refer to the section [Template Syntax](#how-to-write-templates) for specific template syntax.
-8. If you want to redesign your templates and data or want to see the default settings set by the plugin author, you can click the ["Delete Data"](#what-happens-when-i-click-the-delete-data-button) button to delete all the saved settings data.
-9. Click "Save" to store and apply the settings.
+5. Fill in the template for the title of literature content documents: Enter the template for generating titles for literature content documents. For the specific syntax of the template, please refer to [Template Syntax](#how-to-write-templates).
+6. Fill in the [literature note](#glossary) template: Fill in the template for generating the literature note document's text content. Refer to the section [Template Syntax](#how-to-write-templates) for specific template syntax.
+7. If you believe you are an experienced user familiar with regular expression searching and SiYuan citation logic and want to be compatible with workflows outside of SiYuan, you can choose to enable the "Customize Citation Link" switch. For the specific effect of enabling this switch, refer to the section [What Happens If I Enable the "Customize Citation Link" Switch?](#what-happens-if-i-enable-the-customize-citation-link-switch)
+8. Fill in the [citation link](#glossary) template: Fill in the template for generating the anchor text of the citation link. Refer to the section [Template Syntax](#how-to-write-templates) for specific template syntax.
+9. If you want to redesign your templates and data or want to see the default settings set by the plugin author, you can click the ["Delete Data"](#what-happens-when-i-click-the-delete-data-button) button to delete all the saved settings data.
+10. Click "Save" to store and apply the settings.
 
 ### If You Use BibTeX and CSL-JSON Files as the Literature Data Source
 
@@ -68,6 +69,7 @@ Add citations to your notes, which refer to literature note generated in a speci
 
 - Commands (can be searched and executed directly in the `Plugin Button - Command Panel` or set shortcuts in `Settings - Shortcuts - Plugin - Citation for SiYuan`):
   - Reload the Database: Reload the [database](#glossary) and reindex the [library](#glossary) based on the source of the literature. This command also updates the library.
+  - Refresh all literature content document titles: Based on the current set [title template](#configure-the-plugin), refresh the titles of all literature content documents in the [literature library](#glossary).
   - Copy Citation: Open the literature search panel, select a literature, and copy its [citation link](#glossary) to the clipboard, updating the library.
 - Title block icon menu:
   - Refresh Citations: Refresh the anchor text of all [citation links](#glossary) in the current document using the current [citation link template](#configure-the-plugin). When the citation link template changes, you can use this feature to refresh the formatting of all citation links in the document.
@@ -121,6 +123,31 @@ In addition, the following variables can be used in citation links:
 - {{shortAuthor}}: Generates a shorter author string according to the IEEE format, e.g., `Lin and Morse et al.`
 - {{citeFileID}}: The ID of the literature note document within SiYuan, used to assist in generating citation links or external links, e.g., `20230707192208-ocs4482`
 ```
+
+### Advanced Template Syntax
+
+In version 0.0.6, the template handling section utilizes [template.js](https://github.com/yanhaijing/template.js). To adapt to the template syntax commonly used by users, all `{{ }}` will be replaced with `<%= %>` before variable calculations and replacements, allowing template.js to process the templates. Therefore, in addition to using the old `{{variable}}` syntax, there are also many advanced usage methods available:
+
+1. Wrap JavaScript statements within `{{ }}`.
+2. Use the native syntax of template.js (you can refer to the [EJS syntax](https://ejs.bootcss.com/#docs)).
+
+For example, the following template allows the line to not appear as "**Tags**: " when there are no `{{tags}}` variables:
+
+```JavaScript
+{{ tags.length ? `\n**Tags**:\t\t${tags}` : "" }}
+```
+
+And the following template prevents the "Files" section from being generated when there are no associated files:
+
+```JavaScript
+<% if (files.length) { %>
+# Files
+
+<%= {{files}} %>
+<% } %>
+```
+
+**Note:** All variables return strings and will not directly return `null`. Please use `.length` to check if a variable exists.
 
 ## How to Obtain BibTeX or CSL-JSON Files
 
@@ -197,6 +224,8 @@ The code of the following projects was referenced, and I would like to express m
 [siyuan-plugin-importer](https://github.com/terwer/siyuan-plugin-importer)
 
 [obsidian-zotero-integration](https://github.com/mgmeyers/obsidian-zotero-integration)
+
+[template.js](https://github.com/yanhaijing/template.js)
 
 Thanks to everyone in the "思源笔记折腾群" for answering my questions and providing guidance. 
 
