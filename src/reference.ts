@@ -1,7 +1,7 @@
 import SiYuanPluginCitation from "./index";
 import { SiyuanData } from "./api/base-api";
 import {
-  STORAGE_NAME, isDev, citeLink
+  STORAGE_NAME, isDev, citeLink, DISALLOWED_FILENAME_CHARACTERS_RE
 } from "./utils/constants";
 import {
   generateFromTemplate
@@ -22,12 +22,6 @@ export class Reference {
     this.logger = createLogger("reference");
   }
 
-  public async initializeReferenceDir() {
-    // this.updateLiteratureNote("caiAdaptiveFinitetimeConsensus2017");
-    // const res = await this.updateLiteratureLink("20230621160139-xh1t8dg");
-    // console.log(await this.checkRefDirExist());
-  }
-
   public async updateLiteratureNote(citekey: string) {
     const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
     const refPath = this.plugin.data[STORAGE_NAME].referencePath as string;
@@ -43,6 +37,7 @@ export class Reference {
       return null;
     }
     const noteTitle = generateFromTemplate(titleTemplate, entry);
+    noteTitle.replace(DISALLOWED_FILENAME_CHARACTERS_RE, "_");
     const literatureNote = generateFromTemplate(noteTemplate, entry);
     if (data.length) {
       const literatureId = data[0].root_id;
@@ -207,6 +202,7 @@ export class Reference {
         return null;
       }
       const noteTitle = generateFromTemplate(titleTemplate, entry);
+      noteTitle.replace(DISALLOWED_FILENAME_CHARACTERS_RE, "_");
       // 不对的时候才更新
       const res = await this.plugin.kernelApi.getBlock(this.plugin.ck2idDict[citekey]);
       const title = res.data[0].content;

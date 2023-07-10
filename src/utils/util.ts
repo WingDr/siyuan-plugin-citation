@@ -9,8 +9,6 @@ import { createNoticer, INoticer } from "./noticer";
 const fs = window.require("fs");
 const path = window.require("path");
 
-export const DISALLOWED_FILENAME_CHARACTERS_RE = /[*"\\/<>:|?]/g;
-
 /**
  * Reading the given directory and 
  * search all the .json and .bib file
