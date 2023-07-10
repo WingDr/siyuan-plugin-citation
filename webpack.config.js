@@ -36,6 +36,7 @@ module.exports = (env, argv) => {
                 {from: "assets/", to: "./dist/assets/"},
                 {from: "sample-data/sample.bib", to: "./dist/sample-data/"},
                 {from: "sample-data/sample.json", to: "./dist/sample-data/"},
+                {from: "zoteroJS/", to: "./dist/zoteroJS/"},
             ],
         }));
         plugins.push(new ZipPlugin({

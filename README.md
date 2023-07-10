@@ -4,6 +4,8 @@
 
 > A citation plugin that implements basic functionality, hoping to make your SiYuan more academically oriented.
 
+**Based on the suggestion from [ttChen](https://getquicker.net/User/Actions/395924-ttChen), in the upcoming versions, the functionality of accessing Zotero using the [debug-bridge] plugin will be implemented. This method offers faster access speed and higher efficiency compared to the current method of using Better BibTeX. Additionally, it enables the implementation of many additional features (refer to [ttChen's Quicker action](https://getquicker.net/User/Actions/395924-ttChen) for details). Users who use Zotero/Juris-M databases should prepare in advance. For specific preparation methods, please refer to [Run Javascript in Zotero](https://www.yuque.com/chentaotao-cf9fr/gthfy4/clqahv57w5ugmdev).**
+
 **Special thanks to [Geo123abc](https://github.com/Geo123abc) for creating the [tutorial video](https://www.bilibili.com/video/BV17u411j79z/?vd_source=b4b4ca14b1a866918dcef4ca52896f03).**
 
 **In version 0.0.6, the template handling method has been expanded by incorporating the template engine template.js. The templates used previously can still be used in subsequent versions. If you want to use more advanced template syntax, please refer to [Advanced Template Syntax](#advanced-template-syntax).**

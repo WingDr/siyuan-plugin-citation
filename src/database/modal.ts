@@ -21,8 +21,11 @@ import {
  } from "./zoteroLibrary";
 import { htmlNotesProcess } from "../utils/notes";
 import { createLogger, ILogger } from "../utils/simple-logger";
-import { isDev, REF_DIR_PATH } from "../utils/constants";
+import { isDev, REF_DIR_PATH, dataDir } from "../utils/constants";
 import { fileSearch, generateFileLinks } from "../utils/util";
+
+const path = window.require("path");
+const fs = window.require("fs");
 
 export abstract class DataModal {
   public logger: ILogger;
@@ -294,12 +297,17 @@ const defaultHeaders = {
   "Content-Type": "application/json",
   "Accept": "application/json"
 };
+const JSHeaders = {
+  "Content-Type": "application/javascript",
+  "Accept": "application/json"
+};
 const contentTranslator = "36a3b0b5-bad0-4a04-b79b-441c7cef77db";
 
 
 export class ZoteroModal extends DataModal {
   private type: ZoteroType;
   private jsonrpcUrl: string;
+  private absZoteroJSPath: string;
 
   constructor(plugin: SiYuanPluginCitation, zoteroType: ZoteroType) {
     super();
@@ -307,6 +315,7 @@ export class ZoteroModal extends DataModal {
     this.type = zoteroType;
     this.logger = createLogger(`zotero modal: ${zoteroType}`);
     this.jsonrpcUrl = `http://127.0.0.1:${this.getPort(this.type)}/better-bibtex/json-rpc`;
+    this.absZoteroJSPath = path.resolve(dataDir, "./plugins/siyuan-plugin-citation/zoteroJS");
   }
 
   public async buildModal() {
@@ -400,6 +409,18 @@ export class ZoteroModal extends DataModal {
       if (isDev) this.logger.error(e); 
       return false;
     });
+  }
+
+  private async getAllItems() {
+    const jsContent = fs.readFileSync(path.join(this.absZoteroJSPath, "getAllItems.ts"), "utf-8");
+    const Result = await axios({
+      method: "post",
+      url: `http://127.0.0.1:${this.getPort(this.type)}/debug-bridge/execute?password=CTT`,
+      headers: JSHeaders,
+      data: jsContent
+    });
+    console.log(Result);
+    return JSON.parse(Result.data);
   }
 
 }
