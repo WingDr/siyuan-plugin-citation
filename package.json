@@ -28,7 +28,6 @@
     "webpack-cli": "^5.0.2",
     "zip-webpack-plugin": "^4.0.1",
     "@types/node": "^20.3.1",
-    "@types/ejs": "^3.1.2",
     "ts-node": "^10.9.1"
   },
   "dependencies": {

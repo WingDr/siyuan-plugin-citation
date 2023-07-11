@@ -18,6 +18,8 @@
   "copyCiteLink": "复制文献引用",
   "copyCiteLinkSuccess": "引用链接已在剪贴板",
   "settingTab": {
+    "settingTabTitle": "插件版本：${version}",
+    "settingTabDescription": "如果有好的想法或者发现了bug，欢迎到github上提<b>issue</b>或者发邮件到<b>${e-mail}</b>",
     "notebookSelectorTitle": "笔记本",
     "notebookSelectorDescription": "选择文献库放置的笔记本",
     "referencePathInputTitle": "文献库路径",

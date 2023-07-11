@@ -13,10 +13,12 @@ import {
   defaultNoteTemplate,
   defaultLinkTemplate,
   defaultReferencePath,
-  isDev
+  isDev,
+  dataDir
 } from "./utils/constants";
 import { createLogger, ILogger } from "./utils/simple-logger";
 import { DatabaseType } from "./database/database";
+import { readFileSync } from "fs";
 
 export class InteractionManager {
   public plugin: SiYuanPluginCitation;
@@ -60,6 +62,14 @@ export class InteractionManager {
     });
 
     const eMail = "siyuan_citation@126.com";
+    const issuesURL = "https://github.com/WingDr/siyuan-plugin-citation/issues";
+    const fs = window.require("fs");
+    const path = window.require("path");
+    const file = JSON.parse(await fs.readFileSync(path.join(dataDir, "./plugins/siyuan-plugin-citation/plugin.json")));
+    this.setting.addItem({
+      title: this.plugin.i18n.settingTab.settingTabTitle.replace("${version}", file.version),
+      description: this.plugin.i18n.settingTab.settingTabDescription.replaceAll("${e-mail}", eMail).replace("${issuesURL}", issuesURL),
+  });
 
     //notebook selector
     const referenceNotebookSelector = document.createElement("select");

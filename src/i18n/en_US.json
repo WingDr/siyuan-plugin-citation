@@ -18,6 +18,8 @@
   "copyCiteLink": "Copy Citation",
   "copyCiteLinkSuccess": "The citation link is on your clipboard",
   "settingTab": {
+    "settingTabTitle": "Plugin Version: ${version}",
+    "settingTabDescription": "If you have any good ideas or find any bugs, please feel free to raise an <b>issue</b> on GitHub or send an email to <b>${e-mail}</b>.",
     "notebookSelectorTitle": "Notebook",
     "notebookSelectorDescription": "Select the notebook where the literature notes located",
     "referencePathInputTitle": "Library Directory",

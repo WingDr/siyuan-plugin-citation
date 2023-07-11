@@ -328,6 +328,7 @@ export class ZoteroModal extends DataModal {
   public async showSearching(protyle:Protyle, onSelection: (citekeys: string[]) => void) {
     this.protyle = protyle;
     this.onSelection = onSelection;
+    console.log(await this.callZoteroJS("getAllItems"));
     if (await this.checkZoteroRunning()) {
       if (isDev) this.logger.info(`${this.type}已运行`);
       const res = await axios({

@@ -5,11 +5,11 @@ s.libraryID = Zotero.Libraries.userLibraryID;
 s.addCondition('noChildren', 'true');
 s.addCondition('recursive', 'true');
 s.addCondition('joinMode', 'any');
-s.addCondition('itemType', 'is', '')
 var ids = await s.search();
 let Result = [];
 for (let id of ids) {
-  Result.push(Zotero.Items.get(id).getField('title') + " | " + Zotero.Items.get(id).key);
+  var item = Zotero.Items.get(id)
+  if (!item.isNote() && !item.isAnnotation() && !item.isAttachment()) Result.push(item);
 }
-return Result.join("\r\n");
+return JSON.stringify(Result);
 
