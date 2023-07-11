@@ -1,3 +1,4 @@
+import { confirm } from "siyuan";
 import SiYuanPluginCitation from "./index";
 import { SiyuanData } from "./api/base-api";
 import {
@@ -52,25 +53,39 @@ export class Reference {
       if (dataIds.length) {
         // 查找第一个块的内容中是否包含用户自定义片段
         res = await this.plugin.kernelApi.getBlock(dataIds[0]);
-        const match = (res.data[0].markdown as string).match(refRegDynamic);
-        if (match && match.length && dataIds.indexOf(match[0].split(" ")[0].slice(2)) != -1) {
+        const dyMatch = (res.data[0].markdown as string).match(refRegDynamic);
+        const stMatch = (res.data[0].markdown as string).match(refRegStatic);
+        if (dyMatch && dyMatch.length && dataIds.indexOf(dyMatch[0].split(" ")[0].slice(2)) != -1) {
           // 如果能查找到链接，并且链接存在于文本中，则说明存在用户数据区域
-          const idx = dataIds.indexOf(match[0].split(" ")[0].slice(2));
+          const idx = dataIds.indexOf(dyMatch[0].split(" ")[0].slice(2));
           userDataId = dataIds[idx];
-          userDataLink = match[0];
-          if (isDev) this.logger.info("匹配到用户片段链接 =>", {match: match, id: userDataId});
+          userDataLink = dyMatch[0];
+          if (isDev) this.logger.info("匹配到用户片段动态锚文本链接 =>", {dyMatch: dyMatch, id: userDataId});
+          // 删除所有需要更新的片段
+          await this.deleteBlocks(dataIds.slice(0, idx));
+        } else if (stMatch && stMatch.length && dataIds.indexOf(stMatch[0].split(" ")[0].slice(2)) != -1) {
+          // 如果能查找到链接，并且链接存在于文本中，则说明存在用户数据区域
+          const idx = dataIds.indexOf(stMatch[0].split(" ")[0].slice(2));
+          userDataId = dataIds[idx];
+          userDataLink = stMatch[0];
+          if (isDev) this.logger.info("匹配到用户片段静态锚文本链接 =>", {stMatch: stMatch, id: userDataId});
           // 删除所有需要更新的片段
           await this.deleteBlocks(dataIds.slice(0, idx));
         } else {
           if (isDev) this.logger.info("未匹配到用户片段链接 =>", {
             markdown: res.data[0].markdown,
-            match: match,
-            getId: match[0].split(" ")[0].slice(2),
+            stMatch,
+            dyMatch,
             totalIds: dataIds
           });
-          // 不存在用户数据区域，整个更新
-          await this.deleteBlocks(dataIds);
-          userDataId = await this.updateEmptyNote(literatureId);
+          confirm("⚠️", this.plugin.i18n.confirms.updateWithoutUserData, async () => {
+            // 不存在用户数据区域，整个更新
+            await this.deleteBlocks(dataIds);
+            userDataId = await this.updateEmptyNote(literatureId);
+            if (!userDataLink.length) userDataLink = `((${userDataId} 'User Data'))`;
+            return await this.plugin.kernelApi.prependBlock(literatureId, userDataLink + "\n\n" + literatureNote);
+          });
+          return;
         }
       } else {
         if (isDev) this.logger.info("文献内容文档中没有内容");
@@ -78,7 +93,7 @@ export class Reference {
         userDataId = await this.updateEmptyNote(literatureId);
       }
       // 插入前置片段
-      if (!userDataId.length) userDataLink = `((${userDataId} 'User Data'))`;
+      if (!userDataLink.length) userDataLink = `((${userDataId} 'User Data'))`;
       return await this.plugin.kernelApi.prependBlock(literatureId, userDataLink + "\n\n" + literatureNote);
     } else {
       //文件不存在就新建文件

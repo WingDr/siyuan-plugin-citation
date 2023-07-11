@@ -27,7 +27,7 @@ Add citations to your notes, which refer to literature note generated in a speci
 1. **Notebook**: Refers to a notebook in the SiYuan note document tree. The library can only be placed in one of the open notebooks. If you switch to another notebook for the library, the previously selected notebook's library will become invalid.
 2. **Database**: The original data source of the literature, currently supports three types: data files (BibTeX and CSL-JSON), Zotero, and Juris-M. The data files are reimported every time the software is launched, but if the files themselves change during use, you need to **"Reload the Database"** (through the settings panel or command) or **"Restart the SiYuan software"** for the changes to take effect.
 3. **Library**: The location where the inserted citation links point to the literature note. It is essentially a *document located at a specific path*. Its sub-documents are all literature note that has been referenced. The content of this document itself will not be modified, but it will be updated and refreshed when citations are inserted.
-4. **Literature Note**: A document generated based on the original data of the literature and the "Literature Note Template" filled in the settings panel. *The title and name of a newly created document are set as the literature's citekey.* Currently, the document is refreshed every time the corresponding literature is cited. *Please do not place personal content in the document and do not modify the document's name in the document properties. However, you can freely modify the title.*  There are plans to support user-customized area in future versions.
+4. **Literature Note**: A document generated based on the original data of a literature entry and the "*Literature Note Template*" filled in the settings interface. The title and naming of a newly created document are set to the citekey of that literature entry. Currently, the content of this document is refreshed every time the corresponding literature is cited. Therefore, **do not modify the document's naming in the document properties**. The literature note now supports a user data section, as explained in the [Explaining Literature Note](#explaining-literature-note) section. **Please refrain from inserting personal content in areas other than the user data section**.
 5. **Citation Link**: The reference link inserted in the document (or copied to the clipboard), which points to the corresponding literature note in the library. The anchor text of the link is generated based on the literature's original data and the "Citation Link Template" filled in the settings panel.
 
 ## Preparation before Use
@@ -90,45 +90,57 @@ Add citations to your notes, which refer to literature note generated in a speci
 
 ## Template Syntax
 
+## How to write templates
+
 - The template text syntax uses Markdown syntax.
-- Parts to be replaced by variables are wrapped in `{{ }}`, for example, `{{title}}`.
-- In the [literature note template](#configure-the-plugin) input box, you can use `Shift/Ctrl + Enter` for line breaks and use `Tab` for indentation.
+- The parts to be replaced by variables are wrapped in `{{ }}`, for example `{{title}}`.
+- In the input box of the [Literature Content Template](#Setting-the-plugin), you can use `Shift/Ctrl + Enter` to line break and use `Tab` to input tab characters.
 
-The following variables can be used in the literature note and citation templates:
-
-```markdown
-- {{citekey}}: The unique identifier of the literature. It is recommended to generate it using the Better BibTeX plugin for Zotero.
-- {{abstract}}: The abstract of the literature.
-- {{authorString}}: The string containing all authors listed in order.
-- {{containerTitle}}: The title of the container (journal, conference proceedings, etc.) where the literature is located.
-- {{DOI}}: The DOI of the literature.
-- {{eprint}}: The eprint of the literature.
-- {{eprinttype}}: The eprint type of the literature.
-- {{eventPlace}}: The place of the event (conference, etc.).
-- {{page}}: The page number of the literature.
-- {{publisher}}: The publisher of the literature.
-- {{publisherPlace}}: The location of the publisher.
-- {{tags}}: A the tags connected with ", " (It is not exist in CSL-JSON file)
-- {{title}}: The title of the literature.
-- {{titleShort}}: The abbreviated title of the literature. Many literature do not have abbreviated titles.
-- {{type}}: The type of literature. (It might be different between accessed through Zotero directly and the exported BibTex and CSL-JSON files)
-- {{URL}}: The URL of the literature.
-- {{year}}: The publication year of the literature.
-- {{files}}: The attachments of the literature.
-- {{zoteroSelectURI}}: Direct link to the corresponding entry in Zotero.
-- {{note}}: Notes made in Zotero, with support for direct links to Zotero.
-```
-
-In addition, the following variables can be used in citation links:
+The following variables can be used in the literature content and citation templates:
 
 ```markdown
-- {{shortAuthor}}: Generates a shorter author string according to the IEEE format, e.g., `Lin and Morse et al.`
-- {{citeFileID}}: The ID of the literature note document within SiYuan, used to assist in generating citation links or external links, e.g., `20230707192208-ocs4482`
+- {{citekey}}: The unique identifier of the literature, it is recommended to use the better biblatex plugin of Zotero to generate
+- {{abstract}}: Abstract
+- {{authorString}}: A string of all authors arranged in order
+- {{containerTitle}}: The title of the publication (journal, conference proceedings, etc.) where the literature is located
+- {{DOI}}: The DOI of the literature
+- {{eprint}}: Preprint
+- {{eprinttype}}: Preprint type
+- {{eventPlace}}: (Conference, etc.) location
+- {{page}}: Page number
+- {{publisher}}: Publisher
+- {{publisherPlace}}: Publisher's location
+- {{tags}}: All tags, connected by ", ", this variable is not available in CSL-JSON files
+- {{title}}: Title
+- {{titleShort}}: Abbreviated title, many literature do not have abbreviated titles
+- {{type}}: Type of literature (Note: The literature type identifier obtained directly from Zotero may be different from the one obtained after export)
+- {{URL}}: The URL of the literature
+- {{year}}: The publication year of the literature
+- {{files}}: Attachments of the literature. It will be displayed in the default style, one file per line, with a link to Zotero (if it is a PDF, the link can directly open the PDF in Zotero).
+- {{file}}: Attachment of the literature, in the format of the initial data source, for user customization. It is an object itself and its properties can be accessed using `.`. The specific method of accessing properties is as follows:
+  - {{file.type}}: The type of the attachment, i.e., the file extension
+  - {{file.fileName}}: The complete file name of the attachment
+  - {{file.path}}: The absolute path of the attachment, with `file://`
+  - {{file.zoteroSelectURI}}: The link that can select the attachment in Zotero (link only)
+  - {{file.zoteroOpenURI}}: The link that can directly open the attachment in Zotero (link only, only for PDF files)
+- {{zoteroSelectURI}}: The link that can directly jump to the corresponding entry in Zotero
+- {{note}}: Notes made in Zotero, the links in it can directly jump to Zotero
 ```
+
+In addition, the following variables can be used in the citation link:
+
+```Markdown
+- {{shortAuthor}}: A shorter author string generated according to the IEEE format (approximately), for example `Lin and Morse et al.`
+- {{citeFileID}}: The ID of the literature content document in the Obsidian, used to assist in generating citation links or external links, for example `20230707192208-ocs4482`
+```
+
+The template also includes the following special variables:
+
+{{getNow}}: The moment() object of the current time, you can customize the format in the template, the method refers to [moment.js](https://momentjs.com/).
 
 ### Advanced Template Syntax
 
-In version 0.0.6, the template handling section utilizes [template.js](https://github.com/yanhaijing/template.js). To adapt to the template syntax commonly used by users, all `{{ }}` will be replaced with `<%= %>` before variable calculations and replacements, allowing template.js to process the templates. Therefore, in addition to using the old `{{variable}}` syntax, there are also many advanced usage methods available:
+In version 0.0.6, the template handling section utilizes [template.js](https://github.com/yanhaijing/template.js). To accommodate the template syntax commonly used by general users, before performing variable calculations and replacements, all `{{ }}` will be replaced with `<%= %>` for template.js to process the templates. Therefore, besides using the existing `{{variable}}` syntax, there are many advanced usage methods available:
 
 1. Wrap JavaScript statements within `{{ }}`.
 2. Use the native syntax of template.js (you can refer to the [EJS syntax](https://ejs.bootcss.com/#docs)).
@@ -149,7 +161,48 @@ And the following template prevents the "Files" section from being generated whe
 <% } %>
 ```
 
-**Note:** All variables return strings and will not directly return `null`. Please use `.length` to check if a variable exists.
+The following template has the same effect as the previous one:
+
+```JavaScript
+<% if (fileList.length) { %>
+# Files
+
+{{fileList.map(file => {if (file.type === "pdf") return `[[Open]](${file.zoteroOpenURI})\t|\t[${file.fileName}](file.path)`; else return `[[Locate]](${file.zoteroSelectURI})\t|\t[${file.fileName}](file.path)`;}).join("\n")}}
+<% } %>
+```
+
+**Note:** All variables return strings and will not directly return `null`. Therefore, please use `.length` to check if a variable exists.
+
+## Explaining Literature Note
+
+In version v0.0.8, the literature note now supports a user data section, indicated by a top-level heading named "User Data" by default (this allows the floating preview in Obsidian to directly preview all user data). The content after this heading will not be updated with citations, but it also imposes some formatting requirements on the literature note. The format of an individual literature note document is as follows:
+
+```markdown
+((User Data Title ID 'User Data Title'))
+
+Template-generated content
+
+# User Data Title (default: "User Data")
+
+User data content
+```
+
+### What can be modified
+
+- Everything below the `# User Data Title` (including the content of this heading) can be modified and will not be updated with citations.
+- Anchored text can be added to the beginning citation, but it will not change with the user data title (it becomes static anchored text).
+
+### What cannot be modified
+
+- The content above the `# User Data Title`, including the top-most citation, will be updated with citations, so please do not modify it.
+- **Do not delete the `# User Data Title` heading itself!!** If you only clear its content, the block ID will not change. However, if you delete this heading and create a new one, the block ID will change, and all user data below it will be cleared in the next citation update!!!
+- **Do not delete the citation at the beginning of the document!** If you delete this citation, the plugin will not be able to locate the user data section, and all content will be refreshed.
+
+### How to fix if the citation/heading has been deleted
+
+- Add a heading at the top of the data you want to retain.
+- Right-click on the heading, select "Copy," and choose "Copy as Block Reference." Paste it as the first line in the document.
+- **Ensure that only the reference link is present in the first line of the document.**
 
 ## How to Obtain BibTeX or CSL-JSON Files
 
@@ -169,7 +222,7 @@ The [citation link template](#configure-the-plugin) will be fully customized, me
 
 **The regular expression for finding citation links is /\\(\\((.\*?)\\\"(.\*?)\\\"\\)\\)/g. Please make sure your template format conforms to this expression.**
 
-⚠️**Note: After enabling the switch, please make sure your template includes `...(( {{citeFileID}} "..."))...`, otherwise the generated links will not be able to reference the literature note.**
+⚠️**Note: After enabling the switch, please make sure your template includes `...(({{citeFileID}} "..."))...`, otherwise the generated links will not be able to reference the literature note.**
 
 ## What Happens When I Click the "Delete Data" Button?
 

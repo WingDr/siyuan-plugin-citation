@@ -50,5 +50,8 @@
     "zoteroNotRunning": "${type}没有在运行",
     "getLiteratureFailed": "获得引用文献失败",
     "loadLibraryFailed": "文献库导入失败"
+  },
+  "confirms": {
+    "updateWithoutUserData": "未检测到用户数据区域（缺少引用或引用失效），确定要更新链接吗？"
   }
 }
