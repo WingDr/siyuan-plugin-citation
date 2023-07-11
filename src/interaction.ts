@@ -18,7 +18,6 @@ import {
 } from "./utils/constants";
 import { createLogger, ILogger } from "./utils/simple-logger";
 import { DatabaseType } from "./database/database";
-import { readFileSync } from "fs";
 
 export class InteractionManager {
   public plugin: SiYuanPluginCitation;
