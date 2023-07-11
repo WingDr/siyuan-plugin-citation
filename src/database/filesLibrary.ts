@@ -1,5 +1,6 @@
 import * as BibTeXParser from "@retorquere/bibtex-parser";
 import { Entry as EntryDataBibLaTeX } from "@retorquere/bibtex-parser";
+import moment from "moment";
 // Also make EntryDataBibLaTeX available to other modules
 export { Entry as EntryDataBibLaTeX } from "@retorquere/bibtex-parser";
 
@@ -62,6 +63,9 @@ export class Library {
       eprint: entry.eprint,
       eprinttype: entry.eprinttype,
       eventPlace: entry.eventPlace,
+      files: entry.files,
+      fileList: entry.fileList,
+      getNow: moment(),
       note: entry.note,
       page: entry.page,
       publisher: entry.publisher,
@@ -73,7 +77,6 @@ export class Library {
       shortAuthor: entry.shortAuthor,
       URL: entry.URL,
       year: entry.year?.toString(),
-      files: entry.files,
       zoteroSelectURI: entry.zoteroSelectURI,
     };
 
@@ -129,6 +132,14 @@ export interface Author {
   family?: string;
 }
 
+export interface File {
+  type: string;
+  zoteroSelectURI?: string;
+  zoteroOpenURI?: string;
+  fileName: string;
+  path: string;
+}
+
 /**
  * An `Entry` represents a single reference in a reference database.
  * Each entry has a unique identifier, known in most reference managers as its
@@ -160,6 +171,7 @@ export abstract class Entry {
 
   public abstract DOI?: string;
   public abstract files?: string[];
+  public abstract fileList?: File[];
 
   /**
    * The date of issue. Many references do not contain information about month
@@ -262,6 +274,7 @@ export class EntryCSLAdapter extends Entry {
   eprint: string = null;
   eprinttype: string = null;
   files: string[] = null;
+  fileList?: File[] = [];
 
   get id() {
     return this.data.id;
@@ -464,6 +477,25 @@ export class EntryBibLaTeXAdapter extends Entry {
     }
 
     return ret;
+  }
+
+  get fileList(): File[] {
+    let ret: string[] = [];
+    if (this.data.fields.file) {
+      ret = ret.concat(this.data.fields.file.flatMap((x) => x.split(";")));
+    }
+    if (this.data.fields.files) {
+      ret = ret.concat(this.data.fields.files.flatMap((x) => x.split(";")));
+    }
+
+    return ret.map(path => {
+      const fileName =  path.split("\\").slice(-1)[0];
+      return {
+        fileName,
+        type: path.split(".").slice(-1)[0],
+        path: "file://" + path.replace(/\\(.?)/g, (m, p1) => p1)
+      } as File;
+    });
   }
 
   get authorString() {

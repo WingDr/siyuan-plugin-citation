@@ -148,7 +148,17 @@
 <% if (files.length) { %>
 # Files
 
-<%= {{files}} %>
+{{files}}
+<% } %>
+```
+
+这一段模板和下面这一段模板有同样效果：
+
+```Javascript
+<% if (fileList.length) { %>
+# Files
+
+{{fileList.map(file => {if (file.type === "pdf") return `[[Open]](${file.zoteroOpenURI})\t|\t[${file.fileName}](file.path)`; else return `[[Locate]](${file.zoteroSelectURI})\t|\t[${file.fileName}](file.path)`;}).join("\n")}}
 <% } %>
 ```
 

@@ -145,7 +145,7 @@ And the following template prevents the "Files" section from being generated whe
 <% if (files.length) { %>
 # Files
 
-<%= {{files}} %>
+{{files}}
 <% } %>
 ```
 

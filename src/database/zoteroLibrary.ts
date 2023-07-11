@@ -1,5 +1,5 @@
 import moment from "moment";
-import { Entry, Author, IIndexable } from "./filesLibrary";
+import { Entry, Author, IIndexable, File } from "./filesLibrary";
 import { htmlNotesProcess } from "../utils/notes";
 
 interface Creator {
@@ -152,6 +152,28 @@ export class EntryZoteroAdapter extends Entry {
     })];
   }
 
+  get fileList(): File[] {
+    const attachments =  this.data.attachments ?? [];
+    return [...attachments.map(attach => {
+      const fileName = attach.title;
+      const res = (attach.path as string).split(".");
+      const fileType = res[res.length - 1];
+      let zoteroOpenURI = "";
+      if (fileType === "pdf") {
+        const res = (attach.select as string).split("/");
+        const itemID = res[res.length - 1];
+        zoteroOpenURI = `zotero://open-pdf/library/items/${itemID}`;
+      }
+      return {
+        fileName,
+        type: fileType,
+        path: "file://" + attach.path.replace(/\\(.?)/g, (m, p1) => p1),
+        zoteroOpenURI,
+        zoteroSelectURI: attach.select
+      } as File;
+    })];
+  }
+
   get authorString() {
     const authors = this.data.creators?.filter(c => c.creatorType === "author");
     if (authors) {
@@ -271,6 +293,9 @@ export function getTemplateVariablesForZoteroEntry(entry: EntryZoteroAdapter): R
     eprint: entry.eprint,
     eprinttype: entry.eprinttype,
     eventPlace: entry.eventPlace,
+    files: entry.files,
+    fileList: entry.fileList,
+    getNow: moment(),
     note: entry.note,
     page: entry.page,
     publisher: entry.publisher,
@@ -282,7 +307,6 @@ export function getTemplateVariablesForZoteroEntry(entry: EntryZoteroAdapter): R
     shortAuthor: entry.shortAuthor,
     URL: entry.URL,
     year: entry.year?.toString(),
-    files: entry.files,
     zoteroSelectURI: entry.zoteroSelectURI,
   };
 

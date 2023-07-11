@@ -16,7 +16,7 @@ interface htmlBlock {
 
 export function htmlNotesProcess(note: string) {
   return processBlocks([{
-    content: removeWrapDiv(note),
+    content: removeWrapDiv(note).replace(/\n+/g, "\n"),
     isSeparated: false
   }] as htmlBlock[], 0).map(b => "<div>\n"+b.content+"\n</div>").join("\n\n");
 }
