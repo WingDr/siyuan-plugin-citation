@@ -7,6 +7,9 @@ export const siyuanApiToken = "";
 
 export const citeLink = "(( ${id} \"${link}\"))";
 export const DISALLOWED_FILENAME_CHARACTERS_RE = /[*"\\/<>:|?]/g;
+export const refReg = /\(\((.*?)\)\)/g;
+export const refRegStatic = /\(\((.*?)\"(.*?)\"\)\)/g;
+export const refRegDynamic = /\(\((.*?)\'(.*?)\'\)\)/g;
 
 export const databaseType = ["BibTex and CSL-JSON", "Zotero", "Juris-M"] as const;
 export const REF_DIR_PATH = "./references/";

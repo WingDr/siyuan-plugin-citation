@@ -175,6 +175,13 @@ class KernelApi extends BaseApi {
     return await this.siyuanRequest("/api/import/importStdMd", params);
   }
 
+  public async deleteBlock(blockId: string) {
+    const params = {
+      "id": blockId
+    };
+    return await this.siyuanRequest("/api/block/deleteBlock", params);
+  }
+
   public async searchFileInSpecificPath(notebook: string, hpath: string): Promise<SiyuanData> {
     const params = {
       "stmt": `SELECT * FROM blocks WHERE box LIKE'${notebook}' and hpath LIKE'${hpath}' and type LIKE'd'`
@@ -203,6 +210,13 @@ class KernelApi extends BaseApi {
     return await this.siyuanRequest("/api/block/getBlockKramdown", params);
   }
 
+  public async getChidBlocks(blockId: string) {
+    const params = {
+      "id": blockId
+    };
+    return await this.siyuanRequest("/api/block/getChildBlocks", params);
+  }
+
   public async updateBlockContent(blockId: string, md: string) {
     const params = {
       "dataType": "markdown",
@@ -217,6 +231,15 @@ class KernelApi extends BaseApi {
       "stmt": `SELECT * FROM blocks WHERE root_id like '${fileId}' and type like 'p' and markdown like '%((%))%'`
     };
     return await this.siyuanRequest("/api/query/sql", params);
+  }
+
+  public async prependBlock(blockId: string, md: string) {
+    const params = {
+      "data": md,
+      "dataType": "markdown",
+      "parentID": blockId
+    };
+    return await this.siyuanRequest("/api/block/prependBlock", params);
   }
 
   public async updateCitedBlock(blockId: string, md: string): Promise<SiyuanData> {

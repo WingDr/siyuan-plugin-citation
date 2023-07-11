@@ -1,15 +1,15 @@
 import SiYuanPluginCitation from "./index";
 import { SiyuanData } from "./api/base-api";
 import {
-  STORAGE_NAME, isDev, citeLink, DISALLOWED_FILENAME_CHARACTERS_RE
+  STORAGE_NAME, isDev, citeLink, 
+  DISALLOWED_FILENAME_CHARACTERS_RE, 
+  refReg, refRegStatic, refRegDynamic
 } from "./utils/constants";
 import {
   generateFromTemplate
 } from "./utils/templates";
 import { ILogger, createLogger } from "./utils/simple-logger";
 
-const refReg = /\(\((.*?)\)\)/g;
-const refRegInTemplate = /\(\((.*?)\"(.*?)\"\)\)/g;
 
 // 根据输入更新文献库和引用文档，并维护本文档中的引用次序
 export class Reference {
@@ -42,18 +42,82 @@ export class Reference {
     if (data.length) {
       const literatureId = data[0].root_id;
       // 文件存在就更新文件内容
-      return await this.plugin.kernelApi.updateBlockContent(literatureId, literatureNote);
+      // 查找用户自定义片段
+      let res = await this.plugin.kernelApi.getChidBlocks(literatureId);
+      const dataIds = (res.data as any[]).map(data => {
+        return data.id as string;
+      });
+      let userDataId = "";
+      let userDataLink = "";
+      if (dataIds.length) {
+        // 查找第一个块的内容中是否包含用户自定义片段
+        res = await this.plugin.kernelApi.getBlock(dataIds[0]);
+        const match = (res.data[0].markdown as string).match(refRegDynamic);
+        if (match && match.length && dataIds.indexOf(match[0].split(" ")[0].slice(2)) != -1) {
+          // 如果能查找到链接，并且链接存在于文本中，则说明存在用户数据区域
+          const idx = dataIds.indexOf(match[0].split(" ")[0].slice(2));
+          userDataId = dataIds[idx];
+          userDataLink = match[0];
+          if (isDev) this.logger.info("匹配到用户片段链接 =>", {match: match, id: userDataId});
+          // 删除所有需要更新的片段
+          await this.deleteBlocks(dataIds.slice(0, idx));
+        } else {
+          if (isDev) this.logger.info("未匹配到用户片段链接 =>", {
+            markdown: res.data[0].markdown,
+            match: match,
+            getId: match[0].split(" ")[0].slice(2),
+            totalIds: dataIds
+          });
+          // 不存在用户数据区域，整个更新
+          await this.deleteBlocks(dataIds);
+          userDataId = await this.updateEmptyNote(literatureId);
+        }
+      } else {
+        if (isDev) this.logger.info("文献内容文档中没有内容");
+        // 更新空的文档内容
+        userDataId = await this.updateEmptyNote(literatureId);
+      }
+      // 插入前置片段
+      if (!userDataId.length) userDataLink = `((${userDataId} 'User Data'))`;
+      return await this.plugin.kernelApi.prependBlock(literatureId, userDataLink + "\n\n" + literatureNote);
     } else {
       //文件不存在就新建文件
-      return await this.plugin.kernelApi.createDocWithMd(notebookId, refPath + `/${noteTitle}`, literatureNote).then(async res => {
-        const id  = String(res.data);
-        // 新建文件之后要设定命名
-        await this.plugin.kernelApi.setNameOfBlock(id, citekey);
+      const noteData = await this.createLiteratureNote(noteTitle);
+      return await this.plugin.kernelApi.prependBlock(noteData.rootId, `(( ${noteData.userDataId} 'User Data'))\n\n` + literatureNote).then(async () => {
+        await this.plugin.kernelApi.setNameOfBlock(noteData.rootId, citekey);
         // 新建文件之后也要更新对应字典
-        this.plugin.ck2idDict[citekey] = id;
-        this.plugin.id2ckDict[id] = citekey;
+        this.plugin.ck2idDict[citekey] = noteData.rootId;
+        this.plugin.id2ckDict[noteData.rootId] = citekey;
       });
     }
+  }
+
+  private async createLiteratureNote(noteTitle: string): Promise<{rootId: string, userDataId: string}> {
+    const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
+    const refPath = this.plugin.data[STORAGE_NAME].referencePath as string;
+    const res = await this.plugin.kernelApi.createDocWithMd(notebookId, refPath + `/${noteTitle}`, "");
+    const rootId = String(res.data);
+    if (isDev) this.logger.info("创建文档，ID =>", rootId);
+    const userDataId = await this.updateEmptyNote(rootId);
+    return {
+      rootId,
+      userDataId
+    };
+  }
+
+  private async deleteBlocks(blockIds: string[]) {
+    const p = blockIds.map(blockId => {
+      return this.plugin.kernelApi.deleteBlock(blockId);
+    });
+    return Promise.all(p);
+  }
+
+  private async updateEmptyNote(rootId: string): Promise<string> {
+    await this.plugin.kernelApi.updateBlockContent(rootId, "# User Data");
+    const res = await this.plugin.kernelApi.getChidBlocks(rootId);
+    const userDataId = res.data[0].id as string;
+    if (isDev) this.logger.info("获取用户区域标题，ID =>", userDataId);
+    return userDataId;
   }
 
   public async updateLiteratureLink(fileId: string): Promise<SiyuanData[]> {
@@ -160,7 +224,7 @@ export class Reference {
 
   public async generateOnlyCiteLink(citekey: string, index: number) {
     const linkTemplate = this.plugin.data[STORAGE_NAME].linkTemplate as string;
-    const linkReg = refRegInTemplate;
+    const linkReg = refRegStatic;
     const matchRes = linkTemplate.matchAll(linkReg);
     let modifiedTemplate = "";
     for (const match of matchRes) {
