@@ -118,12 +118,12 @@
 - {{URL}}：文献的访问网址
 - {{year}}：文献的发表年份
 - {{files}}：文献的附件。会直接显示默认样式，每行一个文件，并附带跳转到 zotero 的链接（如果是 pdf 则链接可以直接在 zotero 中打开 pdf 。
-- {{file}}：文献的附件，为初始数据源格式，方便用户自定义。本身是一个对象，可以通过`.`调用其属性。具体属性的调用方法如下：
-  - {{file.type}}：附件的类型，即文件扩展名
-  - {{file.fileName}}：附件的完整文件名
-  - {{file.path}}：附件的绝对路径，带有`file://`
-  - {{file.zoteroSelectURI}}：在 Zotero 中能够选中附件的链接（仅链接）
-  - {{file.zoteroOpenURI}}：在 Zotero 中能够直接打开附件的链接（仅链接，仅pdf文件）
+- {{fileList}}：文献的附件，为初始数据源格式，方便用户自定义。本身是一个对象列表，可以通过`.`调用其属性。具体属性的调用方法如下：
+  - {{fileList[i].type}}：附件的类型，即文件扩展名
+  - {{fileList[i].fileName}}：附件的完整文件名
+  - {{fileList[i].path}}：附件的绝对路径，带有`file://`
+  - {{fileList[i].zoteroSelectURI}}：在 Zotero 中能够选中附件的链接（仅链接）
+  - {{fileList[i].zoteroOpenURI}}：在 Zotero 中能够直接打开附件的链接（仅链接，仅pdf文件）
 - {{zoteroSelectURI}}：可以直接跳转到Zotero对应的条目
 - {{note}}：在Zotero中做的笔记，其中的链接支持直接跳转到Zotero
 ```

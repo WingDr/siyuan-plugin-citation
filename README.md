@@ -117,12 +117,12 @@ The following variables can be used in the literature content and citation templ
 - {{URL}}: The URL of the literature
 - {{year}}: The publication year of the literature
 - {{files}}: Attachments of the literature. It will be displayed in the default style, one file per line, with a link to Zotero (if it is a PDF, the link can directly open the PDF in Zotero).
-- {{file}}: Attachment of the literature, in the format of the initial data source, for user customization. It is an object itself and its properties can be accessed using `.`. The specific method of accessing properties is as follows:
-  - {{file.type}}: The type of the attachment, i.e., the file extension
-  - {{file.fileName}}: The complete file name of the attachment
-  - {{file.path}}: The absolute path of the attachment, with `file://`
-  - {{file.zoteroSelectURI}}: The link that can select the attachment in Zotero (link only)
-  - {{file.zoteroOpenURI}}: The link that can directly open the attachment in Zotero (link only, only for PDF files)
+- {{fileList}}: Attachment of the literature, in the format of the initial data source, for user customization. It is an list of object and its properties can be accessed using `.`. The specific method of accessing properties is as follows:
+  - {{fileList[i].type}}: The type of the attachment, i.e., the file extension
+  - {{fileList[i].fileName}}: The complete file name of the attachment
+  - {{fileList[i].path}}: The absolute path of the attachment, with `file://`
+  - {{fileList[i].zoteroSelectURI}}: The link that can select the attachment in Zotero (link only)
+  - {{fileList[i].zoteroOpenURI}}: The link that can directly open the attachment in Zotero (link only, only for PDF files)
 - {{zoteroSelectURI}}: The link that can directly jump to the corresponding entry in Zotero
 - {{note}}: Notes made in Zotero, the links in it can directly jump to Zotero
 ```
