@@ -28,8 +28,6 @@ export class Reference {
     const refPath = this.plugin.data[STORAGE_NAME].referencePath as string;
     const titleTemplate = this.plugin.data[STORAGE_NAME].titleTemplate as string;
     const noteTemplate = this.plugin.data[STORAGE_NAME].noteTemplate as string;
-    const res = await this.plugin.kernelApi.searchFileWithName(notebookId, refPath, citekey);
-    const data = res.data as any[];
     const entry = await this.plugin.database.getContentByCitekey(citekey);
     if (isDev) this.logger.info("从database中获得文献内容 =>", entry);
     if (!entry) {
@@ -37,13 +35,15 @@ export class Reference {
       this.plugin.noticer.error(this.plugin.i18n.errors.getLiteratureFailed);
       return null;
     }
+    const res = this.plugin.kernelApi.searchFileWithName(notebookId, refPath + "/", citekey);
+    const data = (await res).data as any[];
     const noteTitle = generateFromTemplate(titleTemplate, entry);
     noteTitle.replace(DISALLOWED_FILENAME_CHARACTERS_RE, "_");
     const literatureNote = generateFromTemplate(noteTemplate, entry);
     if (data.length) {
-      const literatureId = data[0].root_id;
+      const literatureId = data[0].id;
       // 文件存在就更新文件内容
-      // 查找用户自定义片段
+      // 查找用户自定义片段F
       let res = await this.plugin.kernelApi.getChidBlocks(literatureId);
       const dataIds = (res.data as any[]).map(data => {
         return data.id as string;
@@ -55,7 +55,7 @@ export class Reference {
         res = await this.plugin.kernelApi.getBlock(dataIds[0]);
         const dyMatch = (res.data[0].markdown as string).match(refRegDynamic);
         const stMatch = (res.data[0].markdown as string).match(refRegStatic);
-        if (dyMatch && dyMatch.length && dataIds.indexOf(dyMatch[0].split(" ")[0].slice(2)) != -1) {
+        if (dyMatch && dyMatch.length && dyMatch[0] && dataIds.indexOf(dyMatch[0].split(" ")[0].slice(2)) != -1) {
           // 如果能查找到链接，并且链接存在于文本中，则说明存在用户数据区域
           const idx = dataIds.indexOf(dyMatch[0].split(" ")[0].slice(2));
           userDataId = dataIds[idx];
@@ -63,7 +63,7 @@ export class Reference {
           if (isDev) this.logger.info("匹配到用户片段动态锚文本链接 =>", {dyMatch: dyMatch, id: userDataId});
           // 删除所有需要更新的片段
           await this.deleteBlocks(dataIds.slice(0, idx));
-        } else if (stMatch && stMatch.length && dataIds.indexOf(stMatch[0].split(" ")[0].slice(2)) != -1) {
+        } else if (stMatch && stMatch.length && stMatch[0] && dataIds.indexOf(stMatch[0].split(" ")[0].slice(2)) != -1) {
           // 如果能查找到链接，并且链接存在于文本中，则说明存在用户数据区域
           const idx = dataIds.indexOf(stMatch[0].split(" ")[0].slice(2));
           userDataId = dataIds[idx];
@@ -78,14 +78,13 @@ export class Reference {
             dyMatch,
             totalIds: dataIds
           });
-          confirm("⚠️", this.plugin.i18n.confirms.updateWithoutUserData, async () => {
+          return confirm("⚠️", this.plugin.i18n.confirms.updateWithoutUserData, async () => {
             // 不存在用户数据区域，整个更新
             await this.deleteBlocks(dataIds);
             userDataId = await this.updateEmptyNote(literatureId);
             if (!userDataLink.length) userDataLink = `((${userDataId} 'User Data'))`;
-            return await this.plugin.kernelApi.prependBlock(literatureId, userDataLink + "\n\n" + literatureNote);
+            return this.plugin.kernelApi.prependBlock(literatureId, userDataLink + "\n\n" + literatureNote);
           });
-          return;
         }
       } else {
         if (isDev) this.logger.info("文献内容文档中没有内容");
@@ -94,16 +93,17 @@ export class Reference {
       }
       // 插入前置片段
       if (!userDataLink.length) userDataLink = `((${userDataId} 'User Data'))`;
-      return await this.plugin.kernelApi.prependBlock(literatureId, userDataLink + "\n\n" + literatureNote);
+      this.plugin.kernelApi.prependBlock(literatureId, userDataLink + "\n\n" + literatureNote);
+      return;
     } else {
       //文件不存在就新建文件
       const noteData = await this.createLiteratureNote(noteTitle);
-      return await this.plugin.kernelApi.prependBlock(noteData.rootId, `(( ${noteData.userDataId} 'User Data'))\n\n` + literatureNote).then(async () => {
-        await this.plugin.kernelApi.setNameOfBlock(noteData.rootId, citekey);
-        // 新建文件之后也要更新对应字典
-        this.plugin.ck2idDict[citekey] = noteData.rootId;
-        this.plugin.id2ckDict[noteData.rootId] = citekey;
-      });
+      await this.plugin.kernelApi.setNameOfBlock(noteData.rootId, citekey);
+      // 新建文件之后也要更新对应字典
+      this.plugin.ck2idDict[citekey] = noteData.rootId;
+      this.plugin.id2ckDict[noteData.rootId] = citekey;
+      this.plugin.kernelApi.prependBlock(noteData.rootId, `(( ${noteData.userDataId} 'User Data'))\n\n` + literatureNote);
+      return;
     }
   }
 
@@ -307,87 +307,5 @@ export class Reference {
   public async copyContent(content: string) {
     navigator.clipboard.writeText(content);
     this.plugin.noticer.info(this.plugin.i18n.copyCiteLinkSuccess);
-  }
-
-  // private getCursorOffsetInBlock(blockId: string) {
-  //   const selection = window.getSelection();
-  //   const range = selection.getRangeAt(0);
-  //   const refText = range.commonAncestorContainer.textContent;
-  //   const refRange = document.createRange();
-  //   refRange.selectNode(range.commonAncestorContainer);
-  //   const block = document.querySelector(`div[data-node-id="${blockId}"]`);
-  //   let offset = 0;
-  //   const refReg = new RegExp(refText, "g")
-  //   const matchRes = block.textContent.matchAll(refReg)
-  //   console.log(block)
-  //   for (const match of matchRes) {
-  //     console.log(match);
-  //     console.log(refRange.isPointInRange(block.firstChild, 200))
-  //   }
-  // }
-
-  /**
-   * Translate the human readable path to siyuan path
-   * @param notebookId id of the target notebook
-   * @param currentDir the current searching directory
-   * @param pathSteps the rest of path that needs searching
-   * @returns transelate results {success: boolean, path: string}
-   */
-  private async translateReferenceDir(notebookId: string, currentDir: string, pathSteps: string[]): Promise<any> {
-    // 终止条件
-    if (pathSteps.length == 0) {
-      return {
-          success: true,
-          path: currentDir
-        };
-    }
-    const res = await this.plugin.kernelApi.readDir(`/data/${notebookId}/${currentDir}`);
-    const data = res.data as any[];
-    // 只检索思源文本文件
-    const files = data.filter((file) => {
-      const p = file.name.split(".");
-      const pLen = p.length;
-      return !file.isDir && (p[pLen-1] == "sy");
-    });
-    const promise = files.map(file => {
-      return this.plugin.kernelApi.getFile(`/data/${notebookId}/${currentDir}/${file.name}`, "text");
-    });
-    return Promise.all(promise).then(contents => {
-      const subpromise = contents.map(async contentStr => {
-        const content = JSON.parse(contentStr);
-        if (content.Properties.title == pathSteps[0]) {
-          return this.translateReferenceDir(notebookId, currentDir + `/${content.ID}`, pathSteps.slice(1)).then(res => {
-            console.log(res);
-            if (res.success) {
-              return {
-                success: true,
-                path: res.path
-              };
-            } else {
-              return res;
-            }
-          });
-        } else {
-          return {
-            success: false,
-            path: ""
-          };
-        }
-      });
-      return Promise.all(subpromise).then(res => {
-        let success = false;
-        let path = "";
-        res.forEach(item => {
-          if (item.success) {
-            success = true;
-            path = item.path;
-          }
-        });
-        return {
-          success,
-          path
-        };
-      });
-    });
   }
 }

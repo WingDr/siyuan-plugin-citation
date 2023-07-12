@@ -141,14 +141,16 @@ export class EntryZoteroAdapter extends Entry {
     const attachments =  this.data.attachments ?? [];
     return [...attachments.map(attach => {
       const fileName = attach.title;
-      const res = (attach.path as string).split(".");
-      const fileType = res[res.length - 1];
-      if (fileType === "pdf") {
-        const res = (attach.select as string).split("/");
-        const itemID = res[res.length - 1];
-        return `[[Open]](zotero://open-pdf/library/items/${itemID})\t|\t[${fileName}](file://${attach.path})`;
+      if (attach.path) {
+        const res = (attach.path as string).split(".");
+        const fileType = res[res.length - 1];
+        if (fileType === "pdf") {
+          const res = (attach.select as string).split("/");
+          const itemID = res[res.length - 1];
+          return `[[Open]](zotero://open-pdf/library/items/${itemID})\t|\t[${fileName}](file://${attach.path})`;
+        }
+        return `[[Locate]](${attach.select})\t|\t[${fileName}](file://${attach.path})`;
       }
-      return `[[Locate]](${attach.select})\t|\t[${fileName}](file://${attach.path})`;
     })];
   }
 
@@ -156,21 +158,23 @@ export class EntryZoteroAdapter extends Entry {
     const attachments =  this.data.attachments ?? [];
     return [...attachments.map(attach => {
       const fileName = attach.title;
-      const res = (attach.path as string).split(".");
-      const fileType = res[res.length - 1];
-      let zoteroOpenURI = "";
-      if (fileType === "pdf") {
-        const res = (attach.select as string).split("/");
-        const itemID = res[res.length - 1];
-        zoteroOpenURI = `zotero://open-pdf/library/items/${itemID}`;
+      if (attach.path) {
+        const res = (attach.path as string).split(".");
+        const fileType = res[res.length - 1];
+        let zoteroOpenURI = "";
+        if (fileType === "pdf") {
+          const res = (attach.select as string).split("/");
+          const itemID = res[res.length - 1];
+          zoteroOpenURI = `zotero://open-pdf/library/items/${itemID}`;
+        }
+        return {
+          fileName,
+          type: fileType,
+          path: "file://" + attach.path.replace(/\\(.?)/g, (m, p1) => p1),
+          zoteroOpenURI,
+          zoteroSelectURI: attach.select
+        } as File;
       }
-      return {
-        fileName,
-        type: fileType,
-        path: "file://" + attach.path.replace(/\\(.?)/g, (m, p1) => p1),
-        zoteroOpenURI,
-        zoteroSelectURI: attach.select
-      } as File;
     })];
   }
 

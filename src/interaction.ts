@@ -296,16 +296,31 @@ export class InteractionManager {
 
   public eventBusReaction() {
     this.plugin.eventBus.on("click-editortitleicon", this.customTitleIconMenu.bind(this));
+    this.plugin.eventBus.on("open-menu-breadcrumbmore", this.customBreadcrumbMore.bind(this));
     // this.plugin.eventBus.on("click-editorcontent", this.customTitleIconMenu);
   }
 
   private customTitleIconMenu(event: CustomEvent<any>) {
+    if (isDev) this.logger.info("触发eventBus：click-editortitleicon，=>", event);
     const label = this.plugin.i18n.refreshCitation;
     const clickCallback = this.plugin.reference.updateLiteratureLink.bind(this.plugin.reference);
     event.detail.menu.addItem({
       iconHTML: "",
       label: label,
       click: () => {clickCallback(event.detail.data.id);}
+    });
+  }
+
+  private customBreadcrumbMore(event: CustomEvent<any>) {
+    if (isDev) this.logger.info("触发eventBus：open-menu-breadcrumbmore，=>", event);
+    // 刷新引用
+    event.detail.menu.addItem({
+      iconHTML: "",
+      label: this.plugin.i18n.refreshCitation,
+      click: () => {
+        if (isDev) this.logger.info("按键触发：刷新引用，=>", event);
+        this.plugin.reference.updateLiteratureLink(event.detail.protyle.block.rootID);
+      }
     });
   }
 }
