@@ -249,7 +249,7 @@
 
 ### 这些问题都不是
 
-欢迎到本插件的github仓库上提[issue](https://github.com/WingDr/siyuan-plugin-citation/issues)或者将问题发送到我的邮箱(plugin_citation@126.com)
+欢迎到本插件的github仓库上提[issue](https://github.com/WingDr/siyuan-plugin-citation/issues)或者将问题发送到我的邮箱(siyuan_citation@126.com)
 
 ## TODO
 
