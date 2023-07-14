@@ -84,9 +84,9 @@ export class Database {
         const citeId = this.plugin.ck2idDict[citekey];
         let link = "";
         if (idx == -1) {
-          link = await this.plugin.reference.generateCiteLink(citekey, literatureEnum.length + 1);
+          link = await this.plugin.reference.generateCiteLink(citekey, literatureEnum.length + 1, false);
         } else {
-          link = await this.plugin.reference.generateCiteLink(citekey, idx);
+          link = await this.plugin.reference.generateCiteLink(citekey, idx, false);
         }
         return await this.plugin.reference.generateCiteRef(citeId, link);
       });
@@ -111,7 +111,7 @@ export class Database {
         const idx = existNotes.indexOf(citekey);
         await this.plugin.reference.updateLiteratureNote(citekey);
         const citeId = this.plugin.ck2idDict[citekey];
-        const link = await this.plugin.reference.generateCiteLink(citekey, idx);
+        const link = await this.plugin.reference.generateCiteLink(citekey, idx, false);
         return this.plugin.reference.generateCiteRef(citeId, link);
       });
       const content = await Promise.all(insertContent);

@@ -11,7 +11,7 @@ import {
 } from "./reference";
 import {
     InteractionManager
-} from "./interaction";
+} from "./frontEnd/interaction";
 import {
     isDev,
     STORAGE_NAME,

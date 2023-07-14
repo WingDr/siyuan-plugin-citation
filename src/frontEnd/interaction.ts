@@ -4,7 +4,7 @@ import {
   confirm,
   Protyle
 } from "siyuan";
-import SiYuanPluginCitation from "./index";
+import SiYuanPluginCitation from "../index";
 import {
   STORAGE_NAME,
   hiddenNotebook,
@@ -15,9 +15,9 @@ import {
   defaultReferencePath,
   isDev,
   dataDir
-} from "./utils/constants";
-import { createLogger, ILogger } from "./utils/simple-logger";
-import { DatabaseType } from "./database/database";
+} from "../utils/constants";
+import { createLogger, ILogger } from "../utils/simple-logger";
+import { DatabaseType } from "../database/database";
 
 export class InteractionManager {
   public plugin: SiYuanPluginCitation;
@@ -53,8 +53,8 @@ export class InteractionManager {
             if (settingData.referenceNotebook != this.plugin.data[STORAGE_NAME].referenceNotebook || settingData.database != this.plugin.data[STORAGE_NAME].database) refresh = true;
             this.plugin.saveData(STORAGE_NAME, settingData).then(() => {
               if (refresh) {
-                this.plugin.database.buildDatabase(settingData.database as DatabaseType);
                 this.plugin.reference.checkRefDirExist();
+                this.plugin.database.buildDatabase(settingData.database as DatabaseType);
               } 
             });
         }
@@ -237,6 +237,7 @@ export class InteractionManager {
       </div>`,
       id: "add-literature-citation",
       callback: async (protyle: Protyle) => {
+        await this.plugin.reference.checkRefDirExist();
         if (isDev) this.logger.info("Slash触发：add literature citation", protyle);
         if (this.plugin.data[STORAGE_NAME].referenceNotebook === "") {
           this.plugin.noticer.error(this.plugin.i18n.errors.notebookUnselected);
@@ -270,10 +271,10 @@ export class InteractionManager {
     this.plugin.addCommand({
       langKey: "reloadDatabase",
       hotkey: "",
-      callback: () => {
+      callback: async () => {
         this.logger.info("指令触发：reloadDatabase");
-        this.plugin.database.buildDatabase(this.plugin.data[STORAGE_NAME].database as DatabaseType);
-        return this.plugin.reference.checkRefDirExist();
+        await this.plugin.reference.checkRefDirExist();
+        return this.plugin.database.buildDatabase(this.plugin.data[STORAGE_NAME].database as DatabaseType);
       }
     });
     this.plugin.addCommand({

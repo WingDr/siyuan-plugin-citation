@@ -14,10 +14,9 @@ for (let id of ids) {
   var item = Zotero.Items.get(id)
   Result.push({
     key: item.key,
-    creators: item.getCreators(),
-    date: item.date,
-    title: item.title
+    creators: item.getCreatorsJSON(),
+    year: item.getField("year"),
+    title: item.getField("title"),
   });
 }
 return JSON.stringify(Result);
-

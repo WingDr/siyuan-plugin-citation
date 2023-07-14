@@ -159,12 +159,7 @@ export class Reference {
         const anchor = match[1].slice(key.length + 1);
         const idx = literatureEnum.indexOf(key);
         if (idx != -1) {
-          let link = "";
-          if (this.plugin.data[STORAGE_NAME].customCiteText) {
-            link = await this.generateOnlyCiteLink(this.plugin.id2ckDict[key], idx);
-          } else {
-            link = await this.generateCiteLink(this.plugin.id2ckDict[key], idx);
-          }
+          const link = await this.generateCiteLink(this.plugin.id2ckDict[key], idx, this.plugin.data[STORAGE_NAME].customCiteText);
           if (isDev) this.logger.info("更新文献引用 =>", link);
           if (!link) continue;
           if (anchor != `"${link}"`) {
@@ -222,39 +217,30 @@ export class Reference {
 
   }
 
-  public async generateCiteLink(citekey: string, index: number) {
+  public async generateCiteLink(citekey: string, index: number, onlyLink: boolean) {
     const linkTemplate = this.plugin.data[STORAGE_NAME].linkTemplate as string;
-    const entry = await this.plugin.database.getContentByCitekey(citekey);
-    if (!entry) {
-      if (isDev) this.logger.error("找不到文献数据");
-      this.plugin.noticer.error(this.plugin.i18n.errors.getLiteratureFailed);
-      return null;
-    }
-    return generateFromTemplate(linkTemplate, {
-      index,
-      citeFileID: this.plugin.ck2idDict[citekey],
-      ...entry
-    });
-  }
-
-  public async generateOnlyCiteLink(citekey: string, index: number) {
-    const linkTemplate = this.plugin.data[STORAGE_NAME].linkTemplate as string;
-    const linkReg = refRegStatic;
-    const matchRes = linkTemplate.matchAll(linkReg);
-    let modifiedTemplate = "";
-    for (const match of matchRes) {
-      if (match[1].indexOf("{{citeFileID}}") != -1) {
-        modifiedTemplate = match[2];
+    let template = "";
+    if (onlyLink) {
+      const linkReg = refRegStatic;
+      const matchRes = linkTemplate.matchAll(linkReg);
+      let modifiedTemplate = "";
+      for (const match of matchRes) {
+        if (match[1].indexOf("{{citeFileID}}") != -1) {
+          modifiedTemplate = match[2];
+        }
       }
+      if (isDev) this.logger.info("仅包含链接的模板 =>", modifiedTemplate);
+      template = modifiedTemplate;
+    } else {
+      template = linkTemplate;
     }
-    if (isDev) this.logger.info("仅包含链接的模板 =>", modifiedTemplate);
     const entry = await this.plugin.database.getContentByCitekey(citekey);
     if (!entry) {
       if (isDev) this.logger.error("找不到文献数据");
       this.plugin.noticer.error(this.plugin.i18n.errors.getLiteratureFailed);
       return null;
     }
-    return generateFromTemplate(modifiedTemplate, {
+    return generateFromTemplate(template, {
       index,
       citeFileID: this.plugin.ck2idDict[citekey],
       ...entry
