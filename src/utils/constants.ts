@@ -7,7 +7,7 @@ export const siyuanApiUrl = "";
 export const siyuanApiToken = "";
 
 export const citeLink = "(( ${id} \"${link}\"))";
-export const DISALLOWED_FILENAME_CHARACTERS_RE = /[*"\\/<>:|?]/g;
+export const DISALLOWED_FILENAME_CHARACTERS_RE = /[*"\\/<>:|?\/]/g;
 export const refReg = /\(\((.*?)\)\)/g;
 export const refRegStatic = /\(\((.*?)\"(.*?)\"\)\)/g;
 export const refRegDynamic = /\(\((.*?)\'(.*?)\'\)\)/g;

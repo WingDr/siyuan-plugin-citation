@@ -37,8 +37,6 @@ export class Reference {
     }
     const res = this.plugin.kernelApi.searchFileWithName(notebookId, refPath + "/", citekey);
     const data = (await res).data as any[];
-    const noteTitle = generateFromTemplate(titleTemplate, entry);
-    noteTitle.replace(DISALLOWED_FILENAME_CHARACTERS_RE, "_");
     const literatureNote = generateFromTemplate(noteTemplate, entry);
     if (data.length) {
       const literatureId = data[0].id;
@@ -97,6 +95,9 @@ export class Reference {
       return;
     } else {
       //文件不存在就新建文件
+      let noteTitle = generateFromTemplate(titleTemplate, entry);
+      noteTitle = noteTitle.replace(DISALLOWED_FILENAME_CHARACTERS_RE, "_");
+      if (isDev) this.logger.info("生成文件标题 =>", noteTitle);
       const noteData = await this.createLiteratureNote(noteTitle);
       await this.plugin.kernelApi.setNameOfBlock(noteData.rootId, citekey);
       // 新建文件之后也要更新对应字典
