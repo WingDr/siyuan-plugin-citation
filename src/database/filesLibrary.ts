@@ -507,8 +507,10 @@ export class EntryBibLaTeXAdapter extends Entry {
         return parts.filter((x) => x).join(" ");
       });
       return names.join(", ");
+    } else if (this.data.fields.author) {
+      return this.data.fields.author.join(", ");
     } else {
-      return this.data.fields.author?.join(", ");
+      return "";
     }
   }
 
@@ -551,6 +553,8 @@ export class EntryBibLaTeXAdapter extends Entry {
         ? ` [${this.data.fields.primaryclass}]`
         : "";
       return `${prefix}${this.data.fields.eprint}${suffix}`;
+    } else {
+      return "";
     }
   }
 
@@ -566,6 +570,10 @@ export class EntryBibLaTeXAdapter extends Entry {
   }
 
   get tags(): string {
-    return this.data.fields.keywords?.join(", ");
+    if (this.data.fields.keywords) {
+      return this.data.fields.keywords?.join(", ");
+    } else {
+      return "";
+    }
   }
 }

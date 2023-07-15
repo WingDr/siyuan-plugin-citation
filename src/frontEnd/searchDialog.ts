@@ -5,18 +5,36 @@ import SiYuanPluginCitation from "../index";
 import { ILogger, createLogger } from "../utils/simple-logger";
 import { isDev } from "../utils/constants";
 
+export interface SearchRes {
+  item: {
+    id: string
+  },
+  itemContent: {
+    title: string,
+    year: string,
+    authorString: string
+  },
+  matches: Match[]
+}
+
+export interface Match {
+  value: string,
+  indices: number[][]
+}
+
+
 export class SearchDialog {
   private searchDialog: Dialog;
   private logger: ILogger;
-  private resList;
+  private resList: SearchRes[];
   private selector: number;
-  private onSelection;
+  private onSelection: (citekeys: string[]) => void;
 
   constructor (public plugin: SiYuanPluginCitation) {
     this.logger = createLogger("search dialog");
   }
 
-  public showSearching(search: (string) => any, onSelection) {
+  public showSearching(search: (pattern: string) => any, onSelection: (citekeys: string[]) => void) {
     this.onSelection = onSelection;
     const input = document.createElement("input");
     input.className = "b3-text-field b3-text-field--text fn-block";
@@ -52,7 +70,7 @@ export class SearchDialog {
    * @param resList the searching result list
    * @returns HTMLElement of the result table
    */
-  private resultTableConstructor(resList: any[]): HTMLUListElement {
+  private resultTableConstructor(resList: SearchRes[]): HTMLUListElement {
     const content = document.createElement("ul");
     content.className = "fn__flex-1 search__list b3-list b3-list--background";
     this.resList = resList;
@@ -72,7 +90,7 @@ export class SearchDialog {
     return content;
   }
 
-  private matchHighlight(match) {
+  private matchHighlight(match: Match) {
     // if (isDev) this.logger.info("搜索匹配=>", match);
     let contentString = match.value as string;
     const indices = (match.indices as number[][]).sort((a,b) => b[0] - a[0]);
