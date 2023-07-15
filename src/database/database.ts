@@ -52,11 +52,13 @@ export class Database {
   }
 
   public insertCiteLink(protyle: Protyle) {
-    this.dataModal.showSearching(protyle, this.insertCiteLinkBySelection);
+    this.protyle = protyle;
+    this.dataModal.showSearching(protyle, this.insertCiteLinkBySelection.bind(this));
   }
 
   public insertNotes(protyle:Protyle) {
-    this.dataModal.showSearching(protyle, this.insertCollectedNotesBySelection);
+    this.protyle = protyle;
+    this.dataModal.showSearching(protyle, this.insertCollectedNotesBySelection.bind(this));
   }
 
   public copyCiteLink() {
