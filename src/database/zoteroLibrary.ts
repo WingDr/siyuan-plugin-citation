@@ -11,10 +11,25 @@ interface Creator {
   creatorType: string
 }
 
+interface Annotation {
+  parentKey: string,
+  parentTitle: string,
+  details: AnnotationDetail[]
+}
+
+interface AnnotationDetail {
+  key: string,
+  annotationText: string,
+  annotationPosition: {
+    pageIndex: number
+  }
+}
+
 export interface EntryDataZotero {
   abstractNote?: string;
   accessDate?: string;
   attachments?: any[];
+  annotations?: Annotation[];
   citekey?: string;
   citationKey?: string;
   conferenceName?: string;
@@ -133,6 +148,7 @@ export class EntryZoteroAdapter extends Entry {
   get id() {
     return this.data.citekey || this.data.citationKey;
   }
+
   get type() {
     return this.data.itemType;
   }
@@ -194,6 +210,32 @@ export class EntryZoteroAdapter extends Entry {
     } else {
       return "";
     }
+  }
+
+  get annotations(): string {
+    const annotations = this.data.annotations ?? [];
+    return annotations.map(anno => {
+      const title = `\n\n---\n\n###### Annotation in ${anno.parentTitle}`;
+      const content = anno.details.map(detail => {
+        return `[${detail.annotationText}](zotero://open-pdf/library/items/${anno.parentKey}?page=${detail.annotationPosition.pageIndex}&annotation=${detail.key})`;
+      }).join("\n\n");
+      return title + content;
+    }).join("\n\n");
+  }
+
+  get annotationList() {
+    const annotations = this.data.annotations ?? [];
+    return annotations.map(anno => {
+      return {
+        ...anno,
+        details: anno.details.map(detail => {
+          return {
+            zoteroOpenURI: `zotero://open-pdf/library/items/${anno.parentKey}?page=${detail.annotationPosition.pageIndex}&annotation=${detail.key}`,
+            ...detail
+          };
+        })
+      };
+    });
   }
 
   get shortAuthor(): string {
@@ -292,6 +334,8 @@ export function getTemplateVariablesForZoteroEntry(entry: EntryZoteroAdapter): R
     abstract: entry.abstract,
     author: entry.author,
     authorString: entry.authorString,
+    annotations: entry.annotations,
+    annotationList: entry.annotationList,
     containerTitle: entry.containerTitle,
     DOI: entry.DOI,
     eprint: entry.eprint,
