@@ -13,7 +13,8 @@ let Result = [];
 for (let id of ids) {
   var item = Zotero.Items.get(id)
   Result.push({
-    key: item.key,
+    itemKey: item.key,
+    citationKey: item.getField("citationKey"),
     creators: item.getCreatorsJSON(),
     year: item.getField("year"),
     title: item.getField("title"),

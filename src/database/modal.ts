@@ -2,7 +2,7 @@ import Fuse from "fuse.js";
 import axios from "axios";
 
 import {
-  Dialog, Protyle
+  Protyle
 } from "siyuan";
 import SiYuanPluginCitation from "../index";
 import {
@@ -20,8 +20,6 @@ import {
   getTemplateVariablesForZoteroEntry
  } from "./zoteroLibrary";
 import {
-  SearchRes,
-  Match,
   SearchDialog
 } from "../frontEnd/searchDialog";
 import { htmlNotesProcess } from "../utils/notes";
@@ -47,9 +45,7 @@ export abstract class DataModal {
 
 export class FilesModal extends DataModal {
   private fuse: Fuse<any>;
-  private resList: any[];
   private searchDialog: SearchDialog;
-  private selector: number;
   private library: Library;
 
   constructor(plugin: SiYuanPluginCitation) {
@@ -99,10 +95,6 @@ export class FilesModal extends DataModal {
   public showSearching(protyle:Protyle, onSelection: (citekeys: string[]) => void) {
     this.protyle = protyle;
     this.onSelection = onSelection;
-    const input = document.createElement("input");
-    input.className = "b3-text-field b3-text-field--text fn-block";
-    input.setAttribute("style", "width: 100%");
-    input.placeholder = "Searching literature";
     if (isDev) this.logger.info("打开搜索界面");
     this.searchDialog = new SearchDialog(this.plugin);
     this.searchDialog.showSearching(this.search.bind(this), this.onSelection);
@@ -213,7 +205,6 @@ const contentTranslator = "36a3b0b5-bad0-4a04-b79b-441c7cef77db";
 export class ZoteroModal extends DataModal {
   private type: ZoteroType;
   private jsonrpcUrl: string;
-  private absZoteroJSPath: string;
 
   constructor(plugin: SiYuanPluginCitation, zoteroType: ZoteroType) {
     super();
@@ -221,7 +212,6 @@ export class ZoteroModal extends DataModal {
     this.type = zoteroType;
     this.logger = createLogger(`zotero modal: ${zoteroType}`);
     this.jsonrpcUrl = `http://127.0.0.1:${this.getPort(this.type)}/better-bibtex/json-rpc`;
-    this.absZoteroJSPath = path.resolve(dataDir, "./plugins/siyuan-plugin-citation/zoteroJS");
   }
 
   public async buildModal() {
@@ -314,16 +304,136 @@ export class ZoteroModal extends DataModal {
       return false;
     });
   }
+}
 
-  private async callZoteroJS(filename: string) {
+interface SearchItem {
+  itemKey: string,
+  citationKey?: string,
+  creators: any[],
+  year: string,
+  title: string,
+}
+
+export class ZoteroDBModal extends DataModal {
+  private type: ZoteroType;
+  private absZoteroJSPath: string;
+  private searchOptions: any;
+  private fuse: Fuse<any>;
+  private searchDialog: SearchDialog;
+
+  constructor(plugin: SiYuanPluginCitation, zoteroType: ZoteroType) {
+    super();
+    this.plugin = plugin;
+    this.type = zoteroType;
+    this.logger = createLogger(`zotero modal: ${zoteroType}`);
+    this.absZoteroJSPath = path.resolve(dataDir, "./plugins/siyuan-plugin-citation/zoteroJS");
+    this.searchOptions = {
+      // isCaseSensitive: false,
+      includeScore: true,
+      // shouldSort: true,
+      includeMatches: true,
+      // findAllMatches: false,
+      // minMatchCharLength: 1,
+      // location: 0,
+      threshold: 0.6,
+      // distance: 100,
+      useExtendedSearch: true,
+      ignoreLocation: true,
+      // ignoreFieldNorm: false,
+      // fieldNormWeight: 1,
+      keys: [
+        {name: "keystring", getFn: entry => entry.title + "\n" + entry.year + "\n" + entry.authorString}
+      ]
+    };
+  }
+
+  public async buildModal() {
+    if (isDev) this.logger.info(`Build ${this.type} DB modal successfully`);
+  }
+
+  /**
+   * show searching dialog
+   */
+  public async showSearching(protyle:Protyle, onSelection: (citekeys: string[]) => void) {
+    this.protyle = protyle;
+    this.onSelection = onSelection;
+    if (await this.checkZoteroRunning()) {
+      if (isDev) this.logger.info(`${this.type}已运行`);
+      const items = await this.getAllItems();
+      if (isDev) this.logger.info(`从${this.type}接收到数据 =>`, items);
+      const searchItems = items.map(item => {
+        return new EntryZoteroAdapter(item);
+      });
+      this.fuse = new Fuse(searchItems, this.searchOptions);
+      if (isDev) this.logger.info("打开搜索界面");
+      this.searchDialog = new SearchDialog(this.plugin);
+      this.searchDialog.showSearching(this.search.bind(this), this.onSelection);
+    } else {
+      this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string).replace("${type}", this.type));
+    }
+  }
+
+  public async getContentFromCitekey (citekey: string) {
+    const itemKey = await this.getItemKeyByCitekey(citekey);
+    const res = await this.getItemByKey(itemKey);
+    if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, res);
+    const zoteroEntry = new EntryZoteroAdapter(res as EntryDataZotero);
+    const entry = getTemplateVariablesForZoteroEntry(zoteroEntry);
+    if (entry.files) entry.files = entry.files.join("\n");
+    if (isDev) this.logger.info("文献内容 =>", entry);
+    return entry;
+  }
+
+  public async getCollectedNotesFromCitekey(citekey: string) {
+    const itemKey = await this.getItemKeyByCitekey(citekey);
+    const res = await this.getNotesByKey(itemKey);
+    if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, res);
+    return (res as string[]).map((singleNote, index) => {
+      return `\n\n---\n\n###### Note No.${index+1}\n\n\n\n` + htmlNotesProcess(singleNote.replace(/\\(.?)/g, (m, p1) => p1));
+    }).join("\n\n");
+  }
+
+  public getTotalCitekeys(): string[] {
+    return Object.keys(this.plugin.ck2idDict);
+  }
+
+  private search(pattern: string) {
+    const adaptedSearchPattern = pattern.split(" ").filter(pt => pt != "").reduce((previousValue, currentValue) => previousValue + ` '${currentValue}`, "");
+    return this.fuse.search(adaptedSearchPattern);
+  }
+
+  private getPort(type: ZoteroType): "23119" | "24119" {
+    return type === "Zotero" ? "23119" : "24119";
+  }
+
+  private async checkZoteroRunning(): Promise<boolean> {
+    return (await this.callZoteroJS("checkRunning", "")) === "ready";
+  }
+
+  private async getAllItems(): Promise<SearchItem[]> {
+    return await this.callZoteroJS("getAllItems", "");
+  }
+
+  private async getItemByKey(itemKey: string) {
+    return await this.callZoteroJS("getItemByKey", `var key = ${itemKey};`);
+  }
+
+  private async getItemKeyByCitekey(citekey: string) {
+    return await this.callZoteroJS("getItemByKey", `var citekey = ${citekey};`);
+  }
+
+  private async getNotesByKey(itemKey: string) {
+    return await this.callZoteroJS("getNotesByKey", `var key = ${itemKey};`);
+  }
+
+  private async callZoteroJS(filename: string, prefix: string) {
     const jsContent = fs.readFileSync(path.join(this.absZoteroJSPath, filename+".ts"), "utf-8");
     const Result = await axios({
       method: "post",
       url: `http://127.0.0.1:${this.getPort(this.type)}/debug-bridge/execute?password=CTT`,
       headers: JSHeaders,
-      data: jsContent
+      data: prefix + "\n" + jsContent
     });
     return JSON.parse(Result.data);
   }
-
 }

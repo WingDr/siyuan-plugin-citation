@@ -36,15 +36,15 @@ export interface EntryDataZotero {
   creators?: Creator[]; 
   thesisType?: string;
   date?: string;
-  dateAdded: string;
-  dateModified: string;
+  dateAdded?: string;
+  dateModified?: string;
   DOI?: string;
   edition?: string;
   eprint?: string;
   eprinttype?: string;
   ISBN?: string;
   ISSN?: string;
-  itemID: number;
+  itemID?: number;
   itemKey: string;
   itemType?: string;
   language?: string;
@@ -118,6 +118,7 @@ export class EntryZoteroAdapter extends Entry {
   event?: string;
   eventPlace?: string;
   issued?: string;
+  itemKey: string;
   page?: string;
   primaryclass?: string;
   publisher?: string;
@@ -321,6 +322,10 @@ export class EntryZoteroAdapter extends Entry {
   get tags(): string {
     return this._tags?.map(tag => tag.tag).join(", ");
   }
+
+  public get zoteroSelectURI(): string {
+    return `zotero://select/library/items/${this.itemKey}`;
+  }
 }
 
 /**
@@ -355,6 +360,7 @@ export function getTemplateVariablesForZoteroEntry(entry: EntryZoteroAdapter): R
     shortAuthor: entry.shortAuthor,
     URL: entry.URL,
     year: entry.year?.toString(),
+    itemKey: entry.itemKey,
     zoteroSelectURI: entry.zoteroSelectURI,
   };
 

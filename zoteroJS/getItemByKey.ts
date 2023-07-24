@@ -1,5 +1,6 @@
 // @ts-nocheck 
 /* eslint-disable */
+var library = Zotero.Libraries.userLibraryID;
 var item = await Zotero.Items.getByLibraryAndKeyAsync(library, key);
 
 function getAllFields(item) {
