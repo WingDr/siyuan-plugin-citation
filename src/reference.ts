@@ -41,7 +41,9 @@ export class Reference {
     if (data.length) {
       const literatureId = data[0].id;
       // 文件存在就更新文件内容
-      // 查找用户自定义片段F
+      // 首先将文献的基本内容塞到用户文档的自定义属性中
+      this.plugin.kernelApi.setBlockEntry(literatureId, JSON.stringify(entry));
+      // 查找用户自定义片段
       let res = await this.plugin.kernelApi.getChidBlocks(literatureId);
       const dataIds = (res.data as any[]).map(data => {
         return data.id as string;
@@ -81,7 +83,8 @@ export class Reference {
             await this.deleteBlocks(dataIds);
             userDataId = await this.updateEmptyNote(literatureId);
             if (!userDataLink.length) userDataLink = `((${userDataId} 'User Data'))`;
-            return this.plugin.kernelApi.prependBlock(literatureId, userDataLink + "\n\n" + literatureNote);
+            this.insertNoteContent(literatureId, userDataId, userDataLink, entry);
+            return;
           });
         }
       } else {
@@ -91,7 +94,7 @@ export class Reference {
       }
       // 插入前置片段
       if (!userDataLink.length) userDataLink = `((${userDataId} 'User Data'))`;
-      this.plugin.kernelApi.prependBlock(literatureId, userDataLink + "\n\n" + literatureNote);
+      this.insertNoteContent(literatureId, userDataId, userDataLink, entry);
       return;
     } else {
       //文件不存在就新建文件
@@ -99,11 +102,13 @@ export class Reference {
       noteTitle = noteTitle.replace(DISALLOWED_FILENAME_CHARACTERS_RE, "_");
       if (isDev) this.logger.info("生成文件标题 =>", noteTitle);
       const noteData = await this.createLiteratureNote(noteTitle);
+      // 首先将文献的基本内容塞到用户文档的自定义属性中
       await this.plugin.kernelApi.setNameOfBlock(noteData.rootId, citekey);
+      this.plugin.kernelApi.setBlockEntry(noteData.rootId, JSON.stringify(entry));
       // 新建文件之后也要更新对应字典
       this.plugin.ck2idDict[citekey] = noteData.rootId;
       this.plugin.id2ckDict[noteData.rootId] = citekey;
-      this.plugin.kernelApi.prependBlock(noteData.rootId, `(( ${noteData.userDataId} 'User Data'))\n\n` + literatureNote);
+      this.insertNoteContent(noteData.rootId, noteData.userDataId, `(( ${noteData.userDataId} 'User Data'))`, entry);
       return;
     }
   }
@@ -128,8 +133,37 @@ export class Reference {
     return Promise.all(p);
   }
 
+  private async insertNoteContent(literatureId: string, userDataId: string, userDataLink: string, entry: any) {
+    const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
+    const noteTemplate = this.plugin.data[STORAGE_NAME].noteTemplate as string;
+    const note = entry.note;
+    entry.note = entry.note.map(n => {
+      return n.prefix + `\n\n{ {note${n.index}} }`;
+    }).join("\n\n");
+    const literatureNote = generateFromTemplate(noteTemplate, entry);
+    await this.plugin.kernelApi.prependBlock(literatureId, userDataLink + "\n\n" + literatureNote);
+    const res = await this.plugin.kernelApi.getChidBlocks(literatureId);
+    const dataIds = (res.data as any[]).map(data => {
+      return data.id as string;
+    });
+    setTimeout(async () => {
+      const pList = note.map(async n => {
+        const res = this.plugin.kernelApi.getBlocksWithContent(notebookId, literatureId, `{ {note${n.index}} }`);
+        const data = (await res).data as any[];
+        const pList = data.map(async d => {
+          // 只有在userDataID之前的才会更新
+          if (dataIds.indexOf(d.id) != -1 && dataIds.indexOf(d.id) < dataIds.indexOf(userDataId)) {
+            await this.plugin.kernelApi.updateBlockContent(d.id, "dom", n.content);
+          }
+        });
+        await Promise.all(pList);
+      });
+      return await Promise.all(pList);
+    }, 2000);
+  }
+
   private async updateEmptyNote(rootId: string): Promise<string> {
-    await this.plugin.kernelApi.updateBlockContent(rootId, "# User Data");
+    await this.plugin.kernelApi.updateBlockContent(rootId, "markdown", "# User Data");
     const res = await this.plugin.kernelApi.getChidBlocks(rootId);
     const userDataId = res.data[0].id as string;
     if (isDev) this.logger.info("获取用户区域标题，ID =>", userDataId);

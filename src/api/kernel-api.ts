@@ -217,9 +217,9 @@ class KernelApi extends BaseApi {
     return await this.siyuanRequest("/api/block/getChildBlocks", params);
   }
 
-  public async updateBlockContent(blockId: string, md: string) {
+  public async updateBlockContent(blockId: string, dataType: "markdown" | "dom", md: string) {
     const params = {
-      "dataType": "markdown",
+      "dataType": dataType,
       "data": md,
       "id": blockId
     };
@@ -285,6 +285,23 @@ class KernelApi extends BaseApi {
       }
     };
     return await this.siyuanRequest("/api/attr/setBlockAttrs", attrParams);
+  }
+
+  public async setBlockEntry(blockId: string, entryData: string): Promise<SiyuanData> {
+    const attrParams = {
+      "id": blockId,
+      "attrs": {
+        "custom-entry-data": entryData
+      }
+    };
+    return await this.siyuanRequest("/api/attr/setBlockAttrs", attrParams);
+  }
+
+  public async getBlocksWithContent(notebookId: string, fileId: string, content: string) {
+    const params = {
+      "stmt": `SELECT * FROM blocks WHERE box like '${notebookId}' and root_id like '${fileId}' and type like 'p' and markdown like '${content}'`
+    };
+    return await this.siyuanRequest("/api/query/sql", params);
   }
 }
 

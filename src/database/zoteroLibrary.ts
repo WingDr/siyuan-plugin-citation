@@ -1,5 +1,5 @@
 import moment from "moment";
-import { Entry, Author, IIndexable, File } from "./filesLibrary";
+import { Entry, Author, IIndexable, File, SingleNote } from "./filesLibrary";
 import { htmlNotesProcess } from "../utils/notes";
 
 interface Creator {
@@ -99,8 +99,8 @@ const ZOTERO_PROPERTY_MAPPING: Record<string, string> = {
   numPages: "numPages",
   place: "publisherPlace",
   primaryClass: "primaryclass",
-  proceedingsTitle: "__containerTitle",
-  publicationTitle: "__containerTitle",
+  proceedingsTitle: "_containerTitle",
+  publicationTitle: "_containerTitle",
   relations: "_relations",
   tags: "_tags",
   university: "publisher",
@@ -277,6 +277,8 @@ export class EntryZoteroAdapter extends Entry {
       return `${prefix}${this.eprint}${suffix}`;
     } else if (this.type === "thesis") {
       return `${this.publisher} ${this.thesis}`;
+    } else {
+      return "";
     }
   }
 
@@ -313,10 +315,14 @@ export class EntryZoteroAdapter extends Entry {
     }
   }
 
-  get note(): string {
+  get note(): SingleNote[] {
     return this._note?.map((singleNote, index) => {
-      return `\n\n---\n\n###### Note No.${index+1}\t[[Locate]](zotero://select/items/0_${singleNote.key}/)\t[[Open]](zotero://note/u/${singleNote.key}/)\n\n\n\n` + htmlNotesProcess(singleNote.note.replace(/\\(.?)/g, (m, p1) => p1));
-    }).join("\n\n");
+      return {
+        index: index,
+        prefix: `\n\n---\n\n###### Note No.${index+1}\t[[Locate]](zotero://select/items/0_${singleNote.key}/)\t[[Open]](zotero://note/u/${singleNote.key}/)\n\n\n\n`,
+        content: singleNote.note.replace(/\\(.?)/g, (m, p1) => p1)
+      };
+    });
   }
 
   get tags(): string {

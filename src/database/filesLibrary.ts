@@ -140,6 +140,12 @@ export interface File {
   path: string;
 }
 
+export interface SingleNote {
+  index: number,
+  prefix: string,
+  content: string
+}
+
 /**
  * An `Entry` represents a single reference in a reference database.
  * Each entry has a unique identifier, known in most reference managers as its
@@ -210,10 +216,15 @@ export abstract class Entry {
 
   protected _note?: string[];
 
-  public get note(): string {
+  public get note(): SingleNote[] {
     return this._note
-      ?.map((el) => el.replace(/\\herf\{(zotero:\/\/.+)\}/g, "[Link]($1)"))
-      .join("\n\n");
+      ?.map((el, index) => {
+        return {
+          index: index,
+          prefix: "",
+          content: el.replace(/\\herf\{(zotero:\/\/.+)\}/g, "[Link]($1)")
+        };
+      });
   }
 
   /**
