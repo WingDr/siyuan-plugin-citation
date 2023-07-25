@@ -61,5 +61,10 @@ return JSON.stringify({
   notes,
   annotations,
   attachments,
-  ...itemFields
+  ...itemFields,
+  itemKey: item.key,
+  itemType: item.itemType,
+  creators: item.getCreatorsJSON(),
+  tags: item.getTags(),
+  citationKey: item.getField("citationKey")
 });

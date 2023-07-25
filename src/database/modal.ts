@@ -34,12 +34,12 @@ export abstract class DataModal {
   public logger: ILogger;
   public plugin: SiYuanPluginCitation;
   public protyle: Protyle;
-  public onSelection: (citekeys: string[]) => void;
+  public onSelection: (keys: string[]) => void;
   public abstract buildModal();
-  public abstract getContentFromCitekey(citekey: string);
-  public abstract getCollectedNotesFromCitekey(citekey: string);
-  public abstract showSearching(protyle:Protyle, onSelection: (citekeys: string[]) => void);
-  public abstract getTotalCitekeys(): string[];
+  public abstract getContentFromKey(key: string);
+  public abstract getCollectedNotesFromKey(key: string);
+  public abstract showSearching(protyle:Protyle, onSelection: (keys: string[]) => void);
+  public abstract getTotalKeys(): string[];
 }
 
 
@@ -92,7 +92,7 @@ export class FilesModal extends DataModal {
   /**
    * show searching dialog
    */
-  public showSearching(protyle:Protyle, onSelection: (citekeys: string[]) => void) {
+  public showSearching(protyle:Protyle, onSelection: (keys: string[]) => void) {
     this.protyle = protyle;
     this.onSelection = onSelection;
     if (isDev) this.logger.info("打开搜索界面");
@@ -100,19 +100,19 @@ export class FilesModal extends DataModal {
     this.searchDialog.showSearching(this.search.bind(this), this.onSelection);
   }
 
-  public getContentFromCitekey (citekey: string) {
+  public getContentFromKey (citekey: string) {
     const entry = this.library.getTemplateVariablesForCitekey(citekey);
     if (entry.files) entry.files = generateFileLinks(entry.files);
     if (isDev) this.logger.info("文献内容 =>", entry);
     return entry;
   }
 
-  public getCollectedNotesFromCitekey(citekey: string) {
+  public getCollectedNotesFromKey(citekey: string) {
     const entry = this.library.getTemplateVariablesForCitekey(citekey);
     return entry.note;
   }
 
-  public getTotalCitekeys(): string[] {
+  public getTotalKeys(): string[] {
       return Object.keys(this.library.entries);
   }
 
@@ -221,7 +221,7 @@ export class ZoteroModal extends DataModal {
   /**
    * show searching dialog
    */
-  public async showSearching(protyle:Protyle, onSelection: (citekeys: string[]) => void) {
+  public async showSearching(protyle:Protyle, onSelection: (keys: string[]) => void) {
     this.protyle = protyle;
     this.onSelection = onSelection;
     if (await this.checkZoteroRunning()) {
@@ -238,7 +238,7 @@ export class ZoteroModal extends DataModal {
     }
   }
 
-  public async getContentFromCitekey (citekey: string) {
+  public async getContentFromKey (citekey: string) {
     const res = await axios({
       method: "post",
       url: this.jsonrpcUrl,
@@ -257,7 +257,7 @@ export class ZoteroModal extends DataModal {
     return entry;
   }
 
-  public async getCollectedNotesFromCitekey(citekey: string) {
+  public async getCollectedNotesFromKey(citekey: string) {
     const res = await axios({
       method: "post",
       url: this.jsonrpcUrl,
@@ -274,8 +274,8 @@ export class ZoteroModal extends DataModal {
     }).join("\n\n");
   }
 
-  public getTotalCitekeys(): string[] {
-    return Object.keys(this.plugin.ck2idDict);
+  public getTotalKeys(): string[] {
+    return Object.keys(this.plugin.key2idDict);
   }
 
   private getPort(type: ZoteroType): "23119" | "24119" {
@@ -325,7 +325,7 @@ export class ZoteroDBModal extends DataModal {
     super();
     this.plugin = plugin;
     this.type = zoteroType;
-    this.logger = createLogger(`zotero modal: ${zoteroType}`);
+    this.logger = createLogger(`zotero DB modal: ${zoteroType}`);
     this.absZoteroJSPath = path.resolve(dataDir, "./plugins/siyuan-plugin-citation/zoteroJS");
     this.searchOptions = {
       // isCaseSensitive: false,
@@ -354,7 +354,7 @@ export class ZoteroDBModal extends DataModal {
   /**
    * show searching dialog
    */
-  public async showSearching(protyle:Protyle, onSelection: (citekeys: string[]) => void) {
+  public async showSearching(protyle:Protyle, onSelection: (keys: string[]) => void) {
     this.protyle = protyle;
     this.onSelection = onSelection;
     if (await this.checkZoteroRunning()) {
@@ -373,9 +373,9 @@ export class ZoteroDBModal extends DataModal {
     }
   }
 
-  public async getContentFromCitekey (citekey: string) {
-    const itemKey = await this.getItemKeyByCitekey(citekey);
-    const res = await this.getItemByKey(itemKey);
+  public async getContentFromKey (key: string) {
+    const itemKey = this.useItemKey ? key : await this.getItemKeyByCitekey(key);
+    const res = await this.getItemByItemKey(itemKey);
     if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, res);
     const zoteroEntry = new EntryZoteroAdapter(res as EntryDataZotero, this.useItemKey);
     const entry = getTemplateVariablesForZoteroEntry(zoteroEntry);
@@ -384,17 +384,17 @@ export class ZoteroDBModal extends DataModal {
     return entry;
   }
 
-  public async getCollectedNotesFromCitekey(citekey: string) {
-    const itemKey = await this.getItemKeyByCitekey(citekey);
-    const res = await this.getNotesByKey(itemKey);
+  public async getCollectedNotesFromKey(key: string) {
+    const itemKey = this.useItemKey ? key : await this.getItemKeyByCitekey(key);
+    const res = await this.getNotesByItemKey(itemKey);
     if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, res);
     return (res as string[]).map((singleNote, index) => {
       return `\n\n---\n\n###### Note No.${index+1}\n\n\n\n` + htmlNotesProcess(singleNote.replace(/\\(.?)/g, (m, p1) => p1));
     }).join("\n\n");
   }
 
-  public getTotalCitekeys(): string[] {
-    return Object.keys(this.plugin.ck2idDict);
+  public getTotalKeys(): string[] {
+    return Object.keys(this.plugin.key2idDict);
   }
 
   private search(pattern: string) {
@@ -407,33 +407,39 @@ export class ZoteroDBModal extends DataModal {
   }
 
   private async checkZoteroRunning(): Promise<boolean> {
-    return (await this.callZoteroJS("checkRunning", "")) === "ready";
+    return (await this.callZoteroJS("checkRunning", "")).ready;
   }
 
   private async getAllItems(): Promise<SearchItem[]> {
     return await this.callZoteroJS("getAllItems", "");
   }
 
-  private async getItemByKey(itemKey: string) {
-    return await this.callZoteroJS("getItemByKey", `var key = ${itemKey};`);
+  private async getItemByItemKey(itemKey: string) {
+    return await this.callZoteroJS("getItemByItemKey", `var key = "${itemKey}";`);
   }
 
   private async getItemKeyByCitekey(citekey: string) {
-    return await this.callZoteroJS("getItemByKey", `var citekey = ${citekey};`);
+    return (await this.callZoteroJS("getItemKeyByCiteKey", `var citekey = "${citekey}";`)).itemKey;
   }
 
-  private async getNotesByKey(itemKey: string) {
-    return await this.callZoteroJS("getNotesByKey", `var key = ${itemKey};`);
+  private async getNotesByItemKey(itemKey: string) {
+    return await this.callZoteroJS("getNotesByItemKey", `var key = "${itemKey}";`);
   }
 
   private async callZoteroJS(filename: string, prefix: string) {
     const jsContent = fs.readFileSync(path.join(this.absZoteroJSPath, filename+".ts"), "utf-8");
+    if (isDev) this.logger.info("向debug-bridge发送数据，fetchData=>", {
+      command: filename,
+      data: prefix + "\n" + jsContent
+    });
     const Result = await axios({
       method: "post",
       url: `http://127.0.0.1:${this.getPort(this.type)}/debug-bridge/execute?password=CTT`,
       headers: JSHeaders,
       data: prefix + "\n" + jsContent
     });
-    return JSON.parse(Result.data);
+    const resData = JSON.parse(Result.data);
+    if (isDev) this.logger.info("从debug-bridge接收到数据，resJson=>", resData);
+    return resData;
   }
 }

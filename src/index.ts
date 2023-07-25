@@ -35,8 +35,8 @@ export default class SiYuanPluginCitation extends Plugin {
     public isMobile: boolean;
     public isRefPathExist: boolean;
 
-    public ck2idDict: {[ck: string]: string};
-    public id2ckDict: {[id: string]: string};
+    public key2idDict: {[ck: string]: string};
+    public id2keyDict: {[id: string]: string};
 
     public database: Database;
     public reference: Reference;

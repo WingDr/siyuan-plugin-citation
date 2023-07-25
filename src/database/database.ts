@@ -3,7 +3,7 @@ import SiYuanPluginCitation from "../index";
 import{
   loadLocalRef
 } from "../utils/util";
-import { isDev, databaseType } from "../utils/constants";
+import { isDev, databaseType, STORAGE_NAME } from "../utils/constants";
 import { createLogger, ILogger } from "../utils/simple-logger";
 import { 
   DataModal,
@@ -47,11 +47,11 @@ export class Database {
         break;
       }
       case "Zotero (debug-bridge)": {
-        this.dataModal = new ZoteroDBModal(this.plugin, "Zotero");
+        this.dataModal = new ZoteroDBModal(this.plugin, "Zotero", this.plugin.data[STORAGE_NAME].useItemKey);
         break;
       }
       case "Juris-M (debug-bridge)": {
-        this.dataModal = new ZoteroDBModal(this.plugin, "Juris-M");
+        this.dataModal = new ZoteroDBModal(this.plugin, "Juris-M", this.plugin.data[STORAGE_NAME].useItemKey);
         break;
       }
     }
@@ -67,37 +67,41 @@ export class Database {
 
   public insertNotes(protyle:Protyle) {
     this.protyle = protyle;
-    this.dataModal.showSearching(protyle, this.insertCollectedNotesBySelection.bind(this));
+    this.dataModal.showSearching(protyle, this.insertNotesBySelection.bind(this));
   }
 
   public copyCiteLink() {
     this.dataModal.showSearching(null, this.copyCiteLinkBySelection);
   }
 
-  public async getContentByCitekey(citekey: string) {
-    const content = await this.dataModal.getContentFromCitekey(citekey);
+  public copyNotes() {
+    this.dataModal.showSearching(null, this.copyNotesBySelection);
+  }
+
+  public async getContentByKey(key: string) {
+    const content = await this.dataModal.getContentFromKey(key);
     return content;
   }
 
-  public getTotalCitekeys() {
-    return this.dataModal.getTotalCitekeys();
+  public getTotalKeys() {
+    return this.dataModal.getTotalKeys();
   }
 
-  private async insertCiteLinkBySelection(citekeys: string[]) {
+  private async insertCiteLinkBySelection(keys: string[]) {
     const fileId = (this.protyle as any).protyle.block.rootID;
     await this.plugin.reference.checkRefDirExist();
     if (this.plugin.isRefPathExist) {
       const literatureEnum = await this.plugin.reference.getLiteratureEnum(fileId);
-      const existNotes = Object.keys(this.plugin.ck2idDict);
-      const insertContent = citekeys.map(async citekey => {
-        const idx = existNotes.indexOf(citekey);
-        await this.plugin.reference.updateLiteratureNote(citekey);
-        const citeId = this.plugin.ck2idDict[citekey];
+      const existNotes = Object.keys(this.plugin.key2idDict);
+      const insertContent = keys.map(async key => {
+        const idx = existNotes.indexOf(key);
+        await this.plugin.reference.updateLiteratureNote(key);
+        const citeId = this.plugin.key2idDict[key];
         let link = "";
         if (idx == -1) {
-          link = await this.plugin.reference.generateCiteLink(citekey, literatureEnum.length + 1, false);
+          link = await this.plugin.reference.generateCiteLink(key, literatureEnum.length + 1, false);
         } else {
-          link = await this.plugin.reference.generateCiteLink(citekey, idx, false);
+          link = await this.plugin.reference.generateCiteLink(key, idx, false);
         }
         return await this.plugin.reference.generateCiteRef(citeId, link);
       });
@@ -106,27 +110,35 @@ export class Database {
     }
   }
 
-  private async insertCollectedNotesBySelection(citekeys: string[]) {
-    const insertContent = citekeys.map(async citekey => {
-      return await this.plugin.database.dataModal.getCollectedNotesFromCitekey(citekey);
+  private async insertNotesBySelection(keys: string[]) {
+    const insertContent = keys.map(async key => {
+      return await this.plugin.database.dataModal.getCollectedNotesFromKey(key);
     });
     const content = await Promise.all(insertContent);
     this.plugin.reference.insertContent(this.protyle, content.join(""));
   }
 
-  private async copyCiteLinkBySelection(citekeys: string[]) {
+  private async copyCiteLinkBySelection(keys: string[]) {
     await this.plugin.reference.checkRefDirExist();
     if (this.plugin.isRefPathExist) {
-      const existNotes = Object.keys(this.plugin.ck2idDict);
-      const insertContent = citekeys.map(async citekey => {
-        const idx = existNotes.indexOf(citekey);
-        await this.plugin.reference.updateLiteratureNote(citekey);
-        const citeId = this.plugin.ck2idDict[citekey];
-        const link = await this.plugin.reference.generateCiteLink(citekey, idx, false);
+      const existNotes = Object.keys(this.plugin.key2idDict);
+      const insertContent = keys.map(async key => {
+        const idx = existNotes.indexOf(key);
+        await this.plugin.reference.updateLiteratureNote(key);
+        const citeId = this.plugin.key2idDict[key];
+        const link = await this.plugin.reference.generateCiteLink(key, idx, false);
         return this.plugin.reference.generateCiteRef(citeId, link);
       });
       const content = await Promise.all(insertContent);
       this.plugin.reference.copyContent(content.join(""));
     }
+  }
+
+  private async copyNotesBySelection(keys: string[]) {
+    const insertContent = keys.map(async key => {
+      return await this.plugin.database.dataModal.getCollectedNotesFromKey(key);
+    });
+    const content = await Promise.all(insertContent);
+    this.plugin.reference.copyContent(content.join(""));
   }
 }

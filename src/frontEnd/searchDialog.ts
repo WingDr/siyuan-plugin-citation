@@ -7,7 +7,7 @@ import { isDev } from "../utils/constants";
 
 export interface SearchRes {
   item: {
-    id: string
+    key: string
   },
   itemContent: {
     title: string,
@@ -28,13 +28,13 @@ export class SearchDialog {
   private logger: ILogger;
   private resList: SearchRes[];
   private selector: number;
-  private onSelection: (citekeys: string[]) => void;
+  private onSelection: (keys: string[]) => void;
 
   constructor (public plugin: SiYuanPluginCitation) {
     this.logger = createLogger("search dialog");
   }
 
-  public showSearching(search: (pattern: string) => any, onSelection: (citekeys: string[]) => void) {
+  public showSearching(search: (pattern: string) => any, onSelection: (keys: string[]) => void) {
     this.onSelection = onSelection;
     const input = document.createElement("input");
     input.className = "b3-text-field b3-text-field--text fn-block";
@@ -79,7 +79,7 @@ export class SearchDialog {
         const literatureContent = document.createElement("div");
         literatureContent.className = "plugin-citation__search-item";
         literatureContent.setAttribute("data-type", "search-item");
-        literatureContent.setAttribute("data-search-id", res.item.id);
+        literatureContent.setAttribute("data-search-id", res.item.key);
         const itemContent = this.matchHighlight(res.matches[0]);
         literatureContent.innerHTML = `<div class="b3-list-item__text" style="font-weight:bold;border-bottom:0.5px solid #CCC"> ${itemContent.title}</div><div class="b3-list-item__text">${itemContent.year} \t | \t ${itemContent.authorString}</div>`;
         singleRes.className = "b3-list-item";
@@ -109,9 +109,9 @@ export class SearchDialog {
 
   private clickReaction(ev: MouseEvent) {
     const target = ev.currentTarget as HTMLElement;
-    const id = target.children.item(0).getAttribute("data-search-id");
+    const key = target.children.item(0).getAttribute("data-search-id");
     this.searchDialog.destroy();
-    this.onSelection([id]);
+    this.onSelection([key]);
   }
 
   private keyboardReaction(ev: KeyboardEvent) {
@@ -122,9 +122,9 @@ export class SearchDialog {
       ev.preventDefault();
       this.changeSelection(true);
     } else if (ev.key == "Enter") {
-      const id = this.searchDialog.element.getElementsByTagName("li").item(this.selector).children.item(0).getAttribute("data-search-id");
+      const key = this.searchDialog.element.getElementsByTagName("li").item(this.selector).children.item(0).getAttribute("data-search-id");
       this.searchDialog.destroy();
-      this.onSelection([id]);
+      this.onSelection([key]);
     }
   }
 

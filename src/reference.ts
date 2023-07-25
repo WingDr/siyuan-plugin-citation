@@ -23,18 +23,18 @@ export class Reference {
     this.logger = createLogger("reference");
   }
 
-  public async updateLiteratureNote(citekey: string) {
+  public async updateLiteratureNote(key: string) {
     const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
     const refPath = this.plugin.data[STORAGE_NAME].referencePath as string;
     const titleTemplate = this.plugin.data[STORAGE_NAME].titleTemplate as string;
-    const entry = await this.plugin.database.getContentByCitekey(citekey);
+    const entry = await this.plugin.database.getContentByKey(key);
     if (isDev) this.logger.info("从database中获得文献内容 =>", entry);
     if (!entry) {
       if (isDev) this.logger.error("找不到文献数据");
       this.plugin.noticer.error(this.plugin.i18n.errors.getLiteratureFailed);
       return null;
     }
-    const res = this.plugin.kernelApi.searchFileWithName(notebookId, refPath + "/", citekey);
+    const res = this.plugin.kernelApi.searchFileWithName(notebookId, refPath + "/", key);
     const data = (await res).data as any[];
     if (data.length) {
       const literatureId = data[0].id;
@@ -101,11 +101,11 @@ export class Reference {
       if (isDev) this.logger.info("生成文件标题 =>", noteTitle);
       const noteData = await this.createLiteratureNote(noteTitle);
       // 首先将文献的基本内容塞到用户文档的自定义属性中
-      await this.plugin.kernelApi.setNameOfBlock(noteData.rootId, citekey);
+      await this.plugin.kernelApi.setNameOfBlock(noteData.rootId, key);
       this.plugin.kernelApi.setBlockEntry(noteData.rootId, JSON.stringify(entry));
       // 新建文件之后也要更新对应字典
-      this.plugin.ck2idDict[citekey] = noteData.rootId;
-      this.plugin.id2ckDict[noteData.rootId] = citekey;
+      this.plugin.key2idDict[key] = noteData.rootId;
+      this.plugin.id2keyDict[noteData.rootId] = key;
       this.insertNoteContent(noteData.rootId, noteData.userDataId, `(( ${noteData.userDataId} 'User Data'))`, entry);
       return;
     }
@@ -193,7 +193,7 @@ export class Reference {
         const anchor = match[1].slice(key.length + 1);
         const idx = literatureEnum.indexOf(key);
         if (idx != -1) {
-          const link = await this.generateCiteLink(this.plugin.id2ckDict[key], idx, this.plugin.data[STORAGE_NAME].customCiteText);
+          const link = await this.generateCiteLink(this.plugin.id2keyDict[key], idx, this.plugin.data[STORAGE_NAME].customCiteText);
           if (isDev) this.logger.info("更新文献引用 =>", link);
           if (!link) continue;
           if (anchor != `"${link}"`) {
@@ -236,17 +236,17 @@ export class Reference {
     const data = res.data as any;
     const fileContent = data.kramdown as string;
     // 获取所有可以引用的citekey，用于筛选在文件中的引用
-    const citekeys = this.plugin.database.getTotalCitekeys();
+    const citekeys = this.plugin.database.getTotalKeys();
     return citekeys.map(key => {
       return {
         citekey: key as string,
-        idx: fileContent.indexOf(this.plugin.ck2idDict[key]) as number,
+        idx: fileContent.indexOf(this.plugin.key2idDict[key]) as number,
       };
     })
     .filter(key => key.idx != -1)
     .sort((a,b) => a.idx - b.idx)
     .map(item => {
-      return this.plugin.ck2idDict[item.citekey];
+      return this.plugin.key2idDict[item.citekey];
     });
 
   }
@@ -268,7 +268,7 @@ export class Reference {
     } else {
       template = linkTemplate;
     }
-    const entry = await this.plugin.database.getContentByCitekey(citekey);
+    const entry = await this.plugin.database.getContentByKey(citekey);
     if (!entry) {
       if (isDev) this.logger.error("找不到文献数据");
       this.plugin.noticer.error(this.plugin.i18n.errors.getLiteratureFailed);
@@ -276,7 +276,7 @@ export class Reference {
     }
     return generateFromTemplate(template, {
       index,
-      citeFileID: this.plugin.ck2idDict[citekey],
+      citeFileID: this.plugin.key2idDict[citekey],
       ...entry
     });
   }
@@ -292,8 +292,8 @@ export class Reference {
   public async refreshLiteratureNoteTitles() {
     const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
     const titleTemplate = this.plugin.data[STORAGE_NAME].titleTemplate as string;
-    Object.keys(this.plugin.ck2idDict).forEach(async citekey => {
-      const entry = await this.plugin.database.getContentByCitekey(citekey);
+    Object.keys(this.plugin.key2idDict).forEach(async citekey => {
+      const entry = await this.plugin.database.getContentByKey(citekey);
       if (isDev) this.logger.info("从database中获得文献内容 =>", entry);
       if (!entry) {
         if (isDev) this.logger.error("找不到文献数据");
@@ -303,13 +303,13 @@ export class Reference {
       const noteTitle = generateFromTemplate(titleTemplate, entry);
       noteTitle.replace(DISALLOWED_FILENAME_CHARACTERS_RE, "_");
       // 不对的时候才更新
-      const res = await this.plugin.kernelApi.getBlock(this.plugin.ck2idDict[citekey]);
+      const res = await this.plugin.kernelApi.getBlock(this.plugin.key2idDict[citekey]);
       const title = res.data[0].content;
       if (noteTitle != title) await this.plugin.kernelApi.renameDoc(notebookId, res.data[0].path , noteTitle);
     });
     if (isDev) this.logger.info("所有文件标题已更新");
-    this.plugin.noticer.info(this.plugin.i18n.notices.refreshTitleSuccess.replace("${size}", Object.keys(this.plugin.ck2idDict).length));
-    return this.plugin.id2ckDict, this.plugin.ck2idDict;
+    this.plugin.noticer.info(this.plugin.i18n.notices.refreshTitleSuccess.replace("${size}", Object.keys(this.plugin.key2idDict).length));
+    return this.plugin.id2keyDict, this.plugin.key2idDict;
   }
 
   public async insertContent(protyle, content: string) {

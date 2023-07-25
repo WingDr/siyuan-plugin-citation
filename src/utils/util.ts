@@ -84,8 +84,8 @@ function fsStat(path: string) {
 export async function loadLocalRef(plugin: SiYuanPluginCitation): Promise<any> {
   const logger = createLogger("load references");
   const noticer = createNoticer();
-  plugin.ck2idDict = {};
-  plugin.id2ckDict = {};
+  plugin.key2idDict = {};
+  plugin.id2keyDict = {};
   const notebookId = plugin.data[STORAGE_NAME].referenceNotebook as string;
   const refPath = plugin.data[STORAGE_NAME].referencePath as string;
   const limit = 20;
@@ -98,21 +98,21 @@ export async function loadLocalRef(plugin: SiYuanPluginCitation): Promise<any> {
       }
       (res.data as any[]).forEach(async file => {
         if (file.name != "") {
-          plugin.id2ckDict[file.id] = file.name;
-          plugin.ck2idDict[file.name] = file.id;
+          plugin.id2keyDict[file.id] = file.name;
+          plugin.key2idDict[file.name] = file.id;
         } else {
           //命名为空，那么就把标题赋给命名
           await plugin.kernelApi.setNameOfBlock(file.id, file.content);
-          plugin.id2ckDict[file.id] = file.content;
-          plugin.ck2idDict[file.content] = file.id;
+          plugin.id2keyDict[file.id] = file.content;
+          plugin.key2idDict[file.content] = file.id;
         }
       });
       offset += limit;
   }
-  if (isDev) logger.info("成功载入引用，id2ckDict=>", plugin.id2ckDict);
-  if (isDev) logger.info("成功载入引用，ck2idDict=>", plugin.ck2idDict);
-  noticer.info(plugin.i18n.notices.loadRefSuccess.replace("${size}", Object.keys(plugin.id2ckDict).length));
-  return plugin.id2ckDict, plugin.ck2idDict;
+  if (isDev) logger.info("成功载入引用，id2keyDict=>", plugin.id2keyDict);
+  if (isDev) logger.info("成功载入引用，key2idDict=>", plugin.key2idDict);
+  noticer.info(plugin.i18n.notices.loadRefSuccess.replace("${size}", Object.keys(plugin.id2keyDict).length));
+  return plugin.id2keyDict, plugin.key2idDict;
 }
 
 export function generateFileLinks(files: string[]) {
