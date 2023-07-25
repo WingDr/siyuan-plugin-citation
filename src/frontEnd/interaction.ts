@@ -39,24 +39,30 @@ export class InteractionManager {
   public async customSettingTab(): Promise<Setting> {
     this.setting = new Setting({
         confirmCallback: () => {
-            const settingData = {
-                referenceNotebook: referenceNotebookSelector.value,
-                referencePath: referencePathInput.value,
-                database: databaseSelector.value,
-                titleTemplate: titleTemplateInput.value,
-                noteTemplate: noteTempTexarea.value,
-                linkTemplate: linkTempInput.value,
-                customCiteText: CustomCiteTextSwitch.checked
-            };
-            let refresh = false;
-            // 改变了笔记本和数据库类型之后都要刷新数据库
-            if (settingData.referenceNotebook != this.plugin.data[STORAGE_NAME].referenceNotebook || settingData.database != this.plugin.data[STORAGE_NAME].database) refresh = true;
-            this.plugin.saveData(STORAGE_NAME, settingData).then(() => {
-              if (refresh) {
-                this.plugin.reference.checkRefDirExist();
-                this.plugin.database.buildDatabase(settingData.database as DatabaseType);
-              } 
-            });
+          if (databaseSelector.value === "Zotero") databaseSelector.value = "Zotero (better-bibtex)";
+          else if (databaseSelector.value === "Juris-M") databaseSelector.value = "Juris-M (better-bibtex)";
+          const settingData = {
+              referenceNotebook: referenceNotebookSelector.value,
+              referencePath: referencePathInput.value,
+              database: databaseSelector.value,
+              titleTemplate: titleTemplateInput.value,
+              noteTemplate: noteTempTexarea.value,
+              linkTemplate: linkTempInput.value,
+              customCiteText: CustomCiteTextSwitch.checked,
+              useItemKey: UseItemKeySwitch.checked
+          };
+          let refreshDatabase = false;
+          let refreshName = false;
+          // 改变了笔记本和数据库类型之后都要刷新数据库
+          if (settingData.referenceNotebook != this.plugin.data[STORAGE_NAME].referenceNotebook || settingData.database != this.plugin.data[STORAGE_NAME].database) refreshDatabase = true;
+          if (UseItemKeySwitch.checked != this.plugin.data[STORAGE_NAME].useItemKey) refreshName = true;
+          this.plugin.saveData(STORAGE_NAME, settingData).then(() => {
+            if (refreshDatabase) {
+              this.plugin.reference.checkRefDirExist();
+              this.plugin.database.buildDatabase(settingData.database as DatabaseType);
+            }
+            if (refreshName) this.plugin.noticer.info(this.plugin.i18n.notices.changeKey);
+          });
         }
     });
 
@@ -119,6 +125,29 @@ export class InteractionManager {
       title: this.plugin.i18n.settingTab.databaseSelectorTitle,
       description: this.plugin.i18n.settingTab.databaseSelectorDescription,
       actionElement: databaseSelector,
+    });
+
+    // 是否使用itemKey作为文献内容索引
+    const UseItemKeySwitch = document.createElement("input");
+    UseItemKeySwitch.className = "b3-switch fn__flex-center";
+    UseItemKeySwitch.type = "checkbox";
+    // 默认关闭
+    UseItemKeySwitch.checked = this.plugin.data[STORAGE_NAME].useItemKey ?? false;
+    // 仅在选择debug-bridge情况下能够使用
+    const value = databaseSelector.value;
+    if (value === "Juris-M (debug-bridge)" || value === "Zotero (debug-bridge)") UseItemKeySwitch.disabled = false;
+    else UseItemKeySwitch.disabled = true;
+    // 同时绑定修改事件
+    databaseSelector.onchange = function(ev) {
+      const index = (ev.target as HTMLSelectElement).options.selectedIndex;
+      const value = databaseType[index];
+      if (value === "Juris-M (debug-bridge)" || value === "Zotero (debug-bridge)") UseItemKeySwitch.disabled = false;
+      else UseItemKeySwitch.disabled = true;
+    };
+    this.setting.addItem({
+      title: this.plugin.i18n.settingTab.UseItemKeySwitchTitle,
+      description: this.plugin.i18n.settingTab.UseItemKeySwitchDescription,
+      actionElement: UseItemKeySwitch,
     });
 
     //reload library button

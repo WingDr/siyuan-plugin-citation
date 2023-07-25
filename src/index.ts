@@ -28,6 +28,7 @@ import {
 
 import "./index.scss";
 import { createNoticer,INoticer } from "./utils/noticer";
+import { changeUpdate } from "./utils/updates";
 
 export default class SiYuanPluginCitation extends Plugin {
 
@@ -67,6 +68,7 @@ export default class SiYuanPluginCitation extends Plugin {
         
         if (isDev) this.logger.info("读取本地数据");
         await this.loadData(STORAGE_NAME);
+        await changeUpdate(this);
         this.kernelApi = new KernelApi();
 
         this.interactionManager = new InteractionManager(this);

@@ -27,7 +27,6 @@ export class Reference {
     const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
     const refPath = this.plugin.data[STORAGE_NAME].referencePath as string;
     const titleTemplate = this.plugin.data[STORAGE_NAME].titleTemplate as string;
-    const noteTemplate = this.plugin.data[STORAGE_NAME].noteTemplate as string;
     const entry = await this.plugin.database.getContentByCitekey(citekey);
     if (isDev) this.logger.info("从database中获得文献内容 =>", entry);
     if (!entry) {
@@ -37,7 +36,6 @@ export class Reference {
     }
     const res = this.plugin.kernelApi.searchFileWithName(notebookId, refPath + "/", citekey);
     const data = (await res).data as any[];
-    const literatureNote = generateFromTemplate(noteTemplate, entry);
     if (data.length) {
       const literatureId = data[0].id;
       // 文件存在就更新文件内容
@@ -138,28 +136,29 @@ export class Reference {
     const noteTemplate = this.plugin.data[STORAGE_NAME].noteTemplate as string;
     const note = entry.note;
     entry.note = entry.note.map(n => {
-      return n.prefix + `\n\n{ {note${n.index}} }`;
+      // return n.prefix + `\n\n{ {note${n.index}} }`;
+      return `${n.prefix}\n\n${n.content}`;
     }).join("\n\n");
     const literatureNote = generateFromTemplate(noteTemplate, entry);
     await this.plugin.kernelApi.prependBlock(literatureId, userDataLink + "\n\n" + literatureNote);
-    const res = await this.plugin.kernelApi.getChidBlocks(literatureId);
-    const dataIds = (res.data as any[]).map(data => {
-      return data.id as string;
-    });
-    setTimeout(async () => {
-      const pList = note.map(async n => {
-        const res = this.plugin.kernelApi.getBlocksWithContent(notebookId, literatureId, `{ {note${n.index}} }`);
-        const data = (await res).data as any[];
-        const pList = data.map(async d => {
-          // 只有在userDataID之前的才会更新
-          if (dataIds.indexOf(d.id) != -1 && dataIds.indexOf(d.id) < dataIds.indexOf(userDataId)) {
-            await this.plugin.kernelApi.updateBlockContent(d.id, "dom", n.content);
-          }
-        });
-        await Promise.all(pList);
-      });
-      return await Promise.all(pList);
-    }, 2000);
+    // const res = await this.plugin.kernelApi.getChidBlocks(literatureId);
+    // const dataIds = (res.data as any[]).map(data => {
+    //   return data.id as string;
+    // });
+    // setTimeout(async () => {
+    //   const pList = note.map(async n => {
+    //     const res = this.plugin.kernelApi.getBlocksWithContent(notebookId, literatureId, `{ {note${n.index}} }`);
+    //     const data = (await res).data as any[];
+    //     const pList = data.map(async d => {
+    //       // 只有在userDataID之前的才会更新
+    //       if (dataIds.indexOf(d.id) != -1 && dataIds.indexOf(d.id) < dataIds.indexOf(userDataId)) {
+    //         await this.plugin.kernelApi.updateBlockContent(d.id, "dom", n.content);
+    //       }
+    //     });
+    //     await Promise.all(pList);
+    //   });
+    //   return await Promise.all(pList);
+    // }, 3000);
   }
 
   private async updateEmptyNote(rootId: string): Promise<string> {
@@ -309,7 +308,7 @@ export class Reference {
       if (noteTitle != title) await this.plugin.kernelApi.renameDoc(notebookId, res.data[0].path , noteTitle);
     });
     if (isDev) this.logger.info("所有文件标题已更新");
-    this.plugin.noticer.info(this.plugin.i18n.refreshTitleSuccess.replace("${size}", Object.keys(this.plugin.ck2idDict).length));
+    this.plugin.noticer.info(this.plugin.i18n.notices.refreshTitleSuccess.replace("${size}", Object.keys(this.plugin.ck2idDict).length));
     return this.plugin.id2ckDict, this.plugin.ck2idDict;
   }
 
@@ -327,6 +326,6 @@ export class Reference {
 
   public async copyContent(content: string) {
     navigator.clipboard.writeText(content);
-    this.plugin.noticer.info(this.plugin.i18n.copyCiteLinkSuccess);
+    this.plugin.noticer.info(this.plugin.i18n.notices.copyCiteLinkSuccess);
   }
 }

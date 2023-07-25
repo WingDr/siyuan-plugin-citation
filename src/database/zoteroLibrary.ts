@@ -127,12 +127,15 @@ export class EntryZoteroAdapter extends Entry {
   titleShort?: string;
   thesis?: string;
   URL?: string;
+  useItemKey: boolean;
   declare _year?: string;
   declare _note?: any[];
   declare _tags?: any[];
 
-  constructor(private data: EntryDataZotero) {
+  constructor(private data: EntryDataZotero, useItemKey = false) {
     super();
+
+    this.useItemKey = useItemKey;
 
     Object.entries(ZOTERO_PROPERTY_MAPPING).forEach(
       (map: [string, string]) => {
@@ -148,6 +151,11 @@ export class EntryZoteroAdapter extends Entry {
 
   get id() {
     return this.data.citekey || this.data.citationKey;
+  }
+
+  get key() {
+    if (this.useItemKey) return this.itemKey;
+    else return this.id;
   }
 
   get type() {
@@ -340,6 +348,7 @@ export class EntryZoteroAdapter extends Entry {
    */
 export function getTemplateVariablesForZoteroEntry(entry: EntryZoteroAdapter): Record<string, any> {
   const shortcuts = {
+    key: entry.key,
     citekey: entry.id,
 
     abstract: entry.abstract,

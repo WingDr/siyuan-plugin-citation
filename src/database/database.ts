@@ -8,7 +8,8 @@ import { createLogger, ILogger } from "../utils/simple-logger";
 import { 
   DataModal,
   FilesModal,
-  ZoteroModal
+  ZoteroModal,
+  ZoteroDBModal
 } from "./modal";
 
 export type DatabaseType = typeof databaseType[number];
@@ -37,12 +38,20 @@ export class Database {
         this.dataModal = new FilesModal(this.plugin);
         break;
       }
-      case "Zotero": {
+      case "Zotero (better-bibtex)": {
         this.dataModal = new ZoteroModal(this.plugin, "Zotero");
         break;
       }
-      case "Juris-M": {
+      case "Juris-M (better-bibtex)": {
         this.dataModal = new ZoteroModal(this.plugin, "Juris-M");
+        break;
+      }
+      case "Zotero (debug-bridge)": {
+        this.dataModal = new ZoteroDBModal(this.plugin, "Zotero");
+        break;
+      }
+      case "Juris-M (debug-bridge)": {
+        this.dataModal = new ZoteroDBModal(this.plugin, "Juris-M");
         break;
       }
     }

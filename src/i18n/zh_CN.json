@@ -11,12 +11,8 @@
   "addNotes": "插入文献笔记",
   "reloadDatabase": "重新载入数据库",
   "refreshCitation": "刷新引用",
-  "loadLibrarySuccess": "文献库成功导入${size}个数据",
-  "loadRefSuccess": "成功导入${size}个文献引用",
   "refreshLiteratureNotesTitle": "刷新所有文献内容文档标题",
-  "refreshTitleSuccess": "成功刷新${size}篇文献内容文档标题",
   "copyCiteLink": "复制文献引用",
-  "copyCiteLinkSuccess": "引用链接已在剪贴板",
   "settingTab": {
     "settingTabTitle": "插件版本：${version}",
     "settingTabDescription": "如果有好的想法或者发现了bug，欢迎到github上提<b>issue</b>或者发邮件到<b>${e-mail}</b>",
@@ -53,5 +49,11 @@
   },
   "confirms": {
     "updateWithoutUserData": "未检测到用户数据区域（缺少引用或引用失效），确定要更新链接吗？"
+  },
+  "notices": {
+    "loadLibrarySuccess": "文献库成功导入${size}个数据",
+    "loadRefSuccess": "成功导入${size}个文献引用",
+    "refreshTitleSuccess": "成功刷新${size}篇文献内容文档标题",
+    "copyCiteLinkSuccess": "引用链接已在剪贴板"
   }
 }

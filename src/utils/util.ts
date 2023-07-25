@@ -111,7 +111,7 @@ export async function loadLocalRef(plugin: SiYuanPluginCitation): Promise<any> {
   }
   if (isDev) logger.info("成功载入引用，id2ckDict=>", plugin.id2ckDict);
   if (isDev) logger.info("成功载入引用，ck2idDict=>", plugin.ck2idDict);
-  noticer.info(plugin.i18n.loadRefSuccess.replace("${size}", Object.keys(plugin.id2ckDict).length));
+  noticer.info(plugin.i18n.notices.loadRefSuccess.replace("${size}", Object.keys(plugin.id2ckDict).length));
   return plugin.id2ckDict, plugin.ck2idDict;
 }
 

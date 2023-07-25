@@ -76,7 +76,7 @@ export class FilesModal extends DataModal {
     };
     return this.loadLibrary().then(library => {
       if (library) {
-        this.plugin.noticer.info(this.plugin.i18n.loadLibrarySuccess.replace("${size}", library.size));
+        this.plugin.noticer.info(this.plugin.i18n.notices.loadLibrarySuccess.replace("${size}", library.size));
         this.library = library;
         this.fuse = new Fuse(library.entryList, options);
         if (isDev) this.logger.info("Build file modal successfully");
@@ -321,7 +321,7 @@ export class ZoteroDBModal extends DataModal {
   private fuse: Fuse<any>;
   private searchDialog: SearchDialog;
 
-  constructor(plugin: SiYuanPluginCitation, zoteroType: ZoteroType) {
+  constructor(plugin: SiYuanPluginCitation, zoteroType: ZoteroType, private useItemKey = false) {
     super();
     this.plugin = plugin;
     this.type = zoteroType;
@@ -362,7 +362,7 @@ export class ZoteroDBModal extends DataModal {
       const items = await this.getAllItems();
       if (isDev) this.logger.info(`从${this.type}接收到数据 =>`, items);
       const searchItems = items.map(item => {
-        return new EntryZoteroAdapter(item);
+        return new EntryZoteroAdapter(item, this.useItemKey);
       });
       this.fuse = new Fuse(searchItems, this.searchOptions);
       if (isDev) this.logger.info("打开搜索界面");
@@ -377,7 +377,7 @@ export class ZoteroDBModal extends DataModal {
     const itemKey = await this.getItemKeyByCitekey(citekey);
     const res = await this.getItemByKey(itemKey);
     if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, res);
-    const zoteroEntry = new EntryZoteroAdapter(res as EntryDataZotero);
+    const zoteroEntry = new EntryZoteroAdapter(res as EntryDataZotero, this.useItemKey);
     const entry = getTemplateVariablesForZoteroEntry(zoteroEntry);
     if (entry.files) entry.files = entry.files.join("\n");
     if (isDev) this.logger.info("文献内容 =>", entry);

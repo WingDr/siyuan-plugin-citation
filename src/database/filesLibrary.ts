@@ -53,6 +53,7 @@ export class Library {
   getTemplateVariablesForCitekey(citekey: string): Record<string, any> {
     const entry: Entry = this.entries[citekey];
     const shortcuts = {
+      key: entry.key,
       citekey: citekey,
 
       abstract: entry.abstract,
@@ -227,6 +228,10 @@ export abstract class Entry {
       });
   }
 
+  public get key(): string {
+    return this.id;
+  }
+
   /**
    * A URI which will open the relevant entry in the Zotero client.
    */
@@ -290,6 +295,7 @@ export class EntryCSLAdapter extends Entry {
   get id() {
     return this.data.id;
   }
+
   get type() {
     return this.data.type;
   }
@@ -472,6 +478,7 @@ export class EntryBibLaTeXAdapter extends Entry {
   get id() {
     return this.data.key;
   }
+
   get type() {
     return this.data.type;
   }

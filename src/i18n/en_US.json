@@ -11,12 +11,8 @@
   "addNotes": "Add Notes of Literature",
   "reloadDatabase": "Reload the database",
   "refreshCitation": "Refresh citation links",
-  "loadLibrarySuccess": "Successfully loaded library with ${size} entries.",
-  "loadRefSuccess": "Successfully loaded literature notes with ${size} files.",
   "refreshLiteratureNotesTitle": "Refresh all literature note document titles",
-  "refreshTitleSuccess": "Successfully refresh titles of ${size} literature notes",
   "copyCiteLink": "Copy Citation",
-  "copyCiteLinkSuccess": "The citation link is on your clipboard",
   "settingTab": {
     "settingTabTitle": "Plugin Version: ${version}",
     "settingTabDescription": "If you have any good ideas or find any bugs, please feel free to raise an <b>issue</b> on GitHub or send an email to <b>${e-mail}</b>.",
@@ -53,5 +49,11 @@
   },
   "confirms": {
     "updateWithoutUserData": "No user data area detected (missing reference or reference invalid), do you want to update the link?"
+  },
+  "notices": {
+    "loadLibrarySuccess": "Successfully loaded library with ${size} entries.",
+    "loadRefSuccess": "Successfully loaded literature notes with ${size} files.",
+    "refreshTitleSuccess": "Successfully refresh titles of ${size} literature notes",
+    "copyCiteLinkSuccess": "The citation link is on your clipboard"
   }
 }
