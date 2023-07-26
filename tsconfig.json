@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
-    "inlineSourceMap": true,
+    // "inlineSourceMap": true,
     "inlineSources": true,
     "target": "ESNext",
     "useDefineForClassFields": true,
@@ -17,19 +17,22 @@
     /* Bundler mode */
     "moduleResolution": "Node",
     "importHelpers": true,
-    // "allowImportingTsExtensions": true,
+    "allowImportingTsExtensions": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "noEmit": true,
     "types": [
-      "node"
+      "node",
+      "svelte"
     ]
   },
   "include": [
     "src/**/*.ts",
+    "src/**/*.svelte",
     "typing",
     "node_modules/zotero-types",
     "zoteroJS"
   ],
-  "root": "."
+  "root": ".",
+  "extends": "@tsconfig/svelte/tsconfig.json"
 }

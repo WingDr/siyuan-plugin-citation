@@ -1,6 +1,6 @@
 import { confirm } from "siyuan";
 import SiYuanPluginCitation from "./index";
-import { SiyuanData } from "./api/base-api";
+import { type SiyuanData } from "./api/base-api";
 import {
   STORAGE_NAME, isDev, citeLink, 
   DISALLOWED_FILENAME_CHARACTERS_RE, 
@@ -9,7 +9,7 @@ import {
 import {
   generateFromTemplate
 } from "./utils/templates";
-import { ILogger, createLogger } from "./utils/simple-logger";
+import { type ILogger, createLogger } from "./utils/simple-logger";
 import { loadLocalRef } from "./utils/util";
 
 

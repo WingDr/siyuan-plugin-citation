@@ -5,7 +5,7 @@ import {
 } from "siyuan";
 
 import KernelApi from "./api/kernel-api";
-import { Database, DatabaseType } from "./database/database";
+import { Database, type DatabaseType } from "./database/database";
 import {
     Reference
 } from "./reference";
@@ -23,11 +23,11 @@ import {
 } from "./utils/constants";
 import {
     createLogger,
-    ILogger
+    type ILogger
 } from "./utils/simple-logger";
 
 import "./index.scss";
-import { createNoticer,INoticer } from "./utils/noticer";
+import { createNoticer, type INoticer } from "./utils/noticer";
 import { changeUpdate } from "./utils/updates";
 
 export default class SiYuanPluginCitation extends Plugin {
@@ -81,6 +81,7 @@ export default class SiYuanPluginCitation extends Plugin {
         (await this.interactionManager.customProtyleSlash()).forEach(slash => {
             this.protyleSlash.push(slash);
         });
+
         return ;
     }
 

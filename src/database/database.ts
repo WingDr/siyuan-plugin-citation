@@ -4,7 +4,7 @@ import{
   loadLocalRef
 } from "../utils/util";
 import { isDev, databaseType, STORAGE_NAME } from "../utils/constants";
-import { createLogger, ILogger } from "../utils/simple-logger";
+import { createLogger, type ILogger } from "../utils/simple-logger";
 import { 
   DataModal,
   FilesModal,

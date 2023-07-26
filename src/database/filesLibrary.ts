@@ -1,8 +1,8 @@
 import * as BibTeXParser from "@retorquere/bibtex-parser";
-import { Entry as EntryDataBibLaTeX } from "@retorquere/bibtex-parser";
+import { type Entry as EntryDataBibLaTeX } from "@retorquere/bibtex-parser";
 import moment from "moment";
 // Also make EntryDataBibLaTeX available to other modules
-export { Entry as EntryDataBibLaTeX } from "@retorquere/bibtex-parser";
+export { type Entry as EntryDataBibLaTeX } from "@retorquere/bibtex-parser";
 
 // Trick: allow string indexing onto object properties
 export interface IIndexable {

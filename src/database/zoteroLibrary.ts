@@ -1,5 +1,5 @@
 import moment from "moment";
-import { Entry, Author, IIndexable, File, SingleNote } from "./filesLibrary";
+import { Entry, type Author, type IIndexable, type File, type SingleNote } from "./filesLibrary";
 import { htmlNotesProcess } from "../utils/notes";
 
 interface Creator {

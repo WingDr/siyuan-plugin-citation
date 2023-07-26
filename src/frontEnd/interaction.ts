@@ -16,8 +16,8 @@ import {
   isDev,
   dataDir
 } from "../utils/constants";
-import { createLogger, ILogger } from "../utils/simple-logger";
-import { DatabaseType } from "../database/database";
+import { createLogger, type ILogger } from "../utils/simple-logger";
+import { type DatabaseType } from "../database/database";
 
 export class InteractionManager {
   public plugin: SiYuanPluginCitation;

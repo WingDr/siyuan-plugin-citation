@@ -9,21 +9,21 @@ import {
   Library,
   loadEntries,
   Entry,
-  EntryData,
+  type EntryData,
   EntryBibLaTeXAdapter,
   EntryCSLAdapter,
-  IIndexable
+  type IIndexable
 } from "../database/filesLibrary";
 import { 
-  EntryDataZotero,
+  type EntryDataZotero,
   EntryZoteroAdapter,
   getTemplateVariablesForZoteroEntry
  } from "./zoteroLibrary";
 import {
   SearchDialog
-} from "../frontEnd/searchDialog";
+} from "../frontEnd/searchDialog/searchDialog";
 import { htmlNotesProcess } from "../utils/notes";
-import { createLogger, ILogger } from "../utils/simple-logger";
+import { createLogger, type ILogger } from "../utils/simple-logger";
 import { isDev, REF_DIR_PATH, dataDir } from "../utils/constants";
 import { fileSearch, generateFileLinks } from "../utils/util";
 

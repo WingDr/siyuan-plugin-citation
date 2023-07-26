@@ -23,7 +23,7 @@
  * questions.
  */
 
-import { BaseApi, SiyuanData } from "./base-api";
+import { BaseApi, type SiyuanData } from "./base-api";
 import { siyuanApiToken, siyuanApiUrl } from "../utils/constants";
 import { fetchPost } from "siyuan";
 /**
