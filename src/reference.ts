@@ -10,6 +10,7 @@ import {
   generateFromTemplate
 } from "./utils/templates";
 import { ILogger, createLogger } from "./utils/simple-logger";
+import { loadLocalRef } from "./utils/util";
 
 
 // 根据输入更新文献库和引用文档，并维护本文档中的引用次序
@@ -251,7 +252,7 @@ export class Reference {
 
   }
 
-  public async generateCiteLink(citekey: string, index: number, onlyLink: boolean) {
+  public async generateCiteLink(key: string, index: number, onlyLink: boolean) {
     const linkTemplate = this.plugin.data[STORAGE_NAME].linkTemplate as string;
     let template = "";
     if (onlyLink) {
@@ -268,7 +269,7 @@ export class Reference {
     } else {
       template = linkTemplate;
     }
-    const entry = await this.plugin.database.getContentByKey(citekey);
+    const entry = await this.plugin.database.getContentByKey(key);
     if (!entry) {
       if (isDev) this.logger.error("找不到文献数据");
       this.plugin.noticer.error(this.plugin.i18n.errors.getLiteratureFailed);
@@ -276,7 +277,7 @@ export class Reference {
     }
     return generateFromTemplate(template, {
       index,
-      citeFileID: this.plugin.key2idDict[citekey],
+      citeFileID: this.plugin.key2idDict[key],
       ...entry
     });
   }
@@ -292,8 +293,12 @@ export class Reference {
   public async refreshLiteratureNoteTitles() {
     const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
     const titleTemplate = this.plugin.data[STORAGE_NAME].titleTemplate as string;
-    Object.keys(this.plugin.key2idDict).forEach(async citekey => {
-      const entry = await this.plugin.database.getContentByKey(citekey);
+    const dType = this.plugin.data[STORAGE_NAME].database as string;
+    let enableNameRefresh = false;
+    if (dType == "Zotero (debug-bridge)" || dType == "Juris-M (debug-bridge)") enableNameRefresh = true;
+    if (isDev) this.logger.info("是否需要刷新命名 =>", {database: dType, enableNameRefresh});
+    const pList = Object.keys(this.plugin.key2idDict).map(async key => {
+      const entry = await this.plugin.database.getContentByKey(key);
       if (isDev) this.logger.info("从database中获得文献内容 =>", entry);
       if (!entry) {
         if (isDev) this.logger.error("找不到文献数据");
@@ -303,12 +308,20 @@ export class Reference {
       const noteTitle = generateFromTemplate(titleTemplate, entry);
       noteTitle.replace(DISALLOWED_FILENAME_CHARACTERS_RE, "_");
       // 不对的时候才更新
-      const res = await this.plugin.kernelApi.getBlock(this.plugin.key2idDict[citekey]);
+      const res = await this.plugin.kernelApi.getBlock(this.plugin.key2idDict[key]);
       const title = res.data[0].content;
       if (noteTitle != title) await this.plugin.kernelApi.renameDoc(notebookId, res.data[0].path , noteTitle);
+      if (enableNameRefresh) {
+        if (res.data[0].name != entry.key) {
+          if (isDev) this.logger.info("给文档刷新命名，detail=>", {id: this.plugin.key2idDict[key], name: entry.key});
+          await this.plugin.kernelApi.setNameOfBlock(this.plugin.key2idDict[key], entry.key);
+        }
+      } 
     });
+    await Promise.all(pList);
     if (isDev) this.logger.info("所有文件标题已更新");
     this.plugin.noticer.info(this.plugin.i18n.notices.refreshTitleSuccess.replace("${size}", Object.keys(this.plugin.key2idDict).length));
+    await loadLocalRef(this.plugin);
     return this.plugin.id2keyDict, this.plugin.key2idDict;
   }
 

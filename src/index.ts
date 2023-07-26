@@ -59,7 +59,8 @@ export default class SiYuanPluginCitation extends Plugin {
             titleTemplate: defaultTitleTemplate,
             noteTemplate: defaultNoteTemplate,
             linkTemplate: defaultLinkTemplate,
-            CustomCiteText: false
+            CustomCiteText: false,
+            useItemKey: false
         };
 
         const frontEnd = getFrontend();

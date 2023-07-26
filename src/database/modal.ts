@@ -374,7 +374,8 @@ export class ZoteroDBModal extends DataModal {
   }
 
   public async getContentFromKey (key: string) {
-    const itemKey = this.useItemKey ? key : await this.getItemKeyByCitekey(key);
+    let itemKey = this.useItemKey ? key : await this.getItemKeyByCitekey(key);
+    if (!(await this.checkItemKeyExist(itemKey))) itemKey = this.useItemKey ? await this.getItemKeyByCitekey(key) : key;
     const res = await this.getItemByItemKey(itemKey);
     if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, res);
     const zoteroEntry = new EntryZoteroAdapter(res as EntryDataZotero, this.useItemKey);
@@ -404,6 +405,10 @@ export class ZoteroDBModal extends DataModal {
 
   private getPort(type: ZoteroType): "23119" | "24119" {
     return type === "Zotero" ? "23119" : "24119";
+  }
+
+  private async checkItemKeyExist(itemKey: string): Promise<boolean> {
+    return (await this.callZoteroJS("checkItemKeyExist", `var key = "${itemKey}";`)).itemKeyExist;
   }
 
   private async checkZoteroRunning(): Promise<boolean> {
@@ -437,6 +442,13 @@ export class ZoteroDBModal extends DataModal {
       url: `http://127.0.0.1:${this.getPort(this.type)}/debug-bridge/execute?password=CTT`,
       headers: JSHeaders,
       data: prefix + "\n" + jsContent
+    }).catch(e => {
+      if (isDev) this.logger.error(e);
+      return {
+        data: JSON.stringify({
+          ready: false
+        })
+      };
     });
     const resData = JSON.parse(Result.data);
     if (isDev) this.logger.info("从debug-bridge接收到数据，resJson=>", resData);

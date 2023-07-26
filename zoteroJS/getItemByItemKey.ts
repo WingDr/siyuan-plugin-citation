@@ -3,6 +3,10 @@
 var library = Zotero.Libraries.userLibraryID;
 var item = await Zotero.Items.getByLibraryAndKeyAsync(library, key);
 
+if (!item) return {
+  itemExist: false
+}
+
 function getAllFields(item) {
   // 获得fields
   let fieldDetail = {};
@@ -20,7 +24,13 @@ var itemFields = getAllFields(item);
 var noteIDs = item.getNotes();
 let notes = [];
 for (let noteID of noteIDs) {
-  notes.push(Zotero.Items.get(noteID).getNote());
+  var noteItem = Zotero.Items.get(noteID);
+  notes.push({
+    note: noteItem.getNote(),
+    ...getAllFields(noteItem),
+    key: noteItem.key,
+    itemType: noteItem.itemType
+  });
 }
 
 // 获得attachments和annotations
@@ -37,22 +47,24 @@ for (let attachmentID of attachmentIDs) {
     ...getAllFields(attachment)
   }
   attachments.push(attachDetail);
-  var annoItems = attachment.getAnnotations();
-  if (annoItems.length) {
-    var annoDetail = {
-      parentKey: attachDetail.key,
-      parentTitle: attachDetail.title,
-      details: []
+  if (attachment.itemType == "attachment-pdf" || attachment.itemType == "attachment-pdf-link") {
+    var annoItems = attachment.getAnnotations();
+    if (annoItems.length) {
+      var annoDetail = {
+        parentKey: attachDetail.key,
+        parentTitle: attachDetail.title,
+        details: []
+      }
+      for (let annoItem of annoItems) {
+        annoDetail.details.push({
+          key: annoItem.key,
+          annotationText: annoItem.annotationText,
+          annotationPosition: JSON.parse(annoItem.annotationPosition),
+          ...getAllFields(annoItem)
+        })
+      }
+      annotations.push(annoDetail);
     }
-    for (let annoItem of annoItems) {
-      annoDetail.details.push({
-        key: annoItem.key,
-        annotationText: annoItem.annotationText,
-        annotationPosition: JSON.parse(annoItem.annotationPosition),
-        ...getAllFields(annoItem)
-      })
-    }
-    annotations.push(annoDetail);
   }
 }
 
@@ -66,5 +78,6 @@ return JSON.stringify({
   itemType: item.itemType,
   creators: item.getCreatorsJSON(),
   tags: item.getTags(),
-  citationKey: item.getField("citationKey")
+  citationKey: item.getField("citationKey"),
+  itemExist: true
 });
