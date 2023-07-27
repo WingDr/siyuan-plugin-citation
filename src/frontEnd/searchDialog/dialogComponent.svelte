@@ -58,7 +58,7 @@
             ev.preventDefault();
             changeSelection(true);
         } else if (ev.key == "Enter") {
-            const key = resList[selector].item.key;
+            const key = highlightedRes[selector].key;
             onSelection([key]);
             dispatcher("confirm");
         }

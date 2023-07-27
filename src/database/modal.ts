@@ -94,10 +94,9 @@ export class FilesModal extends DataModal {
    */
   public showSearching(protyle:Protyle, onSelection: (keys: string[]) => void) {
     this.protyle = protyle;
-    this.onSelection = onSelection;
     if (isDev) this.logger.info("打开搜索界面");
     this.searchDialog = new SearchDialog(this.plugin);
-    this.searchDialog.showSearching(this.search.bind(this), this.onSelection);
+    this.searchDialog.showSearching(this.search.bind(this), onSelection);
   }
 
   public getContentFromKey (citekey: string) {
@@ -356,18 +355,21 @@ export class ZoteroDBModal extends DataModal {
    */
   public async showSearching(protyle:Protyle, onSelection: (keys: string[]) => void) {
     this.protyle = protyle;
-    this.onSelection = onSelection;
     if (await this.checkZoteroRunning()) {
       if (isDev) this.logger.info(`${this.type}已运行`);
       const items = await this.getAllItems();
+      if (!items[0].citationKey.length) {
+        this.plugin.noticer.error((this.plugin.i18n.errors.bbtDisabled as string).replace("${type}", this.type));
+      }
       if (isDev) this.logger.info(`从${this.type}接收到数据 =>`, items);
+
       const searchItems = items.map(item => {
         return new EntryZoteroAdapter(item, this.useItemKey);
       });
       this.fuse = new Fuse(searchItems, this.searchOptions);
       if (isDev) this.logger.info("打开搜索界面");
       this.searchDialog = new SearchDialog(this.plugin);
-      this.searchDialog.showSearching(this.search.bind(this), this.onSelection);
+      this.searchDialog.showSearching(this.search.bind(this), onSelection);
     } else {
       this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string).replace("${type}", this.type));
     }
@@ -386,12 +388,17 @@ export class ZoteroDBModal extends DataModal {
   }
 
   public async getCollectedNotesFromKey(key: string) {
-    const itemKey = this.useItemKey ? key : await this.getItemKeyByCitekey(key);
-    const res = await this.getNotesByItemKey(itemKey);
-    if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, res);
-    return (res as string[]).map((singleNote, index) => {
-      return `\n\n---\n\n###### Note No.${index+1}\n\n\n\n` + htmlNotesProcess(singleNote.replace(/\\(.?)/g, (m, p1) => p1));
-    }).join("\n\n");
+    if (await this.checkZoteroRunning()) {
+      const itemKey = this.useItemKey ? key : await this.getItemKeyByCitekey(key);
+      const res = await this.getNotesByItemKey(itemKey);
+      if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, res);
+      return (res as string[]).map((singleNote, index) => {
+        return `\n\n---\n\n###### Note No.${index+1}\n\n\n\n` + htmlNotesProcess(singleNote.replace(/\\(.?)/g, (m, p1) => p1));
+      }).join("\n\n");
+    } else {
+      this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string).replace("${type}", this.type));
+      return "";
+    }
   }
 
   public getTotalKeys(): string[] {

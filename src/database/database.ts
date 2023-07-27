@@ -33,6 +33,9 @@ export class Database {
       return null;
     }
 
+    // 如果已经存在就删除原先的
+    if (this.dataModal) delete this.dataModal;
+
     switch (type) {
       case "BibTex and CSL-JSON": {
         this.dataModal = new FilesModal(this.plugin);
