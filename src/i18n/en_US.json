@@ -45,7 +45,8 @@
     "loadRefFailed": "Failed to load literature notes",
     "zoteroNotRunning": "${type} is not running!",
     "getLiteratureFailed": "Failed to get literature",
-    "loadLibraryFailed": "Failed to load library"
+    "loadLibraryFailed": "Failed to load library",
+    "bbtDisabled": ""
   },
   "confirms": {
     "updateWithoutUserData": "No user data area detected (missing reference or reference invalid), do you want to update the link?"

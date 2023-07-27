@@ -22,7 +22,8 @@ interface AnnotationDetail {
   annotationText: string,
   annotationPosition: {
     pageIndex: number
-  }
+  },
+  annotationComment?: string
 }
 
 export interface EntryDataZotero {
@@ -224,9 +225,9 @@ export class EntryZoteroAdapter extends Entry {
   get annotations(): string {
     const annotations = this.data.annotations ?? [];
     return annotations.map(anno => {
-      const title = `\n\n---\n\n###### Annotation in ${anno.parentTitle}`;
+      const title = `\n\n---\n\n###### Annotation in ${anno.parentTitle}\n\n`;
       const content = anno.details.map(detail => {
-        return `[${detail.annotationText}](zotero://open-pdf/library/items/${anno.parentKey}?page=${detail.annotationPosition.pageIndex}&annotation=${detail.key})`;
+        return `[${detail.annotationText}](zotero://open-pdf/library/items/${anno.parentKey}?page=${detail.annotationPosition.pageIndex}&annotation=${detail.key})` + (detail.annotationComment ? `\n\n**[Comment]**: ${detail.annotationComment}` : "");
       }).join("\n\n");
       return title + content;
     }).join("\n\n");

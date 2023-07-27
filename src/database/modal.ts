@@ -365,10 +365,9 @@ export class ZoteroDBModal extends DataModal {
       const items = await this.getAllItems();
       if (isDev) this.logger.info(`从${this.type}接收到数据 =>`, items);
       if (!this.useItemKey && !items[0].citationKey.length) {
-        this.plugin.noticer.error((this.plugin.i18n.errors.bbtDisabled as string).replace("${type}", this.type));
+        this.plugin.noticer.error(this.plugin.i18n.errors.bbtDisabled as string);
         return null;
       }
-
       const searchItems = items.map(item => {
         return new EntryZoteroAdapter(item, this.useItemKey);
       });

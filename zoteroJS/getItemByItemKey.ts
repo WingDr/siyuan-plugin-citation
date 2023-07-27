@@ -10,13 +10,23 @@ if (!item) return {
 function getAllFields(item) {
   // 获得fields
   let fieldDetail = {};
-  var fields = item.getUsedFields(true);
+  let fields = Object.keys(item);
+  const fieldIgnored = [
+    "_ObjectsClass", "_ObjectType", "_objectTypePlural", "_ObjectTypePlural",
+    "_synced", "_deleted", "_inCache", "_loaded", "_skipDataTypeLoad", "_changed",
+    "_previousData", "_changedData", "_dataTypesToReload", "_disabled", "_creators",
+    "_itemData", "_annotationPosition", "_attachments"
+  ]
+  for (let fieldName of fields) {
+    if (fieldIgnored.indexOf(fieldName) == -1) fieldDetail[fieldName.slice(1)] = item[fieldName];
+  }
+  fields = item.getUsedFields(true);
   for (let fieldName of fields) {
     fieldDetail[fieldName] = item.getField(fieldName);
   }
   return fieldDetail;
 }
-
+Zotero.Item.getUsedFields
 // 获得fields
 var itemFields = getAllFields(item);
 
@@ -47,7 +57,8 @@ for (let attachmentID of attachmentIDs) {
     ...getAllFields(attachment)
   }
   attachments.push(attachDetail);
-  if (attachment.itemType == "attachment-pdf" || attachment.itemType == "attachment-pdf-link") {
+  var fileType = attachDetail.path.split(".").slice(-1);
+  if (fileType == "pdf") {
     var annoItems = attachment.getAnnotations();
     if (annoItems.length) {
       var annoDetail = {
@@ -60,6 +71,7 @@ for (let attachmentID of attachmentIDs) {
           key: annoItem.key,
           annotationText: annoItem.annotationText,
           annotationPosition: JSON.parse(annoItem.annotationPosition),
+          annotationComment: annoItem.annotationComment,
           ...getAllFields(annoItem)
         })
       }
@@ -70,10 +82,10 @@ for (let attachmentID of attachmentIDs) {
 
 // 输出结果
 return JSON.stringify({
+  ...itemFields,
   notes,
   annotations,
   attachments,
-  ...itemFields,
   itemKey: item.key,
   itemType: item.itemType,
   creators: item.getCreatorsJSON(),

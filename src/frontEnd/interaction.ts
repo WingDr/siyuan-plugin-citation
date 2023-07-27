@@ -57,7 +57,7 @@ export class InteractionManager {
           if (settingData.referenceNotebook != this.plugin.data[STORAGE_NAME].referenceNotebook || settingData.database != this.plugin.data[STORAGE_NAME].database) refreshDatabase = true;
           if (UseItemKeySwitch.checked != this.plugin.data[STORAGE_NAME].useItemKey) refreshName = true;
           this.plugin.saveData(STORAGE_NAME, settingData).then(() => {
-            if (refreshDatabase) {
+            if (refreshDatabase || refreshName) {
               this.plugin.reference.checkRefDirExist();
               this.plugin.database.buildDatabase(settingData.database as DatabaseType);
             }
