@@ -257,20 +257,25 @@ export class ZoteroModal extends DataModal {
   }
 
   public async getCollectedNotesFromKey(citekey: string) {
-    const res = await axios({
-      method: "post",
-      url: this.jsonrpcUrl,
-      headers: defaultHeaders,
-      data: JSON.stringify({
-        jsonrpc: "2.0",
-        method: "item.notes",
-        params: [[citekey]]
-      })
-    });
-    if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, res.data.result[citekey]);
-    return (res.data.result[citekey] as string[]).map((singleNote, index) => {
-      return `\n\n---\n\n###### Note No.${index+1}\n\n\n\n` + htmlNotesProcess(singleNote.replace(/\\(.?)/g, (m, p1) => p1));
-    }).join("\n\n");
+    if (await this.checkZoteroRunning()) {
+      const res = await axios({
+        method: "post",
+        url: this.jsonrpcUrl,
+        headers: defaultHeaders,
+        data: JSON.stringify({
+          jsonrpc: "2.0",
+          method: "item.notes",
+          params: [[citekey]]
+        })
+      });
+      if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, res.data.result[citekey]);
+      return (res.data.result[citekey] as string[]).map((singleNote, index) => {
+        return `\n\n---\n\n###### Note No.${index+1}\n\n\n\n` + htmlNotesProcess(singleNote.replace(/\\(.?)/g, (m, p1) => p1));
+      }).join("\n\n");
+    } else {
+      this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string).replace("${type}", this.type));
+      return "";
+    }
   }
 
   public getTotalKeys(): string[] {
