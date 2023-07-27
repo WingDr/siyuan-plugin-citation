@@ -40,6 +40,7 @@ export class Reference {
     if (data.length) {
       const literatureId = data[0].id;
       // 文件存在就更新文件内容
+      let deleteList = [];
       // 首先将文献的基本内容塞到用户文档的自定义属性中
       this.plugin.kernelApi.setBlockEntry(literatureId, JSON.stringify(entry));
       // 查找用户自定义片段
@@ -61,7 +62,7 @@ export class Reference {
           userDataLink = dyMatch[0];
           if (isDev) this.logger.info("匹配到用户片段动态锚文本链接 =>", {dyMatch: dyMatch, id: userDataId});
           // 删除所有需要更新的片段
-          await this.deleteBlocks(dataIds.slice(0, idx));
+          deleteList = dataIds.slice(0, idx);
         } else if (stMatch && stMatch.length && stMatch[0] && dataIds.indexOf(stMatch[0].split(" ")[0].slice(2)) != -1) {
           // 如果能查找到链接，并且链接存在于文本中，则说明存在用户数据区域
           const idx = dataIds.indexOf(stMatch[0].split(" ")[0].slice(2));
@@ -69,7 +70,7 @@ export class Reference {
           userDataLink = stMatch[0];
           if (isDev) this.logger.info("匹配到用户片段静态锚文本链接 =>", {stMatch: stMatch, id: userDataId});
           // 删除所有需要更新的片段
-          await this.deleteBlocks(dataIds.slice(0, idx));
+          deleteList = dataIds.slice(0, idx);
         } else {
           if (isDev) this.logger.info("未匹配到用户片段链接 =>", {
             markdown: res.data[0].markdown,
@@ -79,10 +80,10 @@ export class Reference {
           });
           return confirm("⚠️", this.plugin.i18n.confirms.updateWithoutUserData, async () => {
             // 不存在用户数据区域，整个更新
-            await this.deleteBlocks(dataIds);
+            deleteList = dataIds;
             userDataId = await this.updateEmptyNote(literatureId);
             if (!userDataLink.length) userDataLink = `((${userDataId} 'User Data'))`;
-            this.insertNoteContent(literatureId, userDataId, userDataLink, entry);
+            this.insertNoteContent(literatureId, userDataId, userDataLink, entry, deleteList);
             return;
           });
         }
@@ -93,7 +94,7 @@ export class Reference {
       }
       // 插入前置片段
       if (!userDataLink.length) userDataLink = `((${userDataId} 'User Data'))`;
-      this.insertNoteContent(literatureId, userDataId, userDataLink, entry);
+      this.insertNoteContent(literatureId, userDataId, userDataLink, entry, deleteList);
       return;
     } else {
       //文件不存在就新建文件
@@ -107,7 +108,7 @@ export class Reference {
       // 新建文件之后也要更新对应字典
       this.plugin.key2idDict[key] = noteData.rootId;
       this.plugin.id2keyDict[noteData.rootId] = key;
-      this.insertNoteContent(noteData.rootId, noteData.userDataId, `(( ${noteData.userDataId} 'User Data'))`, entry);
+      this.insertNoteContent(noteData.rootId, noteData.userDataId, `(( ${noteData.userDataId} 'User Data'))`, entry, []);
       return;
     }
   }
@@ -132,7 +133,7 @@ export class Reference {
     return Promise.all(p);
   }
 
-  private async insertNoteContent(literatureId: string, userDataId: string, userDataLink: string, entry: any) {
+  private async insertNoteContent(literatureId: string, userDataId: string, userDataLink: string, entry: any, deleteList: string[]) {
     const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
     const noteTemplate = this.plugin.data[STORAGE_NAME].noteTemplate as string;
     const note = entry.note;
@@ -141,6 +142,7 @@ export class Reference {
       return `${n.prefix}\n\n${n.content}`;
     }).join("\n\n");
     const literatureNote = generateFromTemplate(noteTemplate, entry);
+    if (deleteList.length) await this.deleteBlocks(deleteList);
     await this.plugin.kernelApi.prependBlock(literatureId, userDataLink + "\n\n" + literatureNote);
     // const res = await this.plugin.kernelApi.getChidBlocks(literatureId);
     // const dataIds = (res.data as any[]).map(data => {

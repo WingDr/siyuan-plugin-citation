@@ -14,6 +14,7 @@ var ids = await s.search();
 for (let id of ids) {
   var item = Zotero.Items.get(id)
   Result.push({
+    libraryID: item.libraryID,
     itemKey: item.key,
     citationKey: item.getField("citationKey"),
     creators: item.getCreatorsJSON(),

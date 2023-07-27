@@ -42,6 +42,14 @@ export abstract class DataModal {
   public abstract getTotalKeys(): string[];
 }
 
+function processKey(key: string): [number, string] {
+  const group = key.split("_");
+  if (group.length <= 1) {
+    return [1, key];
+  } else {
+    return [eval(group[0]), group[1]];
+  }
+}
 
 export class FilesModal extends DataModal {
   private fuse: Fuse<any>;
@@ -99,20 +107,22 @@ export class FilesModal extends DataModal {
     this.searchDialog.showSearching(this.search.bind(this), onSelection);
   }
 
-  public getContentFromKey (citekey: string) {
+  public getContentFromKey (key: string) {
+    const [, citekey] = processKey(key);
     const entry = this.library.getTemplateVariablesForCitekey(citekey);
     if (entry.files) entry.files = generateFileLinks(entry.files);
     if (isDev) this.logger.info("文献内容 =>", entry);
     return entry;
   }
 
-  public getCollectedNotesFromKey(citekey: string) {
+  public getCollectedNotesFromKey(key: string) {
+    const [, citekey] = processKey(key);
     const entry = this.library.getTemplateVariablesForCitekey(citekey);
     return entry.note;
   }
 
   public getTotalKeys(): string[] {
-      return Object.keys(this.library.entries);
+    return Object.keys(this.plugin.key2idDict);
   }
 
   /**
@@ -200,7 +210,6 @@ const JSHeaders = {
 };
 const contentTranslator = "36a3b0b5-bad0-4a04-b79b-441c7cef77db";
 
-
 export class ZoteroModal extends DataModal {
   private type: ZoteroType;
   private jsonrpcUrl: string;
@@ -231,13 +240,17 @@ export class ZoteroModal extends DataModal {
         headers: defaultHeaders
       });
       if (isDev) this.logger.info(`从${this.type}接收到数据 =>`, res.data);
-      this.onSelection(this.getCitekeysFromZotero(res.data.items));
+      const citekey = this.getCitekeysFromZotero(res.data.items);
+      if (isDev) this.logger.info("获取到citekey =>", {citekey});
+      this.onSelection(citekey);
     } else {
       this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string).replace("${type}", this.type));
     }
   }
 
-  public async getContentFromKey (citekey: string) {
+  public async getContentFromKey (key: string) {
+    const [libraryID, citekey] = processKey(key);
+    if (isDev) this.logger.info(`请求${this.type}导出数据, reqOpt=>`, {citekey: citekey, libraryID: libraryID});
     const res = await axios({
       method: "post",
       url: this.jsonrpcUrl,
@@ -245,7 +258,7 @@ export class ZoteroModal extends DataModal {
       data: JSON.stringify({
         jsonrpc: "2.0",
         method: "item.export",
-        params: [[citekey], contentTranslator]
+        params: [[citekey], contentTranslator, libraryID]
       })
     });
     if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, JSON.parse(res.data.result[2]));
@@ -256,8 +269,9 @@ export class ZoteroModal extends DataModal {
     return entry;
   }
 
-  public async getCollectedNotesFromKey(citekey: string) {
+  public async getCollectedNotesFromKey(key: string) {
     if (await this.checkZoteroRunning()) {
+      const [, citekey] = processKey(key);
       const res = await axios({
         method: "post",
         url: this.jsonrpcUrl,
@@ -291,7 +305,7 @@ export class ZoteroModal extends DataModal {
     
     const citekeys = items.map((item: any) => {
       if (!item.citekey && !item.citationKey) return null;
-      return item.citekey || item.citationKey;
+      return item.libraryID + "_" + (item.citekey || item.citationKey);
     }).filter(e => !!e);
     if (!citekeys.length) return [];
     return citekeys;
@@ -311,6 +325,7 @@ export class ZoteroModal extends DataModal {
 }
 
 interface SearchItem {
+  libraryID: number,
   itemKey: string,
   citationKey?: string,
   creators: any[],
@@ -381,9 +396,9 @@ export class ZoteroDBModal extends DataModal {
   }
 
   public async getContentFromKey (key: string) {
-    let itemKey = this.useItemKey ? key : await this.getItemKeyByCitekey(key);
-    if (!(await this.checkItemKeyExist(itemKey))) itemKey = this.useItemKey ? await this.getItemKeyByCitekey(key) : key;
-    const res = await this.getItemByItemKey(itemKey);
+    let itemKey = this.useItemKey ? key : await this.getItemKeyByCitekey(...processKey(key));
+    if (!(await this.checkItemKeyExist(...processKey(itemKey)))) itemKey = this.useItemKey ? this.getItemKeyByCitekey(...processKey(key)) : key;
+    const res = await this.getItemByItemKey(...processKey(itemKey));
     if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, res);
     const zoteroEntry = new EntryZoteroAdapter(res as EntryDataZotero, this.useItemKey);
     const entry = getTemplateVariablesForZoteroEntry(zoteroEntry);
@@ -394,8 +409,8 @@ export class ZoteroDBModal extends DataModal {
 
   public async getCollectedNotesFromKey(key: string) {
     if (await this.checkZoteroRunning()) {
-      const itemKey = this.useItemKey ? key : await this.getItemKeyByCitekey(key);
-      const res = await this.getNotesByItemKey(itemKey);
+      const itemKey = this.useItemKey ? key : await this.getItemKeyByCitekey(...processKey(key));
+      const res = await this.getNotesByItemKey(...processKey(itemKey));
       if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, res);
       return (res as string[]).map((singleNote, index) => {
         return `\n\n---\n\n###### Note No.${index+1}\n\n\n\n` + htmlNotesProcess(singleNote.replace(/\\(.?)/g, (m, p1) => p1));
@@ -419,8 +434,12 @@ export class ZoteroDBModal extends DataModal {
     return type === "Zotero" ? "23119" : "24119";
   }
 
-  private async checkItemKeyExist(itemKey: string): Promise<boolean> {
-    return (await this.callZoteroJS("checkItemKeyExist", `var key = "${itemKey}";`)).itemKeyExist;
+  private async checkItemKeyExist(libraryID: number, itemKey: string): Promise<boolean> {
+    if (!itemKey.length) return false;
+    return (await this.callZoteroJS("checkItemKeyExist", `
+      var key = "${itemKey}";
+      var libraryID = ${libraryID};
+    `)).itemKeyExist;
   }
 
   private async checkZoteroRunning(): Promise<boolean> {
@@ -431,16 +450,25 @@ export class ZoteroDBModal extends DataModal {
     return await this.callZoteroJS("getAllItems", "");
   }
 
-  private async getItemByItemKey(itemKey: string) {
-    return await this.callZoteroJS("getItemByItemKey", `var key = "${itemKey}";`);
+  private async getItemByItemKey(libraryID: number, itemKey: string) {
+    return await this.callZoteroJS("getItemByItemKey", `
+      var key = "${itemKey}";
+      var libraryID = ${libraryID};
+    `);
   }
 
-  private async getItemKeyByCitekey(citekey: string) {
-    return (await this.callZoteroJS("getItemKeyByCiteKey", `var citekey = "${citekey}";`)).itemKey;
+  private async getItemKeyByCitekey(libraryID: number, citekey: string) {
+    return (await this.callZoteroJS("getItemKeyByCiteKey", `
+      var citekey = "${citekey}";
+      var libraryID = ${libraryID};
+    `)).itemKey;
   }
 
-  private async getNotesByItemKey(itemKey: string) {
-    return await this.callZoteroJS("getNotesByItemKey", `var key = "${itemKey}";`);
+  private async getNotesByItemKey(libraryID: number, itemKey: string) {
+    return await this.callZoteroJS("getNotesByItemKey", `
+      var key = "${itemKey}";
+      var libraryID = ${libraryID};
+    `);
   }
 
   private async callZoteroJS(filename: string, prefix: string) {

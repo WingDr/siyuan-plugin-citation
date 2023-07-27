@@ -1,7 +1,6 @@
 // @ts-nocheck 
 /* eslint-disable */
-var library = Zotero.Libraries.userLibraryID;
-var item = await Zotero.Items.getByLibraryAndKeyAsync(library, key);
+var item = await Zotero.Items.getByLibraryAndKeyAsync(libraryID, key);
 
 if (!item) return {
   itemExist: false

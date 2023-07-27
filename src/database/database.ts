@@ -74,11 +74,11 @@ export class Database {
   }
 
   public copyCiteLink() {
-    this.dataModal.showSearching(null, this.copyCiteLinkBySelection);
+    this.dataModal.showSearching(null, this.copyCiteLinkBySelection.bind(this));
   }
 
   public copyNotes() {
-    this.dataModal.showSearching(null, this.copyNotesBySelection);
+    this.dataModal.showSearching(null, this.copyNotesBySelection.bind(this));
   }
 
   public async getContentByKey(key: string) {

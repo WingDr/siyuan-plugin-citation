@@ -49,6 +49,7 @@ export interface EntryDataZotero {
   itemKey: string;
   itemType?: string;
   language?: string;
+  libraryID: number;
   journalAbbreviation?: string;
   notes?: any[];
   numPages?: string;
@@ -155,8 +156,8 @@ export class EntryZoteroAdapter extends Entry {
   }
 
   get key() {
-    if (this.useItemKey) return this.itemKey;
-    else return this.id;
+    if (this.useItemKey) return this.data.libraryID + "_" + this.itemKey;
+    else return this.data.libraryID + "_" + this.id;
   }
 
   get type() {
