@@ -27,16 +27,12 @@ export interface Match {
 export class SearchDialog {
   private searchDialog: Dialog;
   private logger: ILogger;
-  private resList: SearchRes[];
-  private selector: number;
-  private onSelection: (keys: string[]) => void;
 
   constructor (public plugin: SiYuanPluginCitation) {
     this.logger = createLogger("search dialog");
   }
 
   public showSearching(search: (pattern: string) => any, onSelection: (keys: string[]) => void) {
-    this.onSelection = onSelection;
     if (isDev) this.logger.info("打开搜索界面");
 
     const id = `dialog-search-${Date.now()}`;
@@ -58,6 +54,11 @@ export class SearchDialog {
     this.searchDialog.element.querySelector(".b3-dialog__header").className = "resize__move b3-dialog__header fn__none-custom";
     const input = this.searchDialog.element.querySelector("#pattern-input") as HTMLInputElement;
     input.focus();
+
+    component.$on("refresh", () => {
+      const table = this.searchDialog.element.getElementsByTagName("ul").item(0);
+      table.scrollTop = 0;
+    });
 
     component.$on("select", e => {
       const selector = e.detail.selector;

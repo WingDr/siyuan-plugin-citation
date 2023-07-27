@@ -2,11 +2,13 @@
     import { createEventDispatcher } from "svelte";
     import { type SearchRes, type Match } from "./searchDialog";
 
-    export let resList: SearchRes[] = [];
-    export let selector: number = 0;
-    export let pattern: string = "";
+    let resList: SearchRes[] = [];
+    let selector: number = 0;
+    let pattern: string = "";
     export let onSelection: (keys: string[]) => void;
     export let search: (pattern: string) => any;
+
+    let highlightedRes: {key: string, title: string, year: string, authorString: string}[] = [];
 
     const dispatcher = createEventDispatcher();
 
@@ -27,11 +29,18 @@
         };
     }
 
-    $: highlitedRes = resList.map(res => matchHighlight(res.matches[0]));
-
     function inputReaction( ev ) {
+        resList = []
         resList = search(pattern) as SearchRes[];
         selector = 0;
+        highlightedRes = resList.map(res => {
+            const highlight = matchHighlight(res.matches[0]);
+            return {
+                key: res.item.key,
+                ...highlight
+            }
+        });
+        dispatcher("refresh");
     }
 
     function clickReaction(ev: MouseEvent) {
@@ -98,15 +107,16 @@
 </div>
 <div class="search__layout result-container" id="result-container">
     <ul class="fn__flex-1 search__list b3-list b3-list--background">
-        {#each resList as resItem, index (resItem.item.key)}
+        <div id="search-list-top"></div>
+        {#each highlightedRes as resItem, index}
             <li class="b3-list-item {(index == selector) ? "b3-list-item--focus" : ""}">
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-                <div class="search-item" data-type="search-item" data-search-id={resItem.item.key}
+                <div class="search-item" data-type="search-item" data-search-id={resItem.key}
                 role="listitem"
                 on:click={clickReaction}>
-                    <div class="b3-list-item__text" style="font-weight:bold;border-bottom:0.5px solid #CCC"> {@html highlitedRes[index].title}</div>
-                    <div class="b3-list-item__text">{@html highlitedRes[index].year + "\t | \t" + highlitedRes[index].authorString}</div>
+                    <div class="b3-list-item__text" style="font-weight:bold;border-bottom:0.5px solid #CCC"> {@html resItem.title}</div>
+                    <div class="b3-list-item__text">{@html resItem.year + "\t | \t" + resItem.authorString}</div>
                 </div>
             </li>
         {/each}
