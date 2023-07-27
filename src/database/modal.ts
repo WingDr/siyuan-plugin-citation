@@ -363,10 +363,11 @@ export class ZoteroDBModal extends DataModal {
     if (await this.checkZoteroRunning()) {
       if (isDev) this.logger.info(`${this.type}已运行`);
       const items = await this.getAllItems();
-      if (!items[0].citationKey.length) {
-        this.plugin.noticer.error((this.plugin.i18n.errors.bbtDisabled as string).replace("${type}", this.type));
-      }
       if (isDev) this.logger.info(`从${this.type}接收到数据 =>`, items);
+      if (!this.useItemKey && !items[0].citationKey.length) {
+        this.plugin.noticer.error((this.plugin.i18n.errors.bbtDisabled as string).replace("${type}", this.type));
+        return null;
+      }
 
       const searchItems = items.map(item => {
         return new EntryZoteroAdapter(item, this.useItemKey);
