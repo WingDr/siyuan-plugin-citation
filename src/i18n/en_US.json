@@ -49,7 +49,7 @@
     "bbtDisabled": ""
   },
   "confirms": {
-    "updateWithoutUserData": "No user data area detected (missing reference or reference invalid), do you want to update the link?"
+    "updateWithoutUserData": "No \"user data\" (# User Data) area detected (missing reference or reference invalid), do you want to update the literature note?"
   },
   "notices": {
     "loadLibrarySuccess": "Successfully loaded library with ${size} entries.",

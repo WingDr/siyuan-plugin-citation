@@ -49,7 +49,7 @@
     "bbtDisabled": "未检索到citationKey字段，请检查better-bibtex插件是否运行，或者切换到使用itemKey进行索引"
   },
   "confirms": {
-    "updateWithoutUserData": "未检测到用户数据区域（缺少引用或引用失效），确定要更新链接吗？"
+    "updateWithoutUserData": "未检测到“用户数据（# User Data）”区域（缺少引用或引用失效），确定要更新文献内容吗？"
   },
   "notices": {
     "loadLibrarySuccess": "文献库成功导入${size}个数据",
