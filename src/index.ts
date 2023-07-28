@@ -8,7 +8,7 @@ import KernelApi from "./api/kernel-api";
 import { Database, type DatabaseType } from "./database/database";
 import {
     Reference
-} from "./reference";
+} from "./ReferenceManager/reference";
 import {
     InteractionManager
 } from "./frontEnd/interaction";
@@ -29,14 +29,14 @@ import {
 import "./index.scss";
 import { createNoticer, type INoticer } from "./utils/noticer";
 import { changeUpdate } from "./utils/updates";
+import { LiteraturePool } from "./ReferenceManager/pool";
 
 export default class SiYuanPluginCitation extends Plugin {
 
     public isMobile: boolean;
     public isRefPathExist: boolean;
 
-    public key2idDict: {[ck: string]: string};
-    public id2keyDict: {[id: string]: string};
+    public literaturePool: LiteraturePool;
 
     public database: Database;
     public reference: Reference;
@@ -49,6 +49,7 @@ export default class SiYuanPluginCitation extends Plugin {
     async onload() {
         this.logger = createLogger("index");
         this.noticer = createNoticer();
+        this.literaturePool = new LiteraturePool();
 
         if (isDev) this.logger.info("插件载入");
 
@@ -73,7 +74,6 @@ export default class SiYuanPluginCitation extends Plugin {
         this.kernelApi = new KernelApi();
 
         this.interactionManager = new InteractionManager(this);
-        this.interactionManager.eventBusReaction();
         await this.interactionManager.customSettingTab().then(setting => {
             this.setting = setting;
         });
@@ -81,6 +81,7 @@ export default class SiYuanPluginCitation extends Plugin {
         (await this.interactionManager.customProtyleSlash()).forEach(slash => {
             this.protyleSlash.push(slash);
         });
+        this.interactionManager.eventBusReaction();
 
         return ;
     }
@@ -92,6 +93,6 @@ export default class SiYuanPluginCitation extends Plugin {
     }
 
     onunload() {
-        if (isDev) this.logger.info("插件卸载");
+        if (isDev) this.logger.info("插件卸载，plugin=>", this);
     }
 }

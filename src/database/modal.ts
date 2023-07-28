@@ -124,7 +124,7 @@ export class FilesModal extends DataModal {
   }
 
   public getTotalKeys(): string[] {
-    return Object.keys(this.plugin.key2idDict);
+    return this.plugin.literaturePool.keys;
   }
 
   /**
@@ -300,7 +300,7 @@ export class ZoteroModal extends DataModal {
   }
 
   public getTotalKeys(): string[] {
-    return Object.keys(this.plugin.key2idDict);
+    return this.plugin.literaturePool.keys;
   }
 
   private getPort(type: ZoteroType): "23119" | "24119" {
@@ -438,7 +438,7 @@ export class ZoteroDBModal extends DataModal {
   }
 
   public getTotalKeys(): string[] {
-    return Object.keys(this.plugin.key2idDict);
+    return this.plugin.literaturePool.keys;
   }
 
   private search(pattern: string) {

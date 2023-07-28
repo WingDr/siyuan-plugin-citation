@@ -95,11 +95,11 @@ export class Database {
     await this.plugin.reference.checkRefDirExist();
     if (this.plugin.isRefPathExist) {
       const literatureEnum = await this.plugin.reference.getLiteratureEnum(fileId);
-      const existNotes = Object.values(this.plugin.id2keyDict);
+      const existNotes = this.plugin.literaturePool.keys;
       const insertContent = keys.map(async key => {
         const idx = existNotes.indexOf(key);
         await this.plugin.reference.updateLiteratureNote(key);
-        const citeId = this.plugin.key2idDict[key];
+        const citeId = this.plugin.literaturePool.get(key);
         let link = "";
         if (idx == -1) {
           link = await this.plugin.reference.generateCiteLink(key, literatureEnum.length + 1, false);
@@ -124,11 +124,11 @@ export class Database {
   private async copyCiteLinkBySelection(keys: string[]) {
     await this.plugin.reference.checkRefDirExist();
     if (this.plugin.isRefPathExist) {
-      const existNotes = Object.values(this.plugin.id2keyDict);
+      const existNotes = this.plugin.literaturePool.keys;
       const insertContent = keys.map(async key => {
         const idx = existNotes.indexOf(key);
         await this.plugin.reference.updateLiteratureNote(key);
-        const citeId = this.plugin.key2idDict[key];
+        const citeId = this.plugin.literaturePool.get(key);
         const link = await this.plugin.reference.generateCiteLink(key, idx, false);
         return this.plugin.reference.generateCiteRef(citeId, link);
       });

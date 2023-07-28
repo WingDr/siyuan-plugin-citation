@@ -1,16 +1,16 @@
 import { confirm } from "siyuan";
-import SiYuanPluginCitation from "./index";
-import { type SiyuanData } from "./api/base-api";
+import SiYuanPluginCitation from "../index";
+import { type SiyuanData } from "../api/base-api";
 import {
   STORAGE_NAME, isDev, citeLink, 
   DISALLOWED_FILENAME_CHARACTERS_RE, 
   refReg, refRegStatic, refRegDynamic
-} from "./utils/constants";
+} from "../utils/constants";
 import {
   generateFromTemplate
-} from "./utils/templates";
-import { type ILogger, createLogger } from "./utils/simple-logger";
-import { loadLocalRef } from "./utils/util";
+} from "../utils/templates";
+import { type ILogger, createLogger } from "../utils/simple-logger";
+import { loadLocalRef } from "../utils/util";
 
 
 // 根据输入更新文献库和引用文档，并维护本文档中的引用次序
@@ -80,8 +80,7 @@ export class Reference {
             totalIds: dataIds
           });
           // 执行后续操作之前先更新文献池
-          this.plugin.key2idDict[key] = literatureId;
-          this.plugin.id2keyDict[literatureId] = key;
+          this.plugin.literaturePool.set({id: literatureId, key: key});
           return confirm("⚠️", this.plugin.i18n.confirms.updateWithoutUserData, async () => {
             // 不存在用户数据区域，整个更新
             deleteList = dataIds;
@@ -97,8 +96,7 @@ export class Reference {
         userDataId = await this.updateEmptyNote(literatureId);
       }
       // 执行后续操作之前先更新文献池
-      this.plugin.key2idDict[key] = literatureId;
-      this.plugin.id2keyDict[literatureId] = key;
+      this.plugin.literaturePool.set({id: literatureId, key: key});
       // 插入前置片段
       if (!userDataLink.length) userDataLink = `((${userDataId} 'User Data'))`;
       this.insertNoteContent(literatureId, userDataId, userDataLink, entry, deleteList);
@@ -113,8 +111,7 @@ export class Reference {
       await this.plugin.kernelApi.setNameOfBlock(noteData.rootId, key);
       this.plugin.kernelApi.setBlockEntry(noteData.rootId, JSON.stringify(entry));
       // 新建文件之后也要更新对应字典
-      this.plugin.key2idDict[key] = noteData.rootId;
-      this.plugin.id2keyDict[noteData.rootId] = key;
+      this.plugin.literaturePool.set({id: noteData.rootId, key: key});
       this.insertNoteContent(noteData.rootId, noteData.userDataId, `(( ${noteData.userDataId} 'User Data'))`, entry, []);
       return;
     }
@@ -203,7 +200,7 @@ export class Reference {
         const anchor = match[1].slice(key.length + 1);
         const idx = literatureEnum.indexOf(key);
         if (idx != -1) {
-          const link = await this.generateCiteLink(this.plugin.id2keyDict[key], idx, this.plugin.data[STORAGE_NAME].customCiteText);
+          const link = await this.generateCiteLink(this.plugin.literaturePool.get(key), idx, this.plugin.data[STORAGE_NAME].customCiteText);
           if (isDev) this.logger.info("更新文献引用 =>", link);
           if (!link) continue;
           if (anchor != `"${link}"`) {
@@ -250,13 +247,13 @@ export class Reference {
     return citekeys.map(key => {
       return {
         citekey: key as string,
-        idx: fileContent.indexOf(this.plugin.key2idDict[key]) as number,
+        idx: fileContent.indexOf(this.plugin.literaturePool.get(key)) as number,
       };
     })
     .filter(key => key.idx != -1)
     .sort((a,b) => a.idx - b.idx)
     .map(item => {
-      return this.plugin.key2idDict[item.citekey];
+      return this.plugin.literaturePool.get(item.citekey);
     });
 
   }
@@ -284,10 +281,10 @@ export class Reference {
       this.plugin.noticer.error(this.plugin.i18n.errors.getLiteratureFailed);
       return null;
     }
-    if (isDev) this.logger.info("仅包含链接的模板 =>", {index, id: this.plugin.key2idDict[key]});
+    if (isDev) this.logger.info("仅包含链接的模板 =>", {index, id: this.plugin.literaturePool.get(key)});
     return generateFromTemplate(template, {
       index,
-      citeFileID: this.plugin.key2idDict[key],
+      citeFileID: this.plugin.literaturePool.get(key),
       ...entry
     });
   }
@@ -309,7 +306,7 @@ export class Reference {
     // 在刷新之前先更新一下文献池
     await loadLocalRef(this.plugin);
     if (isDev) this.logger.info("是否需要刷新命名 =>", {database: dType, enableNameRefresh});
-    const pList = Object.keys(this.plugin.key2idDict).map(async key => {
+    const pList = this.plugin.literaturePool.keys.map(async key => {
       const entry = await this.plugin.database.getContentByKey(key);
       if (isDev) this.logger.info("从database中获得文献内容 =>", entry);
       if (!entry) {
@@ -320,22 +317,27 @@ export class Reference {
       const noteTitle = generateFromTemplate(titleTemplate, entry);
       noteTitle.replace(DISALLOWED_FILENAME_CHARACTERS_RE, "_");
       // 不对的时候才更新
-      const res = await this.plugin.kernelApi.getBlock(this.plugin.key2idDict[key]);
+      const res = await this.plugin.kernelApi.getBlock(this.plugin.literaturePool.get(key));
+      if (!(res.data as any[]).length) {
+        // 如果这个文档没有了，那就在池子里去掉它
+        this.plugin.literaturePool.delete(key);
+        return;
+      } 
       const title = res.data[0].content;
       if (noteTitle != title) await this.plugin.kernelApi.renameDoc(notebookId, res.data[0].path , noteTitle);
       if (enableNameRefresh) {
         if (res.data[0].name != entry.key) {
-          if (isDev) this.logger.info("给文档刷新命名，detail=>", {id: this.plugin.key2idDict[key], name: entry.key});
-          await this.plugin.kernelApi.setNameOfBlock(this.plugin.key2idDict[key], entry.key);
+          if (isDev) this.logger.info("给文档刷新命名，detail=>", {id: this.plugin.literaturePool.get(key), name: entry.key});
+          await this.plugin.kernelApi.setNameOfBlock(this.plugin.literaturePool.get(key), entry.key);
         }
-        if (isDev) this.logger.info("文档无需刷新命名，detail=>", {id: this.plugin.key2idDict[key], name: entry.key});
+        if (isDev) this.logger.info("文档无需刷新命名，detail=>", {id: this.plugin.literaturePool.get(key), name: entry.key});
       } 
     });
     return await Promise.all(pList).then(async () => {
       if (isDev) this.logger.info("所有文件标题已更新");
-      this.plugin.noticer.info(this.plugin.i18n.notices.refreshTitleSuccess.replace("${size}", Object.keys(this.plugin.key2idDict).length));
+      this.plugin.noticer.info(this.plugin.i18n.notices.refreshTitleSuccess.replace("${size}", this.plugin.literaturePool.size));
       await loadLocalRef(this.plugin);
-      return this.plugin.id2keyDict, this.plugin.key2idDict;
+      return this.plugin.literaturePool.content;
     }).catch(e => {
       this.logger.error(e);
     });
