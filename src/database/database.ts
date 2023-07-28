@@ -63,9 +63,19 @@ export class Database {
     loadLocalRef(this.plugin);
   }
 
-  public insertCiteLink(protyle: Protyle) {
+  public async insertCiteLink(protyle: Protyle) {
     this.protyle = protyle;
-    this.dataModal.showSearching(protyle, this.insertCiteLinkBySelection.bind(this));
+    await this.plugin.reference.checkRefDirExist();
+    if (this.plugin.data[STORAGE_NAME].referenceNotebook === "") {
+      this.plugin.noticer.error(this.plugin.i18n.errors.notebookUnselected);
+      if (isDev) this.logger.error("未选择笔记本！");
+    } else if (!this.plugin.isRefPathExist) {
+      protyle.insert("", false, true);
+      this.plugin.noticer.error(this.plugin.i18n.errors.refPathInvalid);
+      if (isDev) this.logger.error("文献库路径不存在！");
+    } else {
+      return this.dataModal.showSearching(protyle, this.insertCiteLinkBySelection.bind(this));
+    }
   }
 
   public insertNotes(protyle:Protyle) {
@@ -133,7 +143,7 @@ export class Database {
         return this.plugin.reference.generateCiteRef(citeId, link);
       });
       const content = await Promise.all(insertContent);
-      this.plugin.reference.copyContent(content.join(""));
+      this.plugin.reference.copyContent(content.join(""), this.plugin.i18n.citeLink);
     }
   }
 
@@ -142,6 +152,6 @@ export class Database {
       return await this.plugin.database.dataModal.getCollectedNotesFromKey(key);
     });
     const content = await Promise.all(insertContent);
-    this.plugin.reference.copyContent(content.join(""));
+    this.plugin.reference.copyContent(content.join(""), this.plugin.i18n.notes);
   }
 }

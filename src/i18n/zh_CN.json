@@ -7,12 +7,15 @@
   "showDialog": "弹出一个对话框",
   "removedData": "数据已删除",
   "prefix": "Citation: ",
+  "citeLink": "引用链接",
+  "notes": "笔记",
   "addCitation": "插入文献引用",
   "addNotes": "插入文献笔记",
   "reloadDatabase": "重新载入数据库",
   "refreshCitation": "刷新引用",
   "refreshLiteratureNotesTitle": "刷新所有文献内容文档标题",
   "copyCiteLink": "复制文献引用",
+  "copyNotes": "复制文献笔记",
   "settingTab": {
     "settingTabTitle": "插件版本：${version}",
     "settingTabDescription": "如果有好的想法或者发现了bug，欢迎到github上提<b>issue</b>或者发邮件到<b>${e-mail}</b>",
@@ -22,6 +25,8 @@
     "referencePathInputDescription": "放置存放文献内容的文献库文档路径，以'/'开头和分隔子目录，例如'/Assets/References'",
     "databaseSelectorTitle": "数据库类型",
     "databaseSelectorDescription": "选择使用的数据库类型",
+    "UseItemKeySwitchTitle": "使用itemKey作为索引",
+    "UseItemKeySwitchDescription": "使用文献在Zotero中的唯一key作为索引，开启后可以不依赖better bibtex插件<br><b>仅使用debug-bridge插件时可以开启</b>",
     "reloadBtnTitle": "重新载入数据库",
     "reloadBtnDescription": "重新从BibTex和CSL-JSON文件中加载数据库",
     "reloadBtnText": "重载",
@@ -46,7 +51,7 @@
     "zoteroNotRunning": "${type}没有在运行",
     "getLiteratureFailed": "获得引用文献失败",
     "loadLibraryFailed": "文献库导入失败",
-    "bbtDisabled": "未检索到citationKey字段，请检查better-bibtex插件是否运行，或者切换到使用itemKey进行索引"
+    "bbtDisabled": "未检索到citekey字段，请检查better-bibtex插件是否运行，或者切换到使用itemKey进行索引"
   },
   "confirms": {
     "updateWithoutUserData": "未检测到“用户数据（# User Data）”区域（缺少引用或引用失效），确定要更新文献内容吗？"
@@ -55,6 +60,7 @@
     "loadLibrarySuccess": "文献库成功导入${size}个数据",
     "loadRefSuccess": "成功导入${size}个文献引用",
     "refreshTitleSuccess": "成功刷新${size}篇文献内容文档标题",
-    "copyCiteLinkSuccess": "引用链接已在剪贴板"
+    "copyContentSuccess": "${type}已在剪贴板",
+    "changeKey": "切换索引成功，文献索引已经切换到${keyType}。"
   }
 }

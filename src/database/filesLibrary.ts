@@ -536,7 +536,7 @@ export class EntryBibLaTeXAdapter extends Entry {
     const limit = 2;
     let shortAuthor = "";
     const author = this.data.creators.author;
-    if (author.length == 0) {
+    if (!author || author.length == 0) {
       return "";
     }
     for (let i = 0; i < limit && i < author.length; i++) {

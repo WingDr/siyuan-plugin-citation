@@ -428,8 +428,8 @@ export class ZoteroDBModal extends DataModal {
       const itemKey = this.useItemKey ? key : await this.getItemKeyByCitekey(...processKey(key));
       const res = await this.getNotesByItemKey(...processKey(itemKey));
       if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, res);
-      return (res as string[]).map((singleNote, index) => {
-        return `\n\n---\n\n###### Note No.${index+1}\n\n\n\n` + htmlNotesProcess(singleNote.replace(/\\(.?)/g, (m, p1) => p1));
+      return (res as any[]).map((singleNote, index) => {
+        return `\n\n---\n\n###### Note No.${index+1}\n\n\n\n` + htmlNotesProcess(singleNote.note.replace(/\\(.?)/g, (m, p1) => p1));
       }).join("\n\n");
     } else {
       this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string).replace("${type}", this.type));

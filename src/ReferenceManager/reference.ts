@@ -300,12 +300,8 @@ export class Reference {
   public async refreshLiteratureNoteTitles() {
     const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
     const titleTemplate = this.plugin.data[STORAGE_NAME].titleTemplate as string;
-    const dType = this.plugin.data[STORAGE_NAME].database as string;
-    let enableNameRefresh = false;
-    if (dType == "Zotero (debug-bridge)" || dType == "Juris-M (debug-bridge)") enableNameRefresh = true;
     // 在刷新之前先更新一下文献池
     await loadLocalRef(this.plugin);
-    if (isDev) this.logger.info("是否需要刷新命名 =>", {database: dType, enableNameRefresh});
     const pList = this.plugin.literaturePool.keys.map(async key => {
       const entry = await this.plugin.database.getContentByKey(key);
       if (isDev) this.logger.info("从database中获得文献内容 =>", entry);
@@ -325,13 +321,11 @@ export class Reference {
       } 
       const title = res.data[0].content;
       if (noteTitle != title) await this.plugin.kernelApi.renameDoc(notebookId, res.data[0].path , noteTitle);
-      if (enableNameRefresh) {
-        if (res.data[0].name != entry.key) {
-          if (isDev) this.logger.info("给文档刷新命名，detail=>", {id: this.plugin.literaturePool.get(key), name: entry.key});
-          await this.plugin.kernelApi.setNameOfBlock(this.plugin.literaturePool.get(key), entry.key);
-        }
-        if (isDev) this.logger.info("文档无需刷新命名，detail=>", {id: this.plugin.literaturePool.get(key), name: entry.key});
-      } 
+      if (res.data[0].name != entry.key) {
+        if (isDev) this.logger.info("给文档刷新命名，detail=>", {id: this.plugin.literaturePool.get(key), name: entry.key});
+        await this.plugin.kernelApi.setNameOfBlock(this.plugin.literaturePool.get(key), entry.key);
+      }
+      if (isDev) this.logger.info("文档无需刷新命名，detail=>", {id: this.plugin.literaturePool.get(key), name: entry.key});
     });
     return await Promise.all(pList).then(async () => {
       if (isDev) this.logger.info("所有文件标题已更新");
@@ -355,8 +349,8 @@ export class Reference {
     // await this.plugin.reference.updateLiteratureLink(rootId);
   }
 
-  public async copyContent(content: string) {
+  public async copyContent(content: string, type: string) {
     navigator.clipboard.writeText(content);
-    this.plugin.noticer.info(this.plugin.i18n.notices.copyCiteLinkSuccess);
+    this.plugin.noticer.info((this.plugin.i18n.notices.copyContentSuccess as string).replace("${type}", type));
   }
 }

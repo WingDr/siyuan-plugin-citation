@@ -61,7 +61,7 @@ export class InteractionManager {
               this.plugin.reference.checkRefDirExist();
               this.plugin.database.buildDatabase(settingData.database as DatabaseType);
             }
-            if (refreshName) this.plugin.noticer.info(this.plugin.i18n.notices.changeKey);
+            if (refreshName) this.plugin.noticer.info((this.plugin.i18n.notices.changeKey as string).replace("${keyType}", settingData.useItemKey ? "itemKey" : "citekey"));
           });
         }
     });
@@ -142,7 +142,10 @@ export class InteractionManager {
       const index = (ev.target as HTMLSelectElement).options.selectedIndex;
       const value = databaseType[index];
       if (value === "Juris-M (debug-bridge)" || value === "Zotero (debug-bridge)") UseItemKeySwitch.disabled = false;
-      else UseItemKeySwitch.disabled = true;
+      else {
+        UseItemKeySwitch.checked = false;
+        UseItemKeySwitch.disabled = true;
+      }
     };
     this.setting.addItem({
       title: this.plugin.i18n.settingTab.UseItemKeySwitchTitle,
@@ -266,18 +269,8 @@ export class InteractionManager {
       </div>`,
       id: "add-literature-citation",
       callback: async (protyle: Protyle) => {
-        await this.plugin.reference.checkRefDirExist();
         if (isDev) this.logger.info("Slash触发：add literature citation", protyle);
-        if (this.plugin.data[STORAGE_NAME].referenceNotebook === "") {
-          this.plugin.noticer.error(this.plugin.i18n.errors.notebookUnselected);
-          if (isDev) this.logger.error("未选择笔记本！");
-        } else if (!this.plugin.isRefPathExist) {
-          protyle.insert("", false, true);
-          this.plugin.noticer.error(this.plugin.i18n.errors.refPathInvalid);
-          if (isDev) this.logger.error("文献库路径不存在！");
-        } else {
-          return this.plugin.database.insertCiteLink(protyle);
-        }
+        return this.plugin.database.insertCiteLink(protyle);
       }
     },
     {
@@ -298,10 +291,22 @@ export class InteractionManager {
 
   public async customCommand() {
     this.plugin.addCommand({
+      langKey: "addCitation",
+      hotkey: "⌥⇧A",
+      editorCallback: async (p) => {
+        const protyle = p.getInstance();
+        if (isDev) this.logger.info("Slash触发：add literature citation", protyle);
+        return this.plugin.database.insertCiteLink(protyle);
+      },
+      callback: () => {
+        this.plugin.noticer.info("请使用快捷键调用此命令");
+      }
+    });
+    this.plugin.addCommand({
       langKey: "reloadDatabase",
       hotkey: "",
       callback: async () => {
-        this.logger.info("指令触发：reloadDatabase");
+        if (isDev) this.logger.info("指令触发：reloadDatabase");
         await this.plugin.reference.checkRefDirExist();
         return this.plugin.database.buildDatabase(this.plugin.data[STORAGE_NAME].database as DatabaseType);
       }
@@ -310,7 +315,7 @@ export class InteractionManager {
       langKey: "refreshLiteratureNotesTitle",
       hotkey: "",
       callback: () => {
-        this.logger.info("指令触发：refreshLiteratureNotesTitle");
+        if (isDev) this.logger.info("指令触发：refreshLiteratureNotesTitle");
         return this.plugin.reference.refreshLiteratureNoteTitles();
       }
     });
@@ -318,8 +323,16 @@ export class InteractionManager {
       langKey: "copyCiteLink",
       hotkey: "",
       callback: () => {
-        this.logger.info("指令触发：copyCiteLink");
+        if (isDev) this.logger.info("指令触发：copyCiteLink");
         return this.plugin.database.copyCiteLink();
+      }
+    });
+    this.plugin.addCommand({
+      langKey: "copyNotes",
+      hotkey: "",
+      callback: () => {
+        if (isDev) this.logger.info("指令触发：copyNotes");
+        return this.plugin.database.copyNotes();
       }
     });
   }

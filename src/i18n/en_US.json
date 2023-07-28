@@ -7,12 +7,15 @@
   "showDialog": "Show dialog",
   "removedData": "Data deleted",
   "prefix": "Ciation: ",
+  "citeLink": "citation link",
+  "notes": "notes",
   "addCitation": "Add Citation",
   "addNotes": "Add Notes of Literature",
   "reloadDatabase": "Reload the database",
   "refreshCitation": "Refresh citation links",
   "refreshLiteratureNotesTitle": "Refresh all literature note document titles",
   "copyCiteLink": "Copy Citation",
+  "copyNotes": "Copy Notes",
   "settingTab": {
     "settingTabTitle": "Plugin Version: ${version}",
     "settingTabDescription": "If you have any good ideas or find any bugs, please feel free to raise an <b>issue</b> on GitHub or send an email to <b>${e-mail}</b>.",
@@ -22,6 +25,8 @@
     "referencePathInputDescription": "Place the document path of the library where the literature notes are stored, starting and separating subdirectories with '/', e.g. '/Assets/References'",
     "databaseSelectorTitle": "Type of Database",
     "databaseSelectorDescription": "Select the used database type",
+    "UseItemKeySwitchTitle": "Use itemKey as Index",
+    "UseItemKeySwitchDescription": "Use the unique key of the literature entry in Zotero as the index. Enabling this option allows you to use Zotero without depending on the Better BibTeX plugin.<br><b>Only available when using the debug-bridge plugin.</b>",
     "reloadBtnTitle": "Reload Database",
     "reloadBtnDescription": "Reload the database with existing bibtex or csj-json files",
     "reloadBtnText": "Reload",
@@ -46,7 +51,7 @@
     "zoteroNotRunning": "${type} is not running!",
     "getLiteratureFailed": "Failed to get literature",
     "loadLibraryFailed": "Failed to load library",
-    "bbtDisabled": ""
+    "bbtDisabled": "The 'citekey' field was not found. Please check if the Better BibTeX plugin is running, or switch to using 'itemKey' for indexing."
   },
   "confirms": {
     "updateWithoutUserData": "No \"user data\" (# User Data) area detected (missing reference or reference invalid), do you want to update the literature note?"
@@ -55,6 +60,7 @@
     "loadLibrarySuccess": "Successfully loaded library with ${size} entries.",
     "loadRefSuccess": "Successfully loaded literature notes with ${size} files.",
     "refreshTitleSuccess": "Successfully refresh titles of ${size} literature notes",
-    "copyCiteLinkSuccess": "The citation link is on your clipboard"
+    "copyContentSuccess": "The ${type} is on your clipboard",
+    "changeKey": "Index switch successful. The literature index has been changed to ${keyType}."
   }
 }
