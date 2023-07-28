@@ -95,7 +95,7 @@ export class Database {
     await this.plugin.reference.checkRefDirExist();
     if (this.plugin.isRefPathExist) {
       const literatureEnum = await this.plugin.reference.getLiteratureEnum(fileId);
-      const existNotes = Object.keys(this.plugin.key2idDict);
+      const existNotes = Object.values(this.plugin.id2keyDict);
       const insertContent = keys.map(async key => {
         const idx = existNotes.indexOf(key);
         await this.plugin.reference.updateLiteratureNote(key);
@@ -124,7 +124,7 @@ export class Database {
   private async copyCiteLinkBySelection(keys: string[]) {
     await this.plugin.reference.checkRefDirExist();
     if (this.plugin.isRefPathExist) {
-      const existNotes = Object.keys(this.plugin.key2idDict);
+      const existNotes = Object.values(this.plugin.id2keyDict);
       const insertContent = keys.map(async key => {
         const idx = existNotes.indexOf(key);
         await this.plugin.reference.updateLiteratureNote(key);

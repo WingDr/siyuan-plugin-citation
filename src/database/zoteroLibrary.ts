@@ -156,7 +156,7 @@ export class EntryZoteroAdapter extends Entry {
   }
 
   get key() {
-    if (this.useItemKey) return this.data.libraryID + "_" + this.itemKey;
+    if (this.useItemKey || !this.id.length) return this.data.libraryID + "_" + this.itemKey;
     else return this.data.libraryID + "_" + this.id;
   }
 
@@ -294,13 +294,16 @@ export class EntryZoteroAdapter extends Entry {
 
   get issuedDate() {
     if (this.issued) {
-      switch (this.issued.length) {
-        case 4: return moment(this.issued, "YYYY").toDate();
-        case 6: return moment(this.issued, "M/YYYY").toDate();
-        case 7: return moment(this.issued, "MM/YYYY").toDate();
-        case 10: return moment(this.issued, "YYYY-MM-DD").toDate();
-        default: return null;
-      }
+      const splits = ["-", "/", "\\", "=", " "];
+      splits.forEach(s => {
+        const conditions = [
+          `YYYY${s}MM${s}DD`, `DD${s}MM${s}YY`, `MM${s}YYYY`, `YYYY${s}MM`
+        ];
+        if (this.issued.split(s).length > 1) {
+          return moment(this.issued, conditions).toDate();
+        }
+      });
+      return moment(this.issued, "YYYY").toDate();
     } else return null;
   }
 
@@ -351,7 +354,7 @@ export class EntryZoteroAdapter extends Entry {
 export function getTemplateVariablesForZoteroEntry(entry: EntryZoteroAdapter): Record<string, any> {
   const shortcuts = {
     key: entry.key,
-    citekey: entry.id,
+    citekey: entry.id.length ? entry.id : entry.itemKey,
 
     abstract: entry.abstract,
     author: entry.author,

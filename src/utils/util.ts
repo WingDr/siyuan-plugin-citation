@@ -5,7 +5,7 @@ import {
   STORAGE_NAME
 } from "./constants";
 import { createLogger } from "./simple-logger";
-import { createNoticer, INoticer } from "./noticer";
+import { createNoticer, type INoticer } from "./noticer";
 const fs = window.require("fs");
 const path = window.require("path");
 
@@ -97,14 +97,14 @@ export async function loadLocalRef(plugin: SiYuanPluginCitation): Promise<any> {
           cont = false;
       }
       (res.data as any[]).forEach(async file => {
-        if (file.name != "") {
-          plugin.id2keyDict[file.id] = file.name;
-          plugin.key2idDict[file.name] = file.id;
-        } else {
-          //命名为空，那么就把标题赋给命名
+        if (file.name === "") {
+          // 命名为空，那么就把标题赋给命名
           await plugin.kernelApi.setNameOfBlock(file.id, file.content);
           plugin.id2keyDict[file.id] = file.content;
           plugin.key2idDict[file.content] = file.id;
+        } else {
+          plugin.id2keyDict[file.id] = file.name;
+          plugin.key2idDict[file.name] = file.id;
         }
       });
       offset += limit;

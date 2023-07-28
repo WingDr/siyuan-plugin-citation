@@ -39,6 +39,7 @@ export class Reference {
     const data = (await res).data as any[];
     if (data.length) {
       const literatureId = data[0].id;
+      if (isDev) this.logger.info("已存在文献文档，id=>", {literatureId});
       // 文件存在就更新文件内容
       let deleteList = [];
       // 首先将文献的基本内容塞到用户文档的自定义属性中
@@ -78,6 +79,9 @@ export class Reference {
             dyMatch,
             totalIds: dataIds
           });
+          // 执行后续操作之前先更新文献池
+          this.plugin.key2idDict[key] = literatureId;
+          this.plugin.id2keyDict[literatureId] = key;
           return confirm("⚠️", this.plugin.i18n.confirms.updateWithoutUserData, async () => {
             // 不存在用户数据区域，整个更新
             deleteList = dataIds;
@@ -92,6 +96,9 @@ export class Reference {
         // 更新空的文档内容
         userDataId = await this.updateEmptyNote(literatureId);
       }
+      // 执行后续操作之前先更新文献池
+      this.plugin.key2idDict[key] = literatureId;
+      this.plugin.id2keyDict[literatureId] = key;
       // 插入前置片段
       if (!userDataLink.length) userDataLink = `((${userDataId} 'User Data'))`;
       this.insertNoteContent(literatureId, userDataId, userDataLink, entry, deleteList);
@@ -277,6 +284,7 @@ export class Reference {
       this.plugin.noticer.error(this.plugin.i18n.errors.getLiteratureFailed);
       return null;
     }
+    if (isDev) this.logger.info("仅包含链接的模板 =>", {index, id: this.plugin.key2idDict[key]});
     return generateFromTemplate(template, {
       index,
       citeFileID: this.plugin.key2idDict[key],
@@ -298,6 +306,8 @@ export class Reference {
     const dType = this.plugin.data[STORAGE_NAME].database as string;
     let enableNameRefresh = false;
     if (dType == "Zotero (debug-bridge)" || dType == "Juris-M (debug-bridge)") enableNameRefresh = true;
+    // 在刷新之前先更新一下文献池
+    await loadLocalRef(this.plugin);
     if (isDev) this.logger.info("是否需要刷新命名 =>", {database: dType, enableNameRefresh});
     const pList = Object.keys(this.plugin.key2idDict).map(async key => {
       const entry = await this.plugin.database.getContentByKey(key);
@@ -318,13 +328,17 @@ export class Reference {
           if (isDev) this.logger.info("给文档刷新命名，detail=>", {id: this.plugin.key2idDict[key], name: entry.key});
           await this.plugin.kernelApi.setNameOfBlock(this.plugin.key2idDict[key], entry.key);
         }
+        if (isDev) this.logger.info("文档无需刷新命名，detail=>", {id: this.plugin.key2idDict[key], name: entry.key});
       } 
     });
-    await Promise.all(pList);
-    if (isDev) this.logger.info("所有文件标题已更新");
-    this.plugin.noticer.info(this.plugin.i18n.notices.refreshTitleSuccess.replace("${size}", Object.keys(this.plugin.key2idDict).length));
-    await loadLocalRef(this.plugin);
-    return this.plugin.id2keyDict, this.plugin.key2idDict;
+    return await Promise.all(pList).then(async () => {
+      if (isDev) this.logger.info("所有文件标题已更新");
+      this.plugin.noticer.info(this.plugin.i18n.notices.refreshTitleSuccess.replace("${size}", Object.keys(this.plugin.key2idDict).length));
+      await loadLocalRef(this.plugin);
+      return this.plugin.id2keyDict, this.plugin.key2idDict;
+    }).catch(e => {
+      this.logger.error(e);
+    });
   }
 
   public async insertContent(protyle, content: string) {

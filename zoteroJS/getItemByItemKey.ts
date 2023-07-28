@@ -56,8 +56,7 @@ for (let attachmentID of attachmentIDs) {
     ...getAllFields(attachment)
   }
   attachments.push(attachDetail);
-  var fileType = attachDetail.path.split(".").slice(-1);
-  if (fileType == "pdf") {
+  if (attachDetail.path && attachDetail.path.split(".").slice(-1) == "pdf") {
     var annoItems = attachment.getAnnotations();
     if (annoItems.length) {
       var annoDetail = {
@@ -90,5 +89,6 @@ return JSON.stringify({
   creators: item.getCreatorsJSON(),
   tags: item.getTags(),
   citationKey: item.getField("citationKey"),
+  year: item.getField("year"),
   itemExist: true
 });

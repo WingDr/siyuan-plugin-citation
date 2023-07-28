@@ -43,11 +43,13 @@ export abstract class DataModal {
 }
 
 function processKey(key: string): [number, string] {
+  if (!key) return [1, key];
   const group = key.split("_");
-  if (group.length <= 1) {
+  if (group.length <= 1 || isNaN(+group[0])) {
+    // 整个长度小于等于1（不含“_”或者为空）或者第一个字符不是数字的，都视为非新生成的
     return [1, key];
   } else {
-    return [eval(group[0]), group[1]];
+    return [eval(group[0]), group.slice(1).join("_")];
   }
 }
 
@@ -249,24 +251,29 @@ export class ZoteroModal extends DataModal {
   }
 
   public async getContentFromKey (key: string) {
-    const [libraryID, citekey] = processKey(key);
-    if (isDev) this.logger.info(`请求${this.type}导出数据, reqOpt=>`, {citekey: citekey, libraryID: libraryID});
-    const res = await axios({
-      method: "post",
-      url: this.jsonrpcUrl,
-      headers: defaultHeaders,
-      data: JSON.stringify({
-        jsonrpc: "2.0",
-        method: "item.export",
-        params: [[citekey], contentTranslator, libraryID]
-      })
-    });
-    if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, JSON.parse(res.data.result[2]));
-    const zoteroEntry = new EntryZoteroAdapter(JSON.parse(res.data.result[2]).items[0] as EntryDataZotero);
-    const entry = getTemplateVariablesForZoteroEntry(zoteroEntry);
-    if (entry.files) entry.files = entry.files.join("\n");
-    if (isDev) this.logger.info("文献内容 =>", entry);
-    return entry;
+    if (await this.checkZoteroRunning()) {
+      const [libraryID, citekey] = processKey(key);
+      if (isDev) this.logger.info(`请求${this.type}导出数据, reqOpt=>`, {citekey: citekey, libraryID: libraryID});
+      const res = await axios({
+        method: "post",
+        url: this.jsonrpcUrl,
+        headers: defaultHeaders,
+        data: JSON.stringify({
+          jsonrpc: "2.0",
+          method: "item.export",
+          params: [[citekey], contentTranslator, libraryID]
+        })
+      });
+      if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, JSON.parse(res.data.result[2]));
+      const zoteroEntry = new EntryZoteroAdapter(JSON.parse(res.data.result[2]).items[0] as EntryDataZotero);
+      const entry = getTemplateVariablesForZoteroEntry(zoteroEntry);
+      if (entry.files) entry.files = entry.files.join("\n");
+      if (isDev) this.logger.info("文献内容 =>", entry);
+      return entry;
+    } else {
+      this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string).replace("${type}", this.type));
+      return null;
+    }
   }
 
   public async getCollectedNotesFromKey(key: string) {
@@ -396,15 +403,24 @@ export class ZoteroDBModal extends DataModal {
   }
 
   public async getContentFromKey (key: string) {
-    let itemKey = this.useItemKey ? key : await this.getItemKeyByCitekey(...processKey(key));
-    if (!(await this.checkItemKeyExist(...processKey(itemKey)))) itemKey = this.useItemKey ? this.getItemKeyByCitekey(...processKey(key)) : key;
-    const res = await this.getItemByItemKey(...processKey(itemKey));
-    if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, res);
-    const zoteroEntry = new EntryZoteroAdapter(res as EntryDataZotero, this.useItemKey);
-    const entry = getTemplateVariablesForZoteroEntry(zoteroEntry);
-    if (entry.files) entry.files = entry.files.join("\n");
-    if (isDev) this.logger.info("文献内容 =>", entry);
-    return entry;
+    if (await this.checkZoteroRunning()) {
+      let itemKey = this.useItemKey ? key : await this.getItemKeyByCitekey(...processKey(key));
+      if (!(await this.checkItemKeyExist(...processKey(itemKey)))) itemKey = this.useItemKey ? await this.getItemKeyByCitekey(...processKey(key)) : key;
+      if (!processKey(itemKey)[1].length) {
+        this.logger.error("不存在key，key=>", {itemKey});
+        return null;
+      }
+      const res = await this.getItemByItemKey(...processKey(itemKey));
+      if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, res);
+      const zoteroEntry = new EntryZoteroAdapter(res as EntryDataZotero, this.useItemKey);
+      const entry = getTemplateVariablesForZoteroEntry(zoteroEntry);
+      if (entry.files) entry.files = entry.files.join("\n");
+      if (isDev) this.logger.info("文献内容 =>", entry);
+      return entry;
+    } else {
+      this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string).replace("${type}", this.type));
+      return null;
+    }
   }
 
   public async getCollectedNotesFromKey(key: string) {
