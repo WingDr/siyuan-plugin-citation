@@ -348,7 +348,7 @@ export class InteractionManager {
     const label = this.plugin.i18n.refreshCitation;
     const clickCallback = this.plugin.reference.updateLiteratureLink.bind(this.plugin.reference);
     event.detail.menu.addItem({
-      iconHTML: "",
+      iconHTML: "<svg class=\"b3-menu__icon\" style><use xlink:herf=\"#iconRefresh\"></use></svg>",
       label: label,
       click: () => {clickCallback(event.detail.data.id);}
     });
@@ -358,7 +358,7 @@ export class InteractionManager {
     if (isDev) this.logger.info("触发eventBus：open-menu-breadcrumbmore，=>", event);
     // 刷新引用
     event.detail.menu.addItem({
-      iconHTML: "",
+      iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconRefresh"></use></svg>',
       label: this.plugin.i18n.refreshCitation,
       click: () => {
         if (isDev) this.logger.info("按键触发：刷新引用，=>", event);
