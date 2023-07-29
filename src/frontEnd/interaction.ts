@@ -348,7 +348,7 @@ export class InteractionManager {
     const label = this.plugin.i18n.refreshCitation;
     const clickCallback = this.plugin.reference.updateLiteratureLink.bind(this.plugin.reference);
     event.detail.menu.addItem({
-      iconHTML: "<svg class=\"b3-menu__icon\" style><use xlink:herf=\"#iconRefresh\"></use></svg>",
+      iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconRefresh"></use></svg>',
       label: label,
       click: () => {clickCallback(event.detail.data.id);}
     });
