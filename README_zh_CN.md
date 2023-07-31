@@ -2,19 +2,11 @@
 
 # Citation for SiYuan
 
-> 一个只实现了基础功能的引用插件，希望你的思源~~更像 obsidian~~更加学术
+> 已经实现了基本功能的引用插件，从这里开始将思源变得更加学术
 
-**参考[ttChen](https://getquicker.net/User/Actions/395924-ttChen)的建议，在之后的几个版本内将会实装使用[debug-brige](https://github.com/retorquere/zotero-better-bibtex/releases/download/debug-bridge/debug-bridge-6.7.79.emile.limonia.xpi)插件访问Zotero的功能，相对于现在版本使用better-bibtex的方法，这种方式的访问速度更快，效率更高，并且可以实现很多额外的功能（详见[大佬的quicker动作](https://getquicker.net/User/Actions/395924-ttChen)，在思源或者zotero上的功能之后都有可能实装在该插件中），使用Zotero/Juris-M数据库的用户可以提前做好准备，具体的准备方法参考[Run Javascript in Zotero](https://www.yuque.com/chentaotao-cf9fr/gthfy4/clqahv57w5ugmdev)**
+**在0.1.1坂本中，本插件已经支持通过[debug-brige](https://github.com/retorquere/zotero-better-bibtex/releases/download/debug-bridge/debug-bridge-6.7.79.emile.limonia.xpi)插件访问Zotero的功能，相对于现在版本使用better-bibtex的方法，这种方式的访问速度更快，效率更高，并且可以实现很多额外的功能（详见[大佬的quicker动作](https://getquicker.net/User/Actions/395924-ttChen)，在思源或者zotero上的功能之后都有可能实装在该插件中），使用该功能的用户需要提前做好准备，具体的准备方法参考[Run Javascript in Zotero](https://www.yuque.com/chentaotao-cf9fr/gthfy4/clqahv57w5ugmdev)**
 
 **感谢[Geo123abc](https://github.com/Geo123abc)制作的[教学视频](https://www.bilibili.com/video/BV17u411j79z/?vd_source=b4b4ca14b1a866918dcef4ca52896f03)**
-
-**在0.0.6版本中，扩展了模板处理的方法，加入了模板引擎[template.js](https://github.com/yanhaijing/template.js)，此前使用的模板在之后的版本中仍然可以使用，如果想要使用更高级的模板写法，请参考[模板的高级写法](#模板的高级写法)**
-
-**在0.05版本中，文献库中文档的索引方式由文档标题变更为文档命名，更新后第一次启动插件时将会自动为未命名的文献内容文档更新命名，随后请重新启动思源，确保右上角提示中的文献引用数量与文献库中的文档数量一致。文档的标题新建时将被设定为文献的citekey，后续可以随意更改，但是请不要在文档属性中更改文档命名**
-
-**在0.04版本中，设置面板增加了“自定义引用”的开关，如果你不是对正则表达式查找和思源引用逻辑有了解的资深用户，请不要打开它**
-
-**在思源2.9.4版本中，已经可以在设置面板的“文献内容模板”中使用Shift/Ctrl+Enter换行了**
 
 ## 功能
 
@@ -27,35 +19,60 @@
 1. **笔记本**：即思源笔记文档树中的笔记本，文献库只能放置在其中一个已经打开的笔记本中，如果切换文献库所在笔记本那么原本笔记本中的文献库将失效。
 2. **数据库**：文献的原始数据来源，目前支持数据文件（BibTex和CSL-JSON）、Zotero/Juris-M（使用better-bibtex插件）和Zotero/Juris-M（使用debug-bridge插件）三种数据来源。其中数据文件在每次启动软件时都会重新导入，但是如果在使用中文件本身产生变化，需要【重新载入数据库】（通过设置面板或命令）或者【重启思源软件】才能生效。
 3. **文献库**：存放已经插入引用连接的文献内容的位置，本质上是一个*处于特定路径的文档*，它的子文档为所有引用过的文献内容，该文档本身的内容不会被修改，但是在插入引用时会增添和刷新它的子文档。
-4. **文献内容**：根据文献的原始数据和设置界面填写的“*文献内容模板*”生成的文档，*新建文档的标题和命名为该文献的citekey*。目前该文档的内容在每次引用对应文献时都会刷新，因此 **请不要在文档属性修改文档的命名**，目前文献内容已经支持用户数据区域，详见[文献内容详解](#文献内容详解)，**非用户数据区域请不要填入个人内容**。
+4. **文献内容**：根据文献的原始数据和设置界面填写的“*文献内容模板*”生成的文档，*新建文档的标题和命名为该文献的citekey或者itemKey*。目前该文档的内容在每次引用对应文献时都会刷新，因此 **请不要在文档属性修改文档的命名**，目前文献内容已经支持用户数据区域，详见[文献内容详解](#文献内容详解)，**非用户数据区域请不要填入个人内容**。
 5. **引用链接**：在文档中插入（也可以选择直接复制到剪贴板）的引用链接，该链接指向文献库中对应的文献内容，其锚文本为通过文献原始数据和设置界面填写的“*引用模板*”生成的文本。
 
 ## 使用前准备
 
 ### 决定选择哪种数据来源
 
+目前可以使用的文献数据来源包括数据文件（BibTex和CSL-JSON）、Zotero/Juris-M（使用better-bibtex插件）和Zotero/Juris-M（使debug-bridge插件）三种，下表给出了三种数据来源之间的对比：
+
+| 数据来源 | BibTex和CSL-JSON | Zotero/Juris-M<br>使用better-bibtex插件 | Zotero/Juris-M<br>使用debug-bridge插件 |
+|:----|:----:|:----:|:----:|
+| 文献标识 | <b>citekey</b><br>允许多个文件<br>自行保证唯一性 | <b>citekey</b><br>由BBT生成 | <b>citekey / itemKey</b><br>citekey由BBT生成<br>itemKey由Zotero生成 |
+| 搜索面板 | Citation插件面板 | Zotero面板 | Citation插件面板 |
+| 初始化速度 | 慢 | 快 | 快 |
+| 搜索/插入速度 | 快 | 慢 | 快 |
+| 兼容其它文献管理软件 | ✓ | × | × |
+| 支持导入pdf标注<br>（annotations） | × | × | ✓ |
+| 支持通过搜索面板<br>一次性插入多篇文献 | × | ✓ | × |
+| 插入在Zotero中<br>选中的条目<br>（未来版本） | × | × | ✓ |
+| 支持在Zotero条目中<br>插入跳转思源链接<br>（未来版本） | × | × | ✓ |
+| 生成带有引用的word文档<br>（未来版本） | × | ✓ | ✓ |
+
 ### 对插件进行设置
 1. 进入设置界面：点击`设置-集市-已下载-文献引用`插件开关旁边的齿轮按钮进入设置界面，也可以通过在顶栏插件按钮点击后的菜单中点击`文献引用`直接进入插件的设置界面。
 2. 选择存放[文献内容](#名词说明)的[笔记本](#名词说明)：只能下拉选择已经在文档树中打开的笔记本，如果之前设置的笔记本本次启动未打开，那么将无法使用本插件。
 3. 填写[文献库](#名词说明)路径：路径以`/`开头，例如`/References`或者`/Assets/References`，注意该路径本质上为文档所在路径，不要在最后加`/`。**注意：如果更换了文献库的路径，之前路径上的文献库将失效。此外，请确保该文档存在，因为[本插件不会自动创建文献库文档](#文献库路径不存在)**
-4. 选择[数据库](#名词说明)类型：选择使用的数据库的类型，如果使用数据文件请参考[使用数据文件作为文献数据来源](#如果你使用bibtex和csl-json文件作为文献数据的来源)，如果使用Zotero或者Juris-M请参考[使用Zotero或者Juris-M作为文献数据来源](#如果你使用zotero或者juris-m作为文献数据的来源)。
-5. 填写[文献内容文档标题]模板：填写生成文献内容文档的标题模板，模板的具体写法参考[模板写法](#怎么写模板)。
-6. 填写[文献内容](#名词说明)模板：填写生成文献内容文档的文本内容模板，模板的具体写法参考[模板写法](#怎么写模板)。
-7. 如果你认为你是对正则表达式查找和思源引用逻辑有了解的资深用户，并且想要兼容思源外的工作流，可以选择打开`自定义引用`的开关，打开该开关的具体效果详见[如果我打开了“自定义引用”的开关]()
-8. 填写[引用链接](#名词说明)模板：填写生成引用链接锚文本的模板，模板的具体写法参考[模板写法](#怎么写模板)。
-9. 如果你希望重新设计你的模板和数据，或者希望看到插件作者设置的默认设置，可以通过[删除数据](#点击“删除数据”后会发生什么)按钮将保存的设置数据全部删除。
-10. 点击`保存`储存并应用设置。
-11. 重启思源笔记（如果是在托盘区，也要完全退出来），重启之后如果设置没有生效，或者更新插件之后版本不对，请再次重启一至两次，有可能可以解决，但是目前不排除还有bug。
+4. 选择[数据库](#名词说明)类型：选择使用的数据库的类型，如果使用数据文件请参考[使用数据文件作为文献数据来源](#如果你使用bibtex和csl-json文件作为文献数据的来源)，如果使用Zotero/Juris-M（使用better-bibtex插件）请参考[使用Zotero/Juris-M（使用better-bibtex插件）作为文献数据来源](#如果你使用-zoterojuris-m-better-bibtex-作为文献数据来源)，如果使用Zotero/Juris-M（使用better-bibtex插件）请参考[使用Zotero/Juris-M（使用debug-bridge插件）作为文献数据来源](#如果你使用-zoterojuris-m-debug-bridge-作为文献数据来源)。
+5. 如果你选择Zotero/Juris-M（使debug-bridge插件）作为文献数据来源，推荐开启“使用itemKey作为索引”选项
+6. 填写[文献内容文档标题]模板：填写生成文献内容文档的标题模板，模板的具体写法参考[模板写法](#怎么写模板)。
+7. 填写[文献内容](#名词说明)模板：填写生成文献内容文档的文本内容模板，模板的具体写法参考[模板写法](#怎么写模板)。
+8. 如果你认为你是对正则表达式查找和思源引用逻辑有了解的资深用户，并且想要兼容思源外的工作流，可以选择打开`自定义引用`的开关，打开该开关的具体效果详见[如果我打开了“自定义引用”的开关]()
+9. 填写[引用链接](#名词说明)模板：填写生成引用链接锚文本的模板，模板的具体写法参考[模板写法](#怎么写模板)。
+10. 如果你希望重新设计你的模板和数据，或者希望看到插件作者设置的默认设置，可以通过[删除数据](#点击“删除数据”后会发生什么)按钮将保存的设置数据全部删除。
+11. 点击`保存`储存并应用设置。
+12. 重启思源笔记（如果是在托盘区，也要完全退出来），重启之后如果设置没有生效，或者更新插件之后版本不对，请再次重启一至两次，有可能可以解决，但是目前不排除还有bug。
+
+**如果对这个过程仍然有疑惑，请参考[Geo123abc](https://github.com/Geo123abc)制作的[教学视频](https://www.bilibili.com/video/BV17u411j79z/?vd_source=b4b4ca14b1a866918dcef4ca52896f03)。如果仍然无法解答您的疑惑，欢迎到本插件的github仓库上提[issue](https://github.com/WingDr/siyuan-plugin-citation/issues)或者将问题发送到我的邮箱(siyuan_citation@126.com)**
 
 ### 如果你使用BibTex和CSL-JSON文件作为文献数据来源
 
 - 在`[工作空间]/data/storage/petal/siyuan-plugin-citation/references/`文件夹下，放置任意数量的`csl-json`和`bibtex`文件，其中包含你所想要引用的文献，文件的获取方法参考[如何获得文献数据文件](#如何获得bibtex或者csl-json文件)。
 - 在插件的设置面板中，数据库类型处选择`BibTex and CSL-JSON`。
 
-### 如果你使用Zotero或者Juris-M作为文献数据来源
+### 如果你使用 Zotero/Juris-M (better-bibtex) 作为文献数据来源
 
 - **确保你的 Zotero 或者 Juris-M 中安装了 [Better BibTex](https://github.com/retorquere/zotero-better-bibtex) 插件。**
-- 在插件的设置面板中，数据库类型处选择`Zotero`或者`Juris-M`。
+- 在插件的设置面板中，数据库类型处选择`Zotero (better-bibtex)`或者`Juris-M (better-bibtex)`。
+- 在使用前确保你的 Zotero 或者 Juris-M 是打开的。
+
+### 如果你使用 Zotero/Juris-M (debug-bridge) 作为文献数据来源
+
+- **确保你的 Zotero 或者 Juris-M 中安装了 [debug-bridge](https://github.com/retorquere/zotero-better-bibtex/releases/download/debug-bridge/debug-bridge-6.7.79.emile.limonia.xpi) 插件，并按照 [Run Javascript in Zotero](https://www.yuque.com/chentaotao-cf9fr/gthfy4/clqahv57w5ugmdev) 教程进行配置（使用“CTT”作为访问密码，后续版本会开放自行设置密码的功能。**
+- 仍然推荐在Zotero中安装Better BibTex插件，以自动生成条目的citekey属性。
+- 在插件的设置面板中，数据库类型处选择`Zotero (debug-bridge)`或者`Juris-M (debug-bridge)`。
 - 在使用前确保你的 Zotero 或者 Juris-M 是打开的。
 
 ## 我该怎么使用这个插件
@@ -74,10 +91,13 @@
 
 - 命令（可以在`顶栏插件按钮-命令面板`直接搜索选中，或者在`设置-快捷键-插件-文献引用`中设置快捷键使用）：
   - 重新载入数据库：重新根据文献的来源载入[数据库](#名词说明)，同时也会重新索引[文献库](#名词说明)。
-  - 刷新所有文献内容文档标题：根据当前设置的[标题模板](#使用前准备)，刷新[文献库](#名词说明)中所有文献内容文档的标题。
+  - 刷新所有文献内容文档标题：根据当前设置的[标题模板](#使用前准备)，刷新[文献库](#名词说明)中所有文献内容文档的标题，同时也会刷新文档的命名。
   - 复制文献引用：弹出文献搜索面板，选中文献后将该文献的[引用链接](#名词说明)复制到剪贴板，并更新文献库。
+  - 复制文献笔记：弹出文献搜索面板，选中文献后将该文献的笔记复制到剪贴板。
 - 标题块图标菜单：
   - 刷新引用：使用当前的[引用链接模板](#对插件进行设置)刷新当前文档的全部（**在当前设置的[文献库](#名词说明)中有存放[文献内容](#名词说明)**）的引用链接的锚文本。当引用链接模板有变化时，可以通过该功能刷新文档内全部的引用链接格式。
+- 文档右上角菜单：
+  - 刷新引用：与标题块的刷新引用功能相同
 
 ![ ](./assets/protyleslash.png)
 
@@ -102,7 +122,10 @@
 在文献内容和引用的模板中可以使用如下变量：
 
 ```markdown
-- {{citekey}}：文献的唯一标识，建议用 zotero 的 better biblatex 插件生成
+- {{key}}：文献的唯一标识，根据“使用itemKey作为索引”选项开启的不同为“libraryID_citekey”，或者“libraryID_itemKey”
+- {{citekey}}：文献的标识，使用数据文件需要自行保证唯一性，使用better bibtex插件会自动生成
+- {{itemKey}}：文献条目在Zotero中的唯一标识，由Zotero自动生成
+- {{libraryID}}：文献内容在Zotero中的库ID，如果使用数据文件则默认为1，未来将据此支持多个库（多个文件可重复citekey）的搜索插入
 - {{abstract}}：摘要
 - {{authorString}}：所有作者按顺序排列的字符串
 - {{containerTitle}}：文献所在刊物（论文集、期刊等）标题
@@ -140,6 +163,23 @@
 模板中还包含以下特殊变量：
 
 - {{getNow}}：当前时间的`moment()`对象，可以在模板中自定义格式，方法参考[moment.js](https://momentjs.com/)。
+
+如果你使用 Zotero/Juris-M (debug-bridge) 作为文献数据来源，则可使用下面的变量：
+
+```markdown
+- {{annotations}}：文献的pdf标注，将按所属的文档区分，同样支持批注的展示。
+- {{annotationList}}：pdf批注的初始数据源格式，方便用户自定义。本身是一个对象列表，可以通过`.`调用其属性。具体属性的调用方法如下：
+  - {{annotationList[i].parentKey}}：标注所在pdf条目的itemKey
+  - {{annotationList[i].parentTitle}}：标注所在pdf文件的标题
+  - {{annotationList[i].detail}}：单个pdf文件标注的细节，是一个列表
+    - {{annotationList[i].detail[j].key}}：单个标注的itemKey
+    - {{annotationList[i].detail[j].annotationText}}：单个标注的文本内容
+    - {{annotationList[i].detail[j].annotationComment}}：单个标注的批注
+    - {{annotationList[i].detail[j].annotationPosition}}：单个标注的位置，可以用`.pageIndex`获得标注的页码
+    - {{annotationList[i].detail[j].zoteroOpenURI}}：直接在Zotero中打开标注位置的链接
+```
+
+更多的变量可以在导入文献后查看文献内容文档的“entry-data”属性，其中包含了导入的所有该文献信息。
 
 ### 模板的高级写法
 

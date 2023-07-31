@@ -4,17 +4,9 @@
 
 > A citation plugin that implements basic functionality, hoping to make your SiYuan more academically oriented.
 
-**Based on the suggestion from [ttChen](https://getquicker.net/User/Actions/395924-ttChen), in the upcoming versions, the functionality of accessing Zotero using the [debug-bridge](https://github.com/retorquere/zotero-better-bibtex/releases/download/debug-bridge/debug-bridge-6.7.79.emile.limonia.xpi) plugin will be implemented. This method offers faster access speed and higher efficiency compared to the current method of using Better BibTeX. Additionally, it enables the implementation of many additional features (refer to [ttChen's Quicker action](https://getquicker.net/User/Actions/395924-ttChen) for details). Users who use Zotero/Juris-M databases should prepare in advance. For specific preparation methods, please refer to [Run Javascript in Zotero](https://www.yuque.com/chentaotao-cf9fr/gthfy4/clqahv57w5ugmdev).**
+**Starting from version 0.1.1, this plugin now supports accessing Zotero using the [debug-bridge](https://github.com/retorquere/zotero-better-bibtex/releases/download/debug-bridge/debug-bridge-6.7.79.emile.limonia.xpi) plugin. Compared to the current method of using better-bibtex, this approach provides faster access and higher efficiency. Additionally, it enables many extra functionalities (for more details, see the [ttChen's Quicker Actions](https://getquicker.net/User/Actions/395924-ttChen), which might be integrated into this plugin for both Siyuan and Zotero functionalities). Users who wish to utilize this feature should prepare in advance by following the specific steps outlined in [Run Javascript in Zotero](https://www.yuque.com/chentaotao-cf9fr/gthfy4/clqahv57w5ugmdev).**
 
 **Special thanks to [Geo123abc](https://github.com/Geo123abc) for creating the [tutorial video](https://www.bilibili.com/video/BV17u411j79z/?vd_source=b4b4ca14b1a866918dcef4ca52896f03).**
-
-**In version 0.0.6, the template handling method has been expanded by incorporating the template engine template.js. The templates used previously can still be used in subsequent versions. If you want to use more advanced template syntax, please refer to [Advanced Template Syntax](#advanced-template-syntax).**
-
-**In version 0.05, the indexing method of documents in the literature library has been changed from document titles to document names. After updating, the plugin will automatically update the names of unnamed literature note documents during the first startup. Please restart SiYuan afterwards to ensure that the literature notes count in the top right corner matches the number of documents in the library. When a document is created, its title will be set as the literature's citekey, and it can be changed later as desired. However, please do not change the document name in the document properties.**
-
-**In version 0.04, a switch for "Customize Citation Link" has been added to the settings tab. If you are not an experienced user familiar with regular expression searching and SiYuan reference logic, please do not enable it.**
-
-**In SiYuan version 2.9.4, you can use `Shift/Ctrl+Enter` to create line breaks in the "Literature Note Template" in the settings panel.**
 
 ## Features
 
@@ -27,34 +19,62 @@ Add citations to your notes, which refer to literature note generated in a speci
 1. **Notebook**: Refers to a notebook in the SiYuan note document tree. The library can only be placed in one of the open notebooks. If you switch to another notebook for the library, the previously selected notebook's library will become invalid.
 2. **Database**: The original data source of the literature, currently supports three types: data files (BibTeX and CSL-JSON), Zotero, and Juris-M. The data files are reimported every time the software is launched, but if the files themselves change during use, you need to **"Reload the Database"** (through the settings panel or command) or **"Restart the SiYuan software"** for the changes to take effect.
 3. **Library**: The location where the inserted citation links point to the literature note. It is essentially a *document located at a specific path*. Its sub-documents are all literature note that has been referenced. The content of this document itself will not be modified, but it will be updated and refreshed when citations are inserted.
-4. **Literature Note**: A document generated based on the original data of a literature entry and the "*Literature Note Template*" filled in the settings interface. The title and naming of a newly created document are set to the citekey of that literature entry. Currently, the content of this document is refreshed every time the corresponding literature is cited. Therefore, **do not modify the document's naming in the document properties**. The literature note now supports a user data section, as explained in the [Explaining Literature Note](#explaining-literature-note) section. **Please refrain from inserting personal content in areas other than the user data section**.
+4. **Literature Note**: This document is generated based on the original data of the literature and the "Literature Note Template" filled in the settings interface. The title and naming of the new document will be set as the `citekey` or `itemKey` of the literature. Currently, the content of this document will be refreshed each time the corresponding literature is referenced. Therefore, **please do not modify the document's naming in the document properties**. The Literature Note now supports the user data area. For more details, refer to [Literature Note Details](#literature-note-details). **Please avoid inserting personal content outside the user data area**.
 5. **Citation Link**: The reference link inserted in the document (or copied to the clipboard), which points to the corresponding literature note in the library. The anchor text of the link is generated based on the literature's original data and the "Citation Link Template" filled in the settings panel.
 
 ## Preparation before Use
+
+### Decide Which Literature Data Source to Choose
+
+Currently, you can use three different sources for literature data: Data Files (BibTeX and CSL-JSON), Zotero/Juris-M (using Better BibTeX plugin), and Zotero/Juris-M (using debug-bridge plugin). The following table provides a comparison between the three data sources:
+
+| Data Source | BibTeX and CSL-JSON | Zotero/Juris-M<br>using Better BibTeX plugin | Zotero/Juris-M<br>using debug-bridge plugin |
+|:----|:----:|:----:|:----:|
+| Literature Identifier | <b>citekey</b><br>Allows multiple files<br>Ensure uniqueness manually | <b>citekey</b><br>Generated by BBT | <b>citekey / itemKey</b><br>citekey generated by BBT<br>itemKey generated by Zotero |
+| Search Panel | Citation plugin panel | Zotero panel | Citation plugin panel |
+| Initialization Speed | Slow | Fast | Fast |
+| Search/Insertion Speed | Fast | Slow | Fast |
+| Compatible with Other Reference Managers | ✓ | × | × |
+| Supports Importing PDF Annotations | × | × | ✓ |
+| Supports Inserting Multiple Literature Entries via Search Panel | × | ✓ | × |
+| Insert Selected Zotero Items Directly | × | × | ✓ |
+| Insert Zotero Links to Jump to Citations | × | × | ✓ |
+| Generate Word Documents with Citations | × | ✓ | ✓ |
 
 ### Configure the Plugin
 
 1. Go to the settings panel: Click on the gear icon next to the `Citation for SiYuan` plugin switch in `Settings - Marketplace - Downloaded` to enter the settings panel. Alternatively, you can directly enter the plugin's settings panel by clicking on "Citation for SiYuan" in the plugin menu after clicking on the top toolbar's plugin button.
 2. Select the [notebook](#glossary) to store the [literature note](#glossary): Only notebooks that have been opened in the document tree can be selected from the drop-down list. If the previously selected notebook is not open in the current session, the plugin will be unable to function.
 3. Fill in the [library](#glossary) path: The path should start with `/`, for example, `/References` or `/Assets/References`. Note that this path is essentially the document's location, so do not include a trailing `/`. **Note: If you change the path of the library, the literature libraries on the previous path will become invalid. Additionally, please ensure that the document exists, as the plugin does not automatically create the library document if it does not exist.**
-4. Select the [database](#glossary) type: Choose the type of database you want to use. If you use data files, please refer to the section [Using Data Files as the Literature Data Source](#if-you-use-bibtex-and-csl-json-files-as-the-literature-data-source). If you use Zotero or Juris-M, please refer to the section [Using Zotero or Juris-M as the Literature Data Source](#if-you-use-zotero-or-juris-m-as-the-literature-data-source).
-5. Fill in the template for the title of literature content documents: Enter the template for generating titles for literature content documents. For the specific syntax of the template, please refer to [Template Syntax](#how-to-write-templates).
-6. Fill in the [literature note](#glossary) template: Fill in the template for generating the literature note document's text content. Refer to the section [Template Syntax](#how-to-write-templates) for specific template syntax.
-7. If you believe you are an experienced user familiar with regular expression searching and SiYuan citation logic and want to be compatible with workflows outside of SiYuan, you can choose to enable the "Customize Citation Link" switch. For the specific effect of enabling this switch, refer to the section [What Happens If I Enable the "Customize Citation Link" Switch?](#what-happens-if-i-enable-the-customize-citation-link-switch)
-8. Fill in the [citation link](#glossary) template: Fill in the template for generating the anchor text of the citation link. Refer to the section [Template Syntax](#how-to-write-templates) for specific template syntax.
-9. If you want to redesign your templates and data or want to see the default settings set by the plugin author, you can click the ["Delete Data"](#what-happens-when-i-click-the-delete-data-button) button to delete all the saved settings data.
-10. Click "Save" to store and apply the settings.
+4. Choose [Database](#glossary) Type: Select the type of database you want to use. If using data files, please refer to [Using Data Files as Literature Data Source](#using-data-files-as-literature-data-source). If using Zotero/Juris-M (using Better BibTeX plugin), refer to [Using Zotero/Juris-M (using Better BibTeX plugin) as Literature Data Source](#using-zoterobetter-bibtex-as-literature-data-source). If using Zotero/Juris-M (using debug-bridge plugin), refer to [Using Zotero/Juris-M (using debug-bridge plugin) as Literature Data Source](#using-zoterojuris-m-debug-bridge-as-literature-data-source).
+5. If you choose Zotero/Juris-M (using debug-bridge plugin) as the literature data source, it is recommended to enable the "Use Item Key as Index" option.
+6. Fill in the template for the title of literature content documents: Enter the template for generating titles for literature content documents. For the specific syntax of the template, please refer to [Template Syntax](#how-to-write-templates).
+7. Fill in the [literature note](#glossary) template: Fill in the template for generating the literature note document's text content. Refer to the section [Template Syntax](#how-to-write-templates) for specific template syntax.
+8. If you believe you are an experienced user familiar with regular expression searching and SiYuan citation logic and want to be compatible with workflows outside of SiYuan, you can choose to enable the "Customize Citation Link" switch. For the specific effect of enabling this switch, refer to the section [What Happens If I Enable the "Customize Citation Link" Switch?](#what-happens-if-i-enable-the-customize-citation-link-switch)
+9. Fill in the [citation link](#glossary) template: Fill in the template for generating the anchor text of the citation link. Refer to the section [Template Syntax](#how-to-write-templates) for specific template syntax.
+10. If you want to redesign your templates and data or want to see the default settings set by the plugin author, you can click the ["Delete Data"](#what-happens-when-i-click-the-delete-data-button) button to delete all the saved settings data.
+11. Click "Save" to store and apply the settings.
+
+**If you have any doubts about this process, please refer to the [tutorial video](https://www.bilibili.com/video/BV17u411j79z/?vd_source=b4b4ca14b1a866918dcef4ca52896f03) created by [Geo123abc](https://github.com/Geo123abc). If you still have questions, feel free to [raise an issue](https://github.com/WingDr/siyuan-plugin-citation/issues) on the plugin's GitHub repository or contact me via email (siyuan_citation@126.com)**
 
 ### If You Use BibTeX and CSL-JSON Files as the Literature Data Source
 
 - Place any number of `csl-json` and `bibtex` files in the `[Workspace]/data/storage/petal/siyuan-plugin-citation/references/` folder, which contain the literature you want to reference. Refer to [How to Obtain Literature Data Files](#how-to-obtain-bibtex-or-csl-json-files) for methods to obtain the files.
 - In the plugin's settings panel, select the "BibTeX and CSL-JSON" option for the database type.
 
-### If You Use Zotero or Juris-M as the Literature Data Source
 
-- **Ensure that you have installed the [Better BibTex](https://github.com/retorquere/zotero-better-bibtex) plugin in Zotero or Juris-M.**
-- In the plugin's settings panel, select the "Zotero" or "Juris-M" option for the database type.
-- Make sure Zotero or Juris-M is open before using the plugin.
+### If You Use Zotero/Juris-M (better-bibtex) as Literature Data Source
+
+- **Ensure that you have installed the [Better BibTeX](https://github.com/retorquere/zotero-better-bibtex) plugin in Zotero or Juris-M.**
+- In the plugin's settings panel, select `Zotero (better-bibtex)` or `Juris-M (better-bibtex)` as the database type.
+- Make sure your Zotero or Juris-M is open before using the plugin.
+
+### If You Use Zotero/Juris-M (debug-bridge) as Literature Data Source
+
+- **Ensure that you have installed the [debug-bridge](https://github.com/retorquere/zotero-better-bibtex/releases/download/debug-bridge/debug-bridge-6.7.79.emile.limonia.xpi) plugin in Zotero or Juris-M, and follow the configuration tutorial in [Run Javascript in Zotero](https://www.yuque.com/chentaotao-cf9fr/gthfy4/clqahv57w5ugmdev) (use "CTT" as the access password, the option to set a custom password will be available in future versions).**
+- It is still recommended to install the Better BibTeX plugin in Zotero to automatically generate the `citekey` attribute for the items.
+- In the plugin's settings panel, select `Zotero (debug-bridge)` or `Juris-M (debug-bridge)` as the database type.
+- Make sure your Zotero or Juris-M is open before using the plugin.
 
 ## How to Use This Plugin
 
@@ -99,7 +119,10 @@ Add citations to your notes, which refer to literature note generated in a speci
 The following variables can be used in the literature content and citation templates:
 
 ```markdown
-- {{citekey}}: The unique identifier of the literature, it is recommended to use the better biblatex plugin of Zotero to generate
+- {{key}}: Unique identifier of the literature, depending on whether the "Use Item Key as Index" option is enabled, it will be in the format "libraryID_citekey" or "libraryID_itemKey".
+- {{citekey}}: Identifier of the literature, manually ensure uniqueness when using data files, automatically generated by the Better BibTeX plugin.
+- {{itemKey}}: Unique identifier of the literature item in Zotero, automatically generated by Zotero.
+- {{libraryID}}: Library ID of the literature content in Zotero. Default is 1 if using data files. In the future, multiple libraries (multiple files with duplicate citekeys) will be supported based on this ID for search and insertion.
 - {{abstract}}: Abstract
 - {{authorString}}: A string of all authors arranged in order
 - {{containerTitle}}: The title of the publication (journal, conference proceedings, etc.) where the literature is located
@@ -137,6 +160,25 @@ In addition, the following variables can be used in the citation link:
 The template also includes the following special variables:
 
 {{getNow}}: The moment() object of the current time, you can customize the format in the template, the method refers to [moment.js](https://momentjs.com/).
+
+If you are using Zotero/Juris-M (debug-bridge) as the literature data source, you can use the following variables:
+
+```markdown
+- {{annotations}}: PDF annotations of the literature, differentiated by the document it belongs to. Support annotation display.
+- {{annotationList}}: Initial data source format of PDF annotations, making it easy for users to customize. It is an object list that can be accessed using `.` for its properties. The calling method for specific attributes is as follows:
+  - {{annotationList[i].parentKey}}: itemKey of the citation where the annotation belongs.
+  - {{annotationList[i].parentTitle}}: title of the PDF file where the annotation belongs.
+  - {{annotationList[i].detail}}: details of a single PDF file annotation, presented as a list.
+    - {{annotationList[i].detail[j].key}}: itemKey of the single annotation.
+    - {{annotationList[i].detail[j].annotationText}}: text content of the single annotation.
+    - {{annotationList[i].detail[j].annotationComment}}: comment of the single annotation.
+    - {{annotationList[i].detail[j].annotationPosition}}: position of the single annotation. Use `.pageIndex` to get the page number of the annotation.
+    - {{annotationList[i].detail[j].zotero
+
+OpenURI}}: direct link to open the annotation in Zotero.
+```
+
+For more variables, check the "entry-data" attribute of the literature content document after importing, which includes all the information imported for that literature.
 
 ### Advanced Template Syntax
 
