@@ -79,9 +79,9 @@ export default class SiYuanPluginCitation extends Plugin {
 
         this.interactionManager = new InteractionManager(this);
         this.settingTab = new SettingTab(this);
-        // await this.interactionManager.customSettingTab().then(setting => {
-        //     this.setting = setting;
-        // });
+        await this.interactionManager.customSettingTab().then(setting => {
+            this.setting = setting;
+        });
         await this.interactionManager.customCommand();
         (await this.interactionManager.customProtyleSlash()).forEach(slash => {
             this.protyleSlash.push(slash);
@@ -97,9 +97,9 @@ export default class SiYuanPluginCitation extends Plugin {
         this.reference = new Reference(this);
     }
 
-    openSetting(): void {
-        this.settingTab.openSetting();
-    }
+    // openSetting(): void {
+    //     this.settingTab.openSetting();
+    // }
 
     onunload() {
         if (isDev) this.logger.info("插件卸载，plugin=>", this);
