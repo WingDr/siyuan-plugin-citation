@@ -290,6 +290,7 @@ export class InteractionManager {
   }
 
   public async customCommand() {
+    this.plugin.commands = [];
     this.plugin.addCommand({
       langKey: "addCitation",
       hotkey: "⌥⇧A",
@@ -335,6 +336,16 @@ export class InteractionManager {
         return this.plugin.database.copyNotes();
       }
     });
+    // if (["Zotero (debug-bridge)", "Juris-M (debug-bridge)"].indexOf(this.plugin.data[STORAGE_NAME].database) != -1) {
+    //   this.plugin.addCommand({
+    //     langKey: "addSelectedItems",
+    //     hotkey: "",
+    //     callback: () => {
+    //       if (isDev) this.logger.info("指令触发：addSelectedItems");
+          
+    //     }
+    //   });
+    // }
   }
 
   public eventBusReaction() {

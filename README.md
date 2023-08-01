@@ -4,6 +4,8 @@
 
 > A citation plugin that implements basic functionality, hoping to make your SiYuan more academically oriented.
 
+**Due to changes in the literature naming rules, it is recommended that all users execute the "Refresh All Literature Note Titles" command after updating. This command will refresh the names of all literature note documents in the library.**
+
 **Starting from version 0.1.1, this plugin now supports accessing Zotero using the [debug-bridge](https://github.com/retorquere/zotero-better-bibtex/releases/download/debug-bridge/debug-bridge-6.7.79.emile.limonia.xpi) plugin. Compared to the current method of using better-bibtex, this approach provides faster access and higher efficiency. Additionally, it enables many extra functionalities (for more details, see the [ttChen's Quicker Actions](https://getquicker.net/User/Actions/395924-ttChen), which might be integrated into this plugin for both Siyuan and Zotero functionalities). Users who wish to utilize this feature should prepare in advance by following the specific steps outlined in [Run Javascript in Zotero](https://www.yuque.com/chentaotao-cf9fr/gthfy4/clqahv57w5ugmdev).**
 
 **Special thanks to [Geo123abc](https://github.com/Geo123abc) for creating the [tutorial video](https://www.bilibili.com/video/BV17u411j79z/?vd_source=b4b4ca14b1a866918dcef4ca52896f03).**
