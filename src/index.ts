@@ -30,6 +30,7 @@ import "./index.scss";
 import { createNoticer, type INoticer } from "./utils/noticer";
 import { changeUpdate } from "./utils/updates";
 import { LiteraturePool } from "./ReferenceManager/pool";
+import type { EventTrigger } from "./frontEnd/eventTrigger";
 
 export default class SiYuanPluginCitation extends Plugin {
 
@@ -42,6 +43,7 @@ export default class SiYuanPluginCitation extends Plugin {
     public reference: Reference;
     public interactionManager: InteractionManager;
     public kernelApi: KernelApi;
+    public eventTrigger: EventTrigger;
 
     public noticer: INoticer;
     private logger: ILogger;

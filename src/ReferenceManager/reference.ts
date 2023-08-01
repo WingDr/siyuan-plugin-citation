@@ -138,34 +138,47 @@ export class Reference {
   }
 
   private async insertNoteContent(literatureId: string, userDataId: string, userDataLink: string, entry: any, deleteList: string[]) {
-    const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
     const noteTemplate = this.plugin.data[STORAGE_NAME].noteTemplate as string;
     const note = entry.note;
     entry.note = entry.note.map(n => {
-      // return n.prefix + `\n\n{ {note${n.index}} }`;
-      return `${n.prefix}\n\n${n.content}`;
+      return n.prefix + `\n\n{ {note${n.index}} }`;
+      // return `${n.prefix}\n\n${n.content}`;
     }).join("\n\n");
     const literatureNote = generateFromTemplate(noteTemplate, entry);
     if (deleteList.length) await this.deleteBlocks(deleteList);
     await this.plugin.kernelApi.prependBlock(literatureId, userDataLink + "\n\n" + literatureNote);
-    // const res = await this.plugin.kernelApi.getChidBlocks(literatureId);
-    // const dataIds = (res.data as any[]).map(data => {
-    //   return data.id as string;
-    // });
-    // setTimeout(async () => {
-    //   const pList = note.map(async n => {
-    //     const res = this.plugin.kernelApi.getBlocksWithContent(notebookId, literatureId, `{ {note${n.index}} }`);
-    //     const data = (await res).data as any[];
-    //     const pList = data.map(async d => {
-    //       // 只有在userDataID之前的才会更新
-    //       if (dataIds.indexOf(d.id) != -1 && dataIds.indexOf(d.id) < dataIds.indexOf(userDataId)) {
-    //         await this.plugin.kernelApi.updateBlockContent(d.id, "dom", n.content);
-    //       }
-    //     });
-    //     await Promise.all(pList);
-    //   });
-    //   return await Promise.all(pList);
-    // }, 3000);
+    note.forEach(n => {
+      this.plugin.eventTrigger.addSQLIndexEvent({
+        triggerFn: this.insertNotes.bind(this),
+        params: {
+          index: n.index,
+          content: n.content,
+          literatureId,
+          userDataId
+        }
+      });
+    });
+  }
+
+  private async insertNotes(params: {index: number, content: string, literatureId: string, userDataId: string}) {
+    const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
+    const index = params.index;
+    const content = params.content;
+    const literatureId = params.literatureId;
+    const userDataId = params.userDataId;
+    let res = await this.plugin.kernelApi.getChidBlocks(literatureId);
+    const dataIds = (res.data as any[]).map(data => {
+      return data.id as string;
+    });
+    res = await this.plugin.kernelApi.getBlocksWithContent(notebookId, literatureId, `{ {note${index}} }`);
+    const data = res.data as any[];
+    const pList = data.map(async d => {
+      // 只有在userDataID之前的才会更新
+      if (dataIds.indexOf(d.id) != -1 && dataIds.indexOf(d.id) < dataIds.indexOf(userDataId)) {
+        await this.plugin.kernelApi.updateBlockContent(d.id, "dom", content);
+      }
+    });
+    return await Promise.all(pList);
   }
 
   private async updateEmptyNote(rootId: string): Promise<string> {

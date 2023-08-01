@@ -68,8 +68,8 @@ devDependencies:
     specifier: ^12.6.0
     version: 12.6.0(sass@1.63.5)(webpack@5.87.0)
   siyuan:
-    specifier: ^0.7.8
-    version: 0.7.8
+    specifier: ^0.7.9
+    version: 0.7.9
   svelte:
     specifier: ^4.1.1
     version: 4.1.1
@@ -2559,8 +2559,8 @@ packages:
     resolution: {integrity: sha512-wnD2ZE+l+SPC/uoS0vXeE9L1+0wuaMqKlfz9AMUo38JsyLSBWSFcHR1Rri62LZc12vLr1gb3jl7iwQhgwpAbGQ==}
     dev: false
 
-  /siyuan@0.7.8:
-    resolution: {integrity: sha512-49aQRgva9Cj5u1PuXPAfsug6GHeuhdrb7AnWBqJKyPRaVI2IskmPuisIDWIkG7JhVJ1e1KCg813a2G9QOpYRkQ==}
+  /siyuan@0.7.9:
+    resolution: {integrity: sha512-X5olBQhfkgyPRF+d8agpcbAaFnCSvSkN3LWX7XU9jApmCfpJ/4PAmK7mKPfR1YGBpjFLRa/xTrv11BQ3hxN15Q==}
     dev: true
 
   /slash@3.0.0:

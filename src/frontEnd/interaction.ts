@@ -2,7 +2,8 @@ import {
   Setting,
   showMessage,
   confirm,
-  Protyle
+  Protyle,
+  Menu
 } from "siyuan";
 import SiYuanPluginCitation from "../index";
 import {
@@ -18,6 +19,7 @@ import {
 } from "../utils/constants";
 import { createLogger, type ILogger } from "../utils/simple-logger";
 import { type DatabaseType } from "../database/database";
+import { EventTrigger } from "./eventTrigger";
 
 export class InteractionManager {
   public plugin: SiYuanPluginCitation;
@@ -27,6 +29,7 @@ export class InteractionManager {
   constructor (plugin: SiYuanPluginCitation) {
     this.plugin = plugin;
     this.logger = createLogger("interaction manager");
+    this.plugin.eventTrigger = new EventTrigger(plugin);
   }
 
   /**
@@ -349,16 +352,15 @@ export class InteractionManager {
   }
 
   public eventBusReaction() {
-    this.plugin.eventBus.on("click-editortitleicon", this.customTitleIconMenu.bind(this));
-    this.plugin.eventBus.on("open-menu-breadcrumbmore", this.customBreadcrumbMore.bind(this));
-    // this.plugin.eventBus.on("click-editorcontent", this.customTitleIconMenu);
+    this.plugin.eventTrigger.addEventBusEvent("click-editortitleicon", this.customTitleIconMenu.bind(this));
+    this.plugin.eventTrigger.addEventBusEvent("open-menu-breadcrumbmore", this.customBreadcrumbMore.bind(this));
   }
 
   private customTitleIconMenu(event: CustomEvent<any>) {
     if (isDev) this.logger.info("触发eventBus：click-editortitleicon，=>", event);
     const label = this.plugin.i18n.refreshCitation;
     const clickCallback = this.plugin.reference.updateLiteratureLink.bind(this.plugin.reference);
-    event.detail.menu.addItem({
+    (event.detail.menu as Menu).addItem({
       iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconRefresh"></use></svg>',
       label: label,
       click: () => {clickCallback(event.detail.data.id);}
