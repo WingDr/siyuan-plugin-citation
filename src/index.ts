@@ -31,6 +31,7 @@ import { createNoticer, type INoticer } from "./utils/noticer";
 import { changeUpdate } from "./utils/updates";
 import { LiteraturePool } from "./ReferenceManager/pool";
 import type { EventTrigger } from "./frontEnd/eventTrigger";
+import { SettingTab } from "./frontEnd/settingTab/settingTab";
 
 export default class SiYuanPluginCitation extends Plugin {
 
@@ -44,6 +45,7 @@ export default class SiYuanPluginCitation extends Plugin {
     public interactionManager: InteractionManager;
     public kernelApi: KernelApi;
     public eventTrigger: EventTrigger;
+    public settingTab: SettingTab;
 
     public noticer: INoticer;
     private logger: ILogger;
@@ -76,9 +78,10 @@ export default class SiYuanPluginCitation extends Plugin {
         this.kernelApi = new KernelApi();
 
         this.interactionManager = new InteractionManager(this);
-        await this.interactionManager.customSettingTab().then(setting => {
-            this.setting = setting;
-        });
+        this.settingTab = new SettingTab(this);
+        // await this.interactionManager.customSettingTab().then(setting => {
+        //     this.setting = setting;
+        // });
         await this.interactionManager.customCommand();
         (await this.interactionManager.customProtyleSlash()).forEach(slash => {
             this.protyleSlash.push(slash);
@@ -92,6 +95,10 @@ export default class SiYuanPluginCitation extends Plugin {
         this.database = new Database(this);
         await this.database.buildDatabase(this.data[STORAGE_NAME].database as DatabaseType);
         this.reference = new Reference(this);
+    }
+
+    openSetting(): void {
+        this.settingTab.openSetting();
     }
 
     onunload() {
