@@ -16,6 +16,7 @@
   "refreshLiteratureNotesTitle": "刷新所有文献内容文档标题",
   "copyCiteLink": "复制文献引用",
   "copyNotes": "复制文献笔记",
+  "addSelectedItems": "插入在Zotero中选中的文献",
   "settingTab": {
     "settingTabTitle": "插件版本：${version}",
     "settingTabDescription": "如果有好的想法或者发现了bug，欢迎到github上提<a href=\"${issuesURL}\"><b>issue</b></a>或者发邮件到我的<a href=\"mailto:${e-mail}\"><b>邮箱</b></a>",
