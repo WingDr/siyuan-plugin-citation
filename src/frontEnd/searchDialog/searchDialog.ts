@@ -38,7 +38,7 @@ export class SearchDialog {
     const id = `dialog-search-${Date.now()}`;
     this.searchDialog = new Dialog({
       content: `<div id="${id}" class="b3-dialog__body"/>`,
-      width: this.plugin.isMobile ? "120vw" : "520px",
+      width: this.plugin.isMobile ? "92vw" : "640px",
       height: "40vh",
       destroyCallback: () => {if (isDev) this.logger.info("关闭搜索界面");}
     });

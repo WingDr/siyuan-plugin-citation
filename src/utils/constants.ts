@@ -47,3 +47,4 @@ export const defaultNoteTemplate = `
 {{note}}
 `;
 export const defaultLinkTemplate = "({{shortAuthor}} {{year}})";
+export const defaultDBPassword = "CTT";

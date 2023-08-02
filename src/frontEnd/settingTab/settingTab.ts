@@ -2,8 +2,9 @@ import { Dialog } from "siyuan";
 
 import { createLogger, type ILogger } from "../../utils/simple-logger";
 import type SiYuanPluginCitation from "../../index";
-import ExampleComponent from "./Example.svelte";
+import ExampleComponent from "./settingTabComponent.svelte";
 import { isDev } from "../../utils/constants";
+import { type DatabaseType } from "../../database/database";
 
 export class SettingTab {
   private logger: ILogger;
@@ -13,14 +14,30 @@ export class SettingTab {
   }
 
   public openSetting() {
-    const id = `dialog-search-${Date.now()}`;
+    const id = `dialog-setting-${Date.now()}`;
     const settingTab = new Dialog({
       content: `<div id="${id}" class="b3-dialog__body"/>`,
-      destroyCallback: () => {if (isDev) this.logger.info("关闭搜索界面");}
+      width: this.plugin.isMobile ? "92vw" : "850px",
+      height: "70vh",
+      destroyCallback: () => { component.$destroy(); }
     });
 
     const component = new ExampleComponent({
       target: settingTab.element.querySelector(`#${id}`),
+      props: {
+        plugin: this.plugin,
+        logger: this.logger
+      }
+    });
+
+    component.$on("confirm", ()=> {
+      settingTab.destroy();
+    });
+
+    component.$on("reload database", async (e:CustomEvent<any>) => {
+      const database = e.detail.database;
+      await this.plugin.database.buildDatabase(database as DatabaseType);
+      return await this.plugin.reference.checkRefDirExist();
     });
   }
 }

@@ -18,30 +18,53 @@
   "copyNotes": "复制文献笔记",
   "settingTab": {
     "settingTabTitle": "插件版本：${version}",
-    "settingTabDescription": "如果有好的想法或者发现了bug，欢迎到github上提<b>issue</b>或者发邮件到<b>${e-mail}</b>",
-    "notebookSelectorTitle": "笔记本",
-    "notebookSelectorDescription": "选择文献库放置的笔记本",
-    "referencePathInputTitle": "文献库路径",
-    "referencePathInputDescription": "放置存放文献内容的文献库文档路径，以'/'开头和分隔子目录，例如'/Assets/References'",
-    "databaseSelectorTitle": "数据库类型",
-    "databaseSelectorDescription": "选择使用的数据库类型",
-    "UseItemKeySwitchTitle": "使用itemKey作为索引",
-    "UseItemKeySwitchDescription": "使用文献在Zotero中的唯一key作为索引，开启后可以不依赖better bibtex插件<br><b>仅使用debug-bridge插件时可以开启</b>",
-    "reloadBtnTitle": "重新载入数据库",
-    "reloadBtnDescription": "重新从BibTex和CSL-JSON文件中加载数据库",
-    "reloadBtnText": "重载",
-    "titleTemplateInputTitle": "文献内容文档标题模板",
-    "titleTemplateInputDescription": "设置文献内容文档的生成标题（用户修改后<b>不会</b>刷新，可以通过“刷新所有文献内容文档标题”重新生成标题）",
-    "noteTempTexareaTitle": "文献内容模板",
-    "noteTempTexareaDescription": "设置在文献库中储存的文献文档的内容模板",
-    "CustomCiteTextSwitchTitle": "自定义引用",
-    "CustomCiteTextSwitchDescription": "完全自定义引用的格式，引用链接模板生成的内容不再为锚文本，而是将直接插入文档<br>⚠️<b>注意：开关开启后请确保你的模板中包含\"...(( {{citeFileID}} \"...\"))...\"否则生成的链接将无法引用</b><br>查找引用链接的正则表达式为/\\(\\((.*?)\\\"(.*?)\\\"\\)\\)/g'，请据此把握好您的模板格式",
-    "linkTempInputTitle": "引用模板",
-    "linkTempInputDescription": "设置添加在文档中的引用链接的模板",
-    "deleteDataBtnTitle": "删除数据",
-    "deleteDataBtnDescription": "删除本插件的所有设置数据（仅包括设置面板上显示的数据）",
-    "confirmRemove": "确认删除 ${name} 的设置数据？",
-    "deleteDataBtnText": "删除"
+    "settingTabDescription": "如果有好的想法或者发现了bug，欢迎到github上提<a href=\"${issuesURL}\"><b>issue</b></a>或者发邮件到我的<a href=\"mailto:${e-mail}\"><b>邮箱</b></a>",
+    "basic": {
+      "title": "基础设置",
+      "notebookSelectorTitle": "笔记本",
+      "notebookSelectorDescription": "选择文献库放置的笔记本",
+      "referencePathInputTitle": "文献库路径",
+      "referencePathInputDescription": "放置存放文献内容的文献库文档路径，以'/'开头和分隔子目录，例如'/Assets/References'",
+      "databaseSelectorTitle": "数据库类型",
+      "databaseSelectorDescription": "选择使用的数据库类型",
+      "UseItemKeySwitchTitle": "使用itemKey作为索引",
+      "UseItemKeySwitchDescription": "使用文献在Zotero中的唯一key作为索引，开启后可以不依赖better bibtex插件<br><b>仅使用debug-bridge插件时可以开启</b>",
+      "reloadBtnTitle": "重新载入数据库",
+      "reloadBtnDescription": "重新载入数据库，包括检查文献库路径是否存在",
+      "reloadBtnText": "重载",
+      "deleteDataBtnTitle": "删除数据",
+      "deleteDataBtnDescription": "删除本插件的所有设置数据（仅包括设置面板上显示的数据）",
+      "confirmRemove": "确认删除 ${name} 的设置数据？",
+      "deleteDataBtnText": "删除"
+    },
+    "templates": {
+      "title": "模板设置",
+      "siyuan": {
+        "title": "思源内容模板",
+        "titleTemplateInputTitle": "文献内容文档标题模板",
+        "titleTemplateInputDescription": "设置文献内容文档的生成标题（用户修改后<b>不会</b>刷新，可以通过“刷新所有文献内容文档标题”重新生成标题）",
+        "noteTempTexareaTitle": "文献内容模板",
+        "noteTempTexareaDescription": "设置在文献库中储存的文献文档的内容模板",
+        "CustomCiteTextSwitchTitle": "自定义引用",
+        "CustomCiteTextSwitchDescription": "完全自定义引用的格式，引用链接模板生成的内容不再为锚文本，而是将直接插入文档<br>⚠️<b>注意：开关开启后请确保你的模板中包含\"...(( {{citeFileID}} \"...\"))...\"否则生成的链接将无法引用</b><br>查找引用链接的正则表达式为/\\(\\((.*?)\\\"(.*?)\\\"\\)\\)/g'，请据此把握好您的模板格式",
+        "linkTempInputTitle": "引用模板",
+        "linkTempInputDescription": "设置添加在文档中的引用链接的模板"
+      },
+      "zotero": {
+        "title": "Zotero内容模板",
+        "notAbleTitle": "无法向Zotero中插入内容",
+        "notAbleDescription": "当然使用的<b>数据库类型</b>不支持向Zotero中插入内容",
+        "zoteroLinkTitleTemplateTitle": "插入Zotero链接标题模板",
+        "zoteroLinkTitleTemplateDescription": "设置当插入文献的同时插入到Zotero对应条目下的思源反链的标题模板，置空则不会添加反链，设置为\"{{siyuan-link}}\"则插入但不添加标题",
+        "zoteroTagTemplateTitle": "插入Zotero标签模板",
+        "zoteroTagTemplateDescription": "设置当插入文献的同时添加到对应条目的标签的模板，置空则默认不添加标签，插入多个标签用逗号隔开"
+      }
+    },
+    "debug_bridge": {
+      "title": "debug-bridge插件",
+      "dbPasswordInputTitle": "debug-bridge插件密码",
+      "dbPasswordInputDescription": "根据<a href=\"https://www.yuque.com/chentaotao-cf9fr/gthfy4/clqahv57w5ugmdev\"><b>教程</b></a>对debug-bridge插件进行设置时设定的密码，教程中默认为\"CTT\"，本插件也默认为此密码"
+    }
   },
   "errors": {
     "notebookUnselected": "未选择笔记本！",
@@ -51,7 +74,8 @@
     "zoteroNotRunning": "${type}没有在运行",
     "getLiteratureFailed": "获得引用文献失败",
     "loadLibraryFailed": "文献库导入失败",
-    "bbtDisabled": "未检索到citekey字段，请检查better-bibtex插件是否运行，或者切换到使用itemKey进行索引"
+    "bbtDisabled": "未检索到citekey字段，请检查better-bibtex插件是否运行，或者切换到使用itemKey进行索引",
+    "wrongDBPassword": "debug-bridge插件密码错误，请在设置界面中设置正确密码"
   },
   "confirms": {
     "updateWithoutUserData": "未检测到“用户数据（# User Data）”区域（缺少引用或引用失效），确定要更新文献内容吗？"

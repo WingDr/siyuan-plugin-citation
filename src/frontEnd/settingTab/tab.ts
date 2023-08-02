@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import type { DatabaseType } from "../../database/database";
+
 export type TabKey = string | number;
 
 export interface ITab {
@@ -22,4 +24,12 @@ export interface ITab {
     text: string;
     name?: string;
     icon?: string;
+}
+
+export interface IPanel {
+    key: TabKey;
+    text: string;
+    name?: string;
+    icon?: string;
+    supportDatabase?: DatabaseType[];
 }

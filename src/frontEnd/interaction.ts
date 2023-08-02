@@ -1,25 +1,39 @@
 import {
   Setting,
-  showMessage,
-  confirm,
   Protyle,
   Menu
 } from "siyuan";
 import SiYuanPluginCitation from "../index";
 import {
   STORAGE_NAME,
-  hiddenNotebook,
-  databaseType,
-  defaultTitleTemplate,
-  defaultNoteTemplate,
-  defaultLinkTemplate,
-  defaultReferencePath,
-  isDev,
-  dataDir
+  isDev
 } from "../utils/constants";
 import { createLogger, type ILogger } from "../utils/simple-logger";
 import { type DatabaseType } from "../database/database";
 import { EventTrigger } from "./eventTrigger";
+import { SettingTab } from "./settingTab/settingTab";
+
+interface ICommandSetting {
+  supportDatabase?: DatabaseType[];
+  langKey: string, // 用于区分不同快捷键的 key
+  langText?: string, // 快捷键功能描述文本
+  /**
+   * 目前需使用 MacOS 符号标识，顺序按照 ⌥⇧⌘，入 ⌥⇧⌘A
+   * "Ctrl": "⌘",
+   * "Shift": "⇧",
+   * "Alt": "⌥",
+   * "Tab": "⇥",
+   * "Backspace": "⌫",
+   * "Delete": "⌦",
+   * "Enter": "↩",
+   */
+  hotkey: string,
+  customHotkey?: string,
+  callback?: () => void
+  fileTreeCallback?: (file: any) => void
+  editorCallback?: (protyle: any) => void
+  dockCallback?: (element: HTMLElement) => void
+}
 
 export class InteractionManager {
   public plugin: SiYuanPluginCitation;
@@ -39,226 +53,8 @@ export class InteractionManager {
    * - Input the storage path of the references
    * @returns Setting object
    */
-  public async customSettingTab(): Promise<Setting> {
-    this.setting = new Setting({
-        confirmCallback: () => {
-          if (databaseSelector.value === "Zotero") databaseSelector.value = "Zotero (better-bibtex)";
-          else if (databaseSelector.value === "Juris-M") databaseSelector.value = "Juris-M (better-bibtex)";
-          const settingData = {
-              referenceNotebook: referenceNotebookSelector.value,
-              referencePath: referencePathInput.value,
-              database: databaseSelector.value,
-              titleTemplate: titleTemplateInput.value,
-              noteTemplate: noteTempTexarea.value,
-              linkTemplate: linkTempInput.value,
-              customCiteText: CustomCiteTextSwitch.checked,
-              useItemKey: UseItemKeySwitch.checked
-          };
-          let refreshDatabase = false;
-          let refreshName = false;
-          // 改变了笔记本和数据库类型之后都要刷新数据库
-          if (settingData.referenceNotebook != this.plugin.data[STORAGE_NAME].referenceNotebook || settingData.database != this.plugin.data[STORAGE_NAME].database) refreshDatabase = true;
-          if (UseItemKeySwitch.checked != this.plugin.data[STORAGE_NAME].useItemKey) refreshName = true;
-          this.plugin.saveData(STORAGE_NAME, settingData).then(() => {
-            if (refreshDatabase || refreshName) {
-              this.plugin.reference.checkRefDirExist();
-              this.plugin.database.buildDatabase(settingData.database as DatabaseType);
-            }
-            if (refreshName) this.plugin.noticer.info((this.plugin.i18n.notices.changeKey as string).replace("${keyType}", settingData.useItemKey ? "itemKey" : "citekey"));
-          });
-        }
-    });
-
-    const eMail = "siyuan_citation@126.com";
-    const issuesURL = "https://github.com/WingDr/siyuan-plugin-citation/issues";
-    const fs = window.require("fs");
-    const path = window.require("path");
-    const file = JSON.parse(await fs.readFileSync(path.join(dataDir, "./plugins/siyuan-plugin-citation/plugin.json")));
-    this.setting.addItem({
-      title: this.plugin.i18n.settingTab.settingTabTitle.replace("${version}", file.version),
-      description: this.plugin.i18n.settingTab.settingTabDescription.replaceAll("${e-mail}", eMail).replace("${issuesURL}", issuesURL),
-  });
-
-    //notebook selector
-    const referenceNotebookSelector = document.createElement("select");
-    referenceNotebookSelector.className = "b3-select fn__flex-center fn__size200";
-    referenceNotebookSelector.required = true;
-    const notebooksRequest = await this.plugin.kernelApi.lsNotebooks();
-    const data = notebooksRequest.data as any;
-    let notebooks = data.notebooks ?? [];
-    // 没有必要把所有笔记本都列出来
-    notebooks = notebooks.filter((notebook) => !notebook.closed && !hiddenNotebook.has(notebook.name));
-    notebooks.forEach(notebook => {
-      const option = document.createElement("option");
-      option.value = notebook.id;
-      option.text = notebook.name;
-      referenceNotebookSelector.appendChild(option);
-    });
-    // 默认笔记本为第一个打开的笔记本
-    referenceNotebookSelector.value = this.plugin.data[STORAGE_NAME].referenceNotebook ?? notebooks[0].id;
-    this.setting.addItem({
-        title: this.plugin.i18n.settingTab.notebookSelectorTitle,
-        description: this.plugin.i18n.settingTab.notebookSelectorDescription,
-        actionElement: referenceNotebookSelector,
-    });
-
-    //storage path input
-    const referencePathInput = document.createElement("input");
-    referencePathInput.className = "b3-text-field fn__size200";
-    referencePathInput.placeholder = "Input the path";
-    // 默认路径为"/References/"
-    referencePathInput.value = this.plugin.data[STORAGE_NAME].referencePath ?? "/References";
-    this.setting.addItem({
-        title: this.plugin.i18n.settingTab.referencePathInputTitle,
-        description: this.plugin.i18n.settingTab.referencePathInputDescription,
-        actionElement: referencePathInput,
-    });
-
-    //select the using type of database
-    const databaseSelector = document.createElement("select");
-    databaseSelector.className = "b3-select fn__flex-center fn__size200";
-    databaseType.forEach(database => {
-      const option = document.createElement("option");
-      option.value = database;
-      option.text = database;
-      databaseSelector.appendChild(option);
-    });
-    databaseSelector.value = this.plugin.data[STORAGE_NAME].database ?? databaseType[0];
-    this.setting.addItem({
-      title: this.plugin.i18n.settingTab.databaseSelectorTitle,
-      description: this.plugin.i18n.settingTab.databaseSelectorDescription,
-      actionElement: databaseSelector,
-    });
-
-    // 是否使用itemKey作为文献内容索引
-    const UseItemKeySwitch = document.createElement("input");
-    UseItemKeySwitch.className = "b3-switch fn__flex-center";
-    UseItemKeySwitch.type = "checkbox";
-    // 默认关闭
-    UseItemKeySwitch.checked = this.plugin.data[STORAGE_NAME].useItemKey ?? false;
-    // 仅在选择debug-bridge情况下能够使用
-    const value = databaseSelector.value;
-    if (value === "Juris-M (debug-bridge)" || value === "Zotero (debug-bridge)") UseItemKeySwitch.disabled = false;
-    else UseItemKeySwitch.disabled = true;
-    // 同时绑定修改事件
-    databaseSelector.onchange = function(ev) {
-      const index = (ev.target as HTMLSelectElement).options.selectedIndex;
-      const value = databaseType[index];
-      if (value === "Juris-M (debug-bridge)" || value === "Zotero (debug-bridge)") UseItemKeySwitch.disabled = false;
-      else {
-        UseItemKeySwitch.checked = false;
-        UseItemKeySwitch.disabled = true;
-      }
-    };
-    this.setting.addItem({
-      title: this.plugin.i18n.settingTab.UseItemKeySwitchTitle,
-      description: this.plugin.i18n.settingTab.UseItemKeySwitchDescription,
-      actionElement: UseItemKeySwitch,
-    });
-
-    //reload library button
-    const reloadBtn = document.createElement("button");
-    reloadBtn.className = "b3-button b3-button--outline fn__flex-center fn__size200";
-    reloadBtn.textContent = this.plugin.i18n.settingTab.reloadBtnText;
-    reloadBtn.addEventListener("click", async () => {
-        await this.plugin.database.buildDatabase(databaseSelector.value as DatabaseType);
-        return await this.plugin.reference.checkRefDirExist();
-    });
-    this.setting.addItem({
-        title: this.plugin.i18n.settingTab.reloadBtnTitle,
-        description: this.plugin.i18n.settingTab.reloadBtnDescription,
-        actionElement: reloadBtn,
-    });
-
-    // 文献内容标题模板
-    const titleTemplateInput = document.createElement("input");
-    titleTemplateInput.className = "b3-text-field fn__size200";
-    titleTemplateInput.placeholder = "Input the path";
-    titleTemplateInput.value = this.plugin.data[STORAGE_NAME].titleTemplate ?? defaultTitleTemplate;
-    this.setting.addItem({
-        title: this.plugin.i18n.settingTab.titleTemplateInputTitle,
-        description: this.plugin.i18n.settingTab.titleTemplateInputDescription,
-        actionElement: titleTemplateInput,
-    });
-
-    //edit note template
-    const noteTempTexarea = document.createElement("textarea");
-    noteTempTexarea.className = "b3-text-field fn__block";
-    noteTempTexarea.setAttribute("style", "resize:vertical");
-    noteTempTexarea.setAttribute("rows", "10");
-    noteTempTexarea.placeholder = "input the literature file template";
-    noteTempTexarea.value = this.plugin.data[STORAGE_NAME].noteTemplate ?? defaultNoteTemplate;
-    noteTempTexarea.addEventListener("keydown", (ev: KeyboardEvent) => {
-      if (ev.key === "Tab") {
-        ev.preventDefault();
-        const indent = "\t";
-        const start = noteTempTexarea.selectionStart;
-        const end = noteTempTexarea.selectionEnd;
-        let selected = window.getSelection().toString();
-        selected = indent + selected.replace(/\n/g, "\n" + indent);
-        noteTempTexarea.value = noteTempTexarea.value.substring(0, start) + selected
-                + noteTempTexarea.value.substring(end);
-        noteTempTexarea.setSelectionRange(start + indent.length, start
-                + selected.length);
-      }
-    });
-    this.setting.addItem({
-      title: this.plugin.i18n.settingTab.noteTempTexareaTitle,
-      description: this.plugin.i18n.settingTab.noteTempTexareaDescription,
-      actionElement: noteTempTexarea,
-    });
-
-    // 切换能否完全自定义引用文本的开关
-    const CustomCiteTextSwitch = document.createElement("input");
-    CustomCiteTextSwitch.className = "b3-switch fn__flex-center";
-    CustomCiteTextSwitch.type = "checkbox";
-    // 默认关闭
-    CustomCiteTextSwitch.checked = this.plugin.data[STORAGE_NAME].customCiteText ?? false;
-    this.setting.addItem({
-      title: this.plugin.i18n.settingTab.CustomCiteTextSwitchTitle,
-      description: this.plugin.i18n.settingTab.CustomCiteTextSwitchDescription,
-      actionElement: CustomCiteTextSwitch,
-    });
-
-    //edit literature link
-    const linkTempInput = document.createElement("input");
-    linkTempInput.className = "b3-text-field fn__size200";
-    linkTempInput.placeholder = "Input the path";
-    linkTempInput.value = this.plugin.data[STORAGE_NAME].linkTemplate ?? defaultLinkTemplate;
-    this.setting.addItem({
-        title: this.plugin.i18n.settingTab.linkTempInputTitle,
-        description: this.plugin.i18n.settingTab.linkTempInputDescription,
-        actionElement: linkTempInput,
-    });
-
-    //delete data button
-    const deleteDataBtn = document.createElement("button");
-    deleteDataBtn.className = "b3-button b3-button--outline fn__flex-center fn__size200";
-    deleteDataBtn.textContent = this.plugin.i18n.settingTab.deleteDataBtnText;
-    deleteDataBtn.addEventListener("click", () => {
-      confirm("⚠️", this.plugin.i18n.settingTab.confirmRemove.replace("${name}", this.plugin.name), () => {
-        this.plugin.removeData(STORAGE_NAME).then(() => {
-            referenceNotebookSelector.value = "";
-            referencePathInput.value = defaultReferencePath;
-            linkTempInput.value = defaultLinkTemplate;
-            noteTempTexarea.value = defaultNoteTemplate;
-            this.plugin.data[STORAGE_NAME] = {
-                referenceNotebook: "",
-                referencePath: defaultReferencePath,
-                noteTemplate: defaultNoteTemplate,
-                linkTemplate: defaultLinkTemplate
-            };
-            showMessage(`[${this.plugin.name}]: ${this.plugin.i18n.removedData}`);
-        });
-      });
-    });
-    this.setting.addItem({
-        title: this.plugin.i18n.settingTab.deleteDataBtnTitle,
-        description: this.plugin.i18n.settingTab.deleteDataBtnDescription,
-        actionElement: deleteDataBtn,
-    });
-
-    return this.setting;
+  public async customSettingTab() {
+    return new SettingTab(this.plugin);
   }
 
   public async customProtyleSlash() {
@@ -292,63 +88,71 @@ export class InteractionManager {
     }];
   }
 
-  public async customCommand() {
-    this.plugin.commands = [];
-    this.plugin.addCommand({
+  private commands:ICommandSetting[] = [
+    {
       langKey: "addCitation",
       hotkey: "⌥⇧A",
-      editorCallback: async (p) => {
+      editorCallback: (p) => {
         const protyle = p.getInstance();
-        if (isDev) this.logger.info("Slash触发：add literature citation", protyle);
-        return this.plugin.database.insertCiteLink(protyle);
-      },
-      callback: () => {
-        this.plugin.noticer.info("请使用快捷键调用此命令");
+        this.plugin.database.insertCiteLink(protyle);
       }
-    });
-    this.plugin.addCommand({
+    },
+    {
       langKey: "reloadDatabase",
       hotkey: "",
       callback: async () => {
-        if (isDev) this.logger.info("指令触发：reloadDatabase");
         await this.plugin.reference.checkRefDirExist();
         return this.plugin.database.buildDatabase(this.plugin.data[STORAGE_NAME].database as DatabaseType);
       }
-    });
-    this.plugin.addCommand({
+    },
+    {
       langKey: "refreshLiteratureNotesTitle",
       hotkey: "",
-      callback: () => {
-        if (isDev) this.logger.info("指令触发：refreshLiteratureNotesTitle");
-        return this.plugin.reference.refreshLiteratureNoteTitles();
-      }
-    });
-    this.plugin.addCommand({
+      callback: () => { return this.plugin.reference.refreshLiteratureNoteTitles(); }
+    },
+    {
       langKey: "copyCiteLink",
       hotkey: "",
-      callback: () => {
-        if (isDev) this.logger.info("指令触发：copyCiteLink");
-        return this.plugin.database.copyCiteLink();
-      }
-    });
-    this.plugin.addCommand({
+      callback: () => { return this.plugin.database.copyCiteLink(); }
+    },
+    {
       langKey: "copyNotes",
       hotkey: "",
-      callback: () => {
-        if (isDev) this.logger.info("指令触发：copyNotes");
-        return this.plugin.database.copyNotes();
+      callback: () => { return this.plugin.database.copyNotes(); }
+    },
+    {
+      supportDatabase: ["Juris-M (debug-bridge)", "Zotero (debug-bridge)"],
+      langKey: "addSelectedItems",
+      hotkey: "",
+      callback: () => { return ;}
+    }
+  ];
+
+  public async customCommand() {
+    this.commands.forEach(command => {
+      if (this.validateCommand(command)) {
+        this.plugin.addCommand({
+          langKey: command.langKey,
+          hotkey: command.hotkey,
+          callback: () => {
+            if (isDev) this.logger.info(`Command触发：${command.langKey}`);
+            if (command.callback && this.validateCommand(command)) command.callback();
+            else if (isDev) this.logger.error(`Command调用不合法：${command.langKey}`);
+          },
+          editorCallback: (p) => {
+            if (isDev) this.logger.info(`Command触发：${command.langKey}`);
+            if (command.editorCallback && this.validateCommand(command)) command.editorCallback(p);
+            else if (isDev) this.logger.error(`Command调用不合法：${command.langKey}`);
+          }
+        });
       }
     });
-    // if (["Zotero (debug-bridge)", "Juris-M (debug-bridge)"].indexOf(this.plugin.data[STORAGE_NAME].database) != -1) {
-    //   this.plugin.addCommand({
-    //     langKey: "addSelectedItems",
-    //     hotkey: "",
-    //     callback: () => {
-    //       if (isDev) this.logger.info("指令触发：addSelectedItems");
-          
-    //     }
-    //   });
-    // }
+  }
+
+  private validateCommand(command: ICommandSetting): boolean {
+    const database = this.plugin.data[STORAGE_NAME].database;
+    if (!command.supportDatabase || command.supportDatabase.indexOf(database) != -1) return true;
+    return false;
   }
 
   public eventBusReaction() {

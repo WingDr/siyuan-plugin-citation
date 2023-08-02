@@ -34,6 +34,8 @@ REF: https://github.com/siyuan-note/plugin-sample-vite-svelte/blob/main/src/libs
     import Input from "./item/Input.svelte";
     import Svg from "./../misc/Svg.svelte";
 
+    export let plugin;
+    console.log(plugin);
     let block = false;
     let normal = false;
 

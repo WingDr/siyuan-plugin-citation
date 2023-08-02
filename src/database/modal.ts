@@ -24,7 +24,7 @@ import {
 } from "../frontEnd/searchDialog/searchDialog";
 import { htmlNotesProcess } from "../utils/notes";
 import { createLogger, type ILogger } from "../utils/simple-logger";
-import { isDev, REF_DIR_PATH, dataDir } from "../utils/constants";
+import { isDev, REF_DIR_PATH, dataDir, STORAGE_NAME } from "../utils/constants";
 import { fileSearch, generateFileLinks } from "../utils/util";
 
 const path = window.require("path");
@@ -488,6 +488,7 @@ export class ZoteroDBModal extends DataModal {
   }
 
   private async callZoteroJS(filename: string, prefix: string) {
+    const password = this.plugin.data[STORAGE_NAME].dbPassword;
     const jsContent = fs.readFileSync(path.join(this.absZoteroJSPath, filename+".ts"), "utf-8");
     if (isDev) this.logger.info("向debug-bridge发送数据，fetchData=>", {
       command: filename,
@@ -495,11 +496,12 @@ export class ZoteroDBModal extends DataModal {
     });
     const Result = await axios({
       method: "post",
-      url: `http://127.0.0.1:${this.getPort(this.type)}/debug-bridge/execute?password=CTT`,
+      url: `http://127.0.0.1:${this.getPort(this.type)}/debug-bridge/execute?password=${password}`,
       headers: JSHeaders,
       data: prefix + "\n" + jsContent
     }).catch(e => {
-      if (isDev) this.logger.error(e);
+      if (isDev) this.logger.error("访问Zotero发生错误, error=>", e);
+      if (e.response.data === "invalid password") this.plugin.noticer.error(this.plugin.i18n.errors.wrongDBPassword);
       return {
         data: JSON.stringify({
           ready: false

@@ -34,6 +34,7 @@
     export let options: IOptions = []; // Use it if type is select
     export let limits: ILimits = { min: 0, max: 100, step: 1 }; // Use it if type is number/slider
     export let height: number = 0; // Use it if type is textarea
+    export let rows: number = 0;
 
     const dispatch = createEventDispatcher<IInputEvent>();
 
@@ -135,6 +136,8 @@
         class:fn__size200={!block && normal}
         style:height={height > 0 ? `${height}px` : undefined}
         {placeholder}
+        style:resize={block ? "vertical": "auto"}
+        rows={rows > 0 ? rows : undefined}
         bind:value={settingValue}
         on:change={changed}
     />

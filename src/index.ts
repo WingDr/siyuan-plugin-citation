@@ -19,7 +19,8 @@ import {
     defaultNoteTemplate,
     defaultReferencePath,
     databaseType,
-    defaultTitleTemplate
+    defaultTitleTemplate,
+    defaultDBPassword
 } from "./utils/constants";
 import {
     createLogger,
@@ -64,9 +65,12 @@ export default class SiYuanPluginCitation extends Plugin {
             titleTemplate: defaultTitleTemplate,
             noteTemplate: defaultNoteTemplate,
             linkTemplate: defaultLinkTemplate,
-            CustomCiteText: false,
-            useItemKey: false
-        };
+            customCiteText: false,
+            useItemKey: false,
+            zoteroLinkTitleTemplate: "",
+            zoteroTagTemplate: "",
+            dbPassword: defaultDBPassword,
+          };
 
         const frontEnd = getFrontend();
         this.isMobile = frontEnd === "mobile" || frontEnd === "browser-mobile";
@@ -78,9 +82,8 @@ export default class SiYuanPluginCitation extends Plugin {
         this.kernelApi = new KernelApi();
 
         this.interactionManager = new InteractionManager(this);
-        this.settingTab = new SettingTab(this);
         await this.interactionManager.customSettingTab().then(setting => {
-            this.setting = setting;
+            this.settingTab = setting;
         });
         await this.interactionManager.customCommand();
         (await this.interactionManager.customProtyleSlash()).forEach(slash => {
@@ -97,9 +100,9 @@ export default class SiYuanPluginCitation extends Plugin {
         this.reference = new Reference(this);
     }
 
-    // openSetting(): void {
-    //     this.settingTab.openSetting();
-    // }
+    openSetting(): void {
+        this.settingTab.openSetting();
+    }
 
     onunload() {
         if (isDev) this.logger.info("插件卸载，plugin=>", this);

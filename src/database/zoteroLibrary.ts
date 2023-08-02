@@ -333,7 +333,7 @@ export class EntryZoteroAdapter extends Entry {
       return {
         index: index,
         prefix: `\n\n---\n\n###### Note No.${index+1}\t[[Locate]](zotero://select/items/0_${singleNote.key}/)\t[[Open]](zotero://note/u/${singleNote.key}/)\n\n\n\n`,
-        content: singleNote.note.replace(/\\(.?)/g, (m, p1) => p1)
+        content: `<div>\n${singleNote.note.replace(/\\(.?)/g, (m, p1) => p1)}\n</div>`
       };
     });
   }

@@ -61,6 +61,8 @@
             const key = highlightedRes[selector].key;
             onSelection([key]);
             dispatcher("confirm");
+        } else if (ev.key == "Escape") {
+            dispatcher("confirm")
         }
     }
 
@@ -94,11 +96,14 @@
     }
 </style>
 
-<div class="input-container fn-block" id="input-container">
+<div class="b3-form__icon input-container" id="input-container">
+    <svg class="b3-form__icon-icon">
+        <use xlink:href="#iconSearch"></use>
+    </svg>
     <input 
     id="pattern-input"
     type="text" 
-    class="b3-text-field b3-text-field--text fn-block" 
+    class="b3-text-field fn__block b3-form__icon-input" 
     style="width: 100%" 
     placeholder="Searching literature"
     bind:value={pattern}
