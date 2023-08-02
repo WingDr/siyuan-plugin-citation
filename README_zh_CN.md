@@ -327,8 +327,10 @@
 
 [template.js](https://github.com/yanhaijing/template.js)
 
+[siyuan-package-monorepo](https://github.com/Zuoqiu-Yingyi/siyuan-packages-monorepo)
+
 感谢 “思源笔记折腾群”的大伙给我答疑解惑
-感谢[Geo123abc](https://github.com/Geo123abc)提供的资料和参考建议，以及相关的测试支持
+感谢[Geo123abc](https://github.com/Geo123abc)和[ttChen](https://getquicker.net/User/Actions/395924-ttChen)提供的资料和参考建议，以及相关的测试支持
 
 ## 赞助
 

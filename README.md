@@ -326,9 +326,11 @@ The code of the following projects was referenced, and I would like to express m
 
 [template.js](https://github.com/yanhaijing/template.js)
 
+[siyuan-package-monorepo](https://github.com/Zuoqiu-Yingyi/siyuan-packages-monorepo)
+
 Thanks to everyone in the "思源笔记折腾群" for answering my questions and providing guidance. 
 
-Thanks to [Geo123abc](https://github.com/Geo123abc) for providing information, suggestions, and testing support.
+Thanks to [Geo123abc](https://github.com/Geo123abc) and [ttChen](https://getquicker.net/User/Actions/395924-ttChen) for providing information, suggestions, and testing support.
 
 ## Sponsorship
 

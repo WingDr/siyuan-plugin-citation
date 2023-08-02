@@ -57,7 +57,7 @@
     "updateWithoutUserData": "未检测到“用户数据（# User Data）”区域（缺少引用或引用失效），确定要更新文献内容吗？"
   },
   "notices": {
-    "loadLibrarySuccess": "文献库成功导入${size}个数据",
+    "loadLibrarySuccess": "成功导入${size}个文献数据",
     "loadRefSuccess": "成功导入${size}个文献引用",
     "refreshTitleSuccess": "成功刷新${size}篇文献内容文档标题",
     "copyContentSuccess": "${type}已在剪贴板",
