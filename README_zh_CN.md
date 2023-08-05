@@ -4,6 +4,15 @@
 
 > 已经实现了基本功能的引用插件，从这里开始将思源变得更加学术
 
+**0.1.3版本重大更新：**
+
+1. **搜索面板和设置面板都进行了重构，建议所有用户在更新后检查一下设置是否正确。**
+2. **考虑到“刷新所有文献内容文档标题”功能并不常用，被移动到设置界面。**
+3. **所有“复制”相关的命令都和同类型的“插入”命令合并，当光标不在文档中时，结果会自动复制到剪贴板。**
+4. **debug-bridge插件：**
+   1. **支持直接使用Zotero的“插入引注”面板，可以在设置面板中进行设置。**
+   2. **支持引用后自动向Zotero对应条目中插入思源反链（点击链接会跳转到思源中的文献内容文档），并且可以更新该条目的标签。**
+
 **由于文献命名规则发生变动，建议所有用户在更新之后执行一遍“刷新所有文献内容文档标题”命令，该命令会同时刷新所有文献库中文档的命名**
 
 **在0.1.1坂本中，本插件已经支持通过[debug-brige](https://github.com/retorquere/zotero-better-bibtex/releases/download/debug-bridge/debug-bridge-6.7.79.emile.limonia.xpi)插件访问Zotero的功能，相对于现在版本使用better-bibtex的方法，这种方式的访问速度更快，效率更高，并且可以实现很多额外的功能（详见[大佬的quicker动作](https://getquicker.net/User/Actions/395924-ttChen)，在思源或者zotero上的功能之后都有可能实装在该插件中），使用该功能的用户需要提前做好准备，具体的准备方法参考[Run Javascript in Zotero](https://www.yuque.com/chentaotao-cf9fr/gthfy4/clqahv57w5ugmdev)**
@@ -14,7 +23,7 @@
 
 在笔记中添加文献引用，该引用指向在你指定的文件夹下生成的文献内容，如下图所示：
 
-![ ](./preview.png)
+![ ](./assets/preview.jpg)
 
 ## 名词说明
 
@@ -33,13 +42,13 @@
 | 数据来源 | BibTex和CSL-JSON | Zotero/Juris-M<br>使用better-bibtex插件 | Zotero/Juris-M<br>使用debug-bridge插件 |
 |:----|:----:|:----:|:----:|
 | 文献标识 | <b>citekey</b><br>允许多个文件<br>自行保证唯一性 | <b>citekey</b><br>由BBT生成 | <b>citekey / itemKey</b><br>citekey由BBT生成<br>itemKey由Zotero生成 |
-| 搜索面板 | Citation插件面板 | Zotero面板 | Citation插件面板 |
+| 搜索面板 | Citation插件面板 | Zotero面板 | Citation插件面板 / Zotero面板 （可选） |
 | 初始化速度 | 慢 | 快 | 快 |
-| 搜索/插入速度 | 快 | 慢 | 快 |
-| 兼容Zotero 7 | - | × | √ |
+| 搜索/插入速度 | 快 | 慢 | 快（Citation插件面板） |
+| 兼容Zotero 7 | - | × （暂时） | √ |
 | 兼容其它文献管理软件 | ✓ | × | × |
 | 支持导入pdf标注<br>（annotations） | × | × | ✓ |
-| 支持通过搜索面板<br>一次性插入多篇文献 | × | ✓ | × |
+| 支持通过搜索面板<br>一次性插入多篇文献 | × | ✓ | ×（Citation插件面板）<br>✓ （Zotero面板） |
 | 插入在Zotero中<br>选中的条目 | × | × | ✓ |
 | 支持在Zotero条目中<br>插入跳转思源链接 | × | × | ✓ |
 | 支持在Zotero条目中<br>插入自定义标签 | × | × | ✓ |
@@ -74,9 +83,10 @@
 
 ### 如果你使用 Zotero/Juris-M (debug-bridge) 作为文献数据来源
 
-- **确保你的 Zotero 或者 Juris-M 中安装了 [debug-bridge](https://github.com/retorquere/zotero-better-bibtex/releases/download/debug-bridge/debug-bridge-6.7.79.emile.limonia.xpi) 插件，并按照 [Run Javascript in Zotero](https://www.yuque.com/chentaotao-cf9fr/gthfy4/clqahv57w5ugmdev) 教程进行配置（使用“CTT”作为访问密码，后续版本会开放自行设置密码的功能。**
+- **确保你的 Zotero 或者 Juris-M 中安装了 [debug-bridge](https://github.com/retorquere/zotero-better-bibtex/releases/download/debug-bridge/debug-bridge-6.7.79.emile.limonia.xpi) 插件，并按照 [Run Javascript in Zotero](https://www.yuque.com/chentaotao-cf9fr/gthfy4/clqahv57w5ugmdev) 教程进行配置（可以不选择“CTT”作为密码，只需要在设置面板中进行相应设置）**
 - 仍然推荐在Zotero中安装Better BibTex插件，以自动生成条目的citekey属性。
 - 在插件的设置面板中，数据库类型处选择`Zotero (debug-bridge)`或者`Juris-M (debug-bridge)`。
+- 在设置面板的“debug-bridge插件”栏中，输入设置时配置的密码，并选择使用SiYuan（Citation插件面板）或者Zotero面板作为搜索面板。
 - 在使用前确保你的 Zotero 或者 Juris-M 是打开的。
 
 ## 我该怎么使用这个插件
@@ -93,11 +103,15 @@
 
     通过输入“插入文献笔记”、“addliteraturenotes”、“charuwenxianbiji”都可以在斜杠菜单中索引到这个选项
 
+  - 引用Zotero中选中的文献（仅debug-bridge插件可用）：在Zotero中选中文献后，运行该命令则可直接将选中的（多个）文献插入到当前光标位置。
+
+  通过输入"引用Zotero中选中的条目"、"addzoteroselecteditemscitations"、"yinyongzoterozhongxuanzhongdetiaomu"都可以在斜杠菜单中索引到这个选项。
+
 - 命令（可以在`顶栏插件按钮-命令面板`直接搜索选中，或者在`设置-快捷键-插件-文献引用`中设置快捷键使用）：
   - 重新载入数据库：重新根据文献的来源载入[数据库](#名词说明)，同时也会重新索引[文献库](#名词说明)。
-  - 刷新所有文献内容文档标题：根据当前设置的[标题模板](#使用前准备)，刷新[文献库](#名词说明)中所有文献内容文档的标题，同时也会刷新文档的命名。
-  - 复制文献引用：弹出文献搜索面板，选中文献后将该文献的[引用链接](#名词说明)复制到剪贴板，并更新文献库。
-  - 复制文献笔记：弹出文献搜索面板，选中文献后将该文献的笔记复制到剪贴板。
+  - 插入文献引用：弹出文献搜索面板，选中文献后将该文献的[引用链接](#名词说明)插入到当前光标位置，并更新文献库，如果非快捷键调用或者光标没有聚焦在编辑器，则改为复制到剪贴板。
+  - 插入文献笔记：弹出文献搜索面板，选中文献后将该文献的笔记插入到当前光标位置，如果非快捷键调用或者光标没有聚焦在编辑器，则改为复制到剪贴板。
+  - 引用Zotero中选中的文献：同斜杠菜单功能，如果非快捷键调用或者光标没有聚焦在编辑器，则改为复制到剪贴板。
 - 标题块图标菜单：
   - 刷新引用：使用当前的[引用链接模板](#对插件进行设置)刷新当前文档的全部（**在当前设置的[文献库](#名词说明)中有存放[文献内容](#名词说明)**）的引用链接的锚文本。当引用链接模板有变化时，可以通过该功能刷新文档内全部的引用链接格式。
 - 文档右上角菜单：
@@ -123,16 +137,16 @@
 
 - 在[文献内容模板](#对插件进行设置)输入框中可以使用`Shift/Ctrl + Enter`换行，和用`Tab`输入制表符。
 
-在文献内容和引用的模板中可以使用如下变量：
+在文献内容和引用的模板中可以使用如下变量，默认不存在时为`undefined`：
 
 ```markdown
-- {{key}}：文献的唯一标识，根据“使用itemKey作为索引”选项开启的不同为“libraryID_citekey”，或者“libraryID_itemKey”
-- {{citekey}}：文献的标识，使用数据文件需要自行保证唯一性，使用better bibtex插件会自动生成
-- {{itemKey}}：文献条目在Zotero中的唯一标识，由Zotero自动生成
-- {{libraryID}}：文献内容在Zotero中的库ID，如果使用数据文件则默认为1，未来将据此支持多个库（多个文件可重复citekey）的搜索插入
+- {{key}}：文献的唯一标识，根据“使用itemKey作为索引”选项开启的不同为“libraryID_citekey”，或者“libraryID_itemKey”，必定存在。
+- {{citekey}}：文献的标识，使用数据文件需要自行保证唯一性，使用better bibtex插件会自动生成，如果没有安装bbt插件则与itemKey相同
+- {{itemKey}}：文献条目在Zotero中的唯一标识，由Zotero自动生成，不使用Zotero则不存在
+- {{libraryID}}：文献内容在Zotero中的库ID，如果使用数据文件则默认为1，未来将据此支持多个库（多个文件可重复citekey）的搜索插入，不使用Zotero则不存在
 - {{abstract}}：摘要
-- {{authorString}}：所有作者按顺序排列的字符串
-- {{containerTitle}}：文献所在刊物（论文集、期刊等）标题
+- {{authorString}}：所有作者按顺序排列的字符串，不存在则为空字符串
+- {{containerTitle}}：文献所在刊物（论文集、期刊等）标题，不存在则为null
 - {{DOI}}：文献的 DOI
 - {{eprint}}：预印本
 - {{eprinttype}}：预印本类型
@@ -140,14 +154,14 @@
 - {{page}}：页码
 - {{publisher}}：出版商
 - {{publisherPlace}}：出版商所在地
-- {{tags}}: 所有的标签，以", "连接， CSL-JSON 文件中没有此变量
+- {{tags}}: 所有的标签，以", "连接， CSL-JSON 文件中没有此变量，不存在则为空字符串
 - {{title}}：标题
 - {{titleShort}}：简写标题，很多文献不存在简写标题
 - {{type}}：文献的类型（注意：直接从 zotero 获取的和导出后再获取的文献类型标识可能不一样）
 - {{URL}}：文献的访问网址
 - {{year}}：文献的发表年份
 - {{files}}：文献的附件。会直接显示默认样式，每行一个文件，并附带跳转到 zotero 的链接（如果是 pdf 则链接可以直接在 zotero 中打开 pdf 。
-- {{fileList}}：文献的附件，为初始数据源格式，方便用户自定义。本身是一个对象列表，可以通过`.`调用其属性。具体属性的调用方法如下：
+- {{fileList}}：文献的附件，为初始数据源格式，方便用户自定义。本身是一个对象列表，可以通过`.`调用其属性，不存在则为空列表。具体属性的调用方法如下：
   - {{fileList[i].type}}：附件的类型，即文件扩展名
   - {{fileList[i].fileName}}：附件的完整文件名
   - {{fileList[i].path}}：附件的绝对路径，带有`file://`
@@ -160,7 +174,7 @@
 此外，在引用链接中还可以使用下面的变量：
 
 ```markdown
-- {{shortAuthor}}：按照IEEE格式（大概）生成较短的作者字符串，例如`Lin and Morse et al.`
+- {{shortAuthor}}：按照IEEE格式（大概）生成较短的作者字符串，例如`Lin and Morse et al.`，不存在则为空字符串
 - {{citeFileID}}：文献内容文档在思源内部的ID，用于辅助生成引用链接或者外链，例如 `20230707192208-ocs4482`
 ```
 
@@ -171,8 +185,8 @@
 如果你使用 Zotero/Juris-M (debug-bridge) 作为文献数据来源，则可使用下面的变量：
 
 ```markdown
-- {{annotations}}：文献的pdf标注，将按所属的文档区分，同样支持批注的展示。
-- {{annotationList}}：pdf批注的初始数据源格式，方便用户自定义。本身是一个对象列表，可以通过`.`调用其属性。具体属性的调用方法如下：
+- {{annotations}}：文献的pdf标注，将按所属的文档区分，同样支持批注的展示，不存在则为空字符串。
+- {{annotationList}}：pdf批注的初始数据源格式，方便用户自定义。本身是一个对象列表，可以通过`.`调用其属性，不存在则为空列表。具体属性的调用方法如下：
   - {{annotationList[i].parentKey}}：标注所在pdf条目的itemKey
   - {{annotationList[i].parentTitle}}：标注所在pdf文件的标题
   - {{annotationList[i].detail}}：单个pdf文件标注的细节，是一个列表
@@ -307,7 +321,7 @@
 - [ ] 导出支持 LATEX `长期`
 - [ ] 支持公式引用和自动编号 `长期`
 - [ ] 支持添加 Remark, Lemma 等 LATEX 定义块 `长期`
-- [ ] 美化界面 `脑子要炸`
+- [x] 美化界面 `脑子要炸`
 - [ ] 功能优化：
   - [ ] 更宽松的模板/路径格式限制 `多给我提issue`
   - [x] 更好的 Template 处理 `好难写`

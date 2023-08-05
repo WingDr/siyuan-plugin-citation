@@ -12,7 +12,6 @@ import { createLogger, type ILogger } from "../utils/simple-logger";
 import { type DatabaseType } from "../database/database";
 import { EventTrigger } from "./eventTrigger";
 import { SettingTab } from "./settingTab/settingTab";
-import { relativeTimeRounding } from "moment";
 
 interface ICommandSetting {
   supportDatabase?: DatabaseType[];
@@ -152,7 +151,7 @@ export class InteractionManager {
             if (this.validateCommand(ps)) ps.callback(protyle);
             else if (isDev) this.logger.error("Slash调用不合法：, id=>", ps.id);
           }
-        }]
+        }];
       } else return acc;
     }, []);
   }

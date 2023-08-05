@@ -82,7 +82,7 @@ export class Database {
     if (await this.checkSettings()) {
       const keys = await this.dataModal.getSelectedItems();
       if (isDev) this.logger.info("获得到Zotero中选中的条目, keys=>", keys);
-      if (!keys.length) this.plugin.noticer.info(this.plugin.i18n.notices.noSelectedItem)
+      if (!keys.length) this.plugin.noticer.info(this.plugin.i18n.notices.noSelectedItem);
       else this.insertCiteLinkBySelection(keys);
     } else {
       protyle.insert("", false, true);
@@ -101,7 +101,7 @@ export class Database {
     if (await this.checkSettings()) {
       const keys = await this.dataModal.getSelectedItems();
       if (isDev) this.logger.info("获得到Zotero中选中的条目, keys=>", keys);
-      if (!keys.length) this.plugin.noticer.info(this.plugin.i18n.notices.noSelectedItem)
+      if (!keys.length) this.plugin.noticer.info(this.plugin.i18n.notices.noSelectedItem);
       else this.copyCiteLinkBySelection(keys);
     }
   }
@@ -140,7 +140,7 @@ export class Database {
     const fileId = (this.protyle as any).protyle.block.rootID;
     await this.plugin.reference.checkRefDirExist();
     if (this.plugin.isRefPathExist) {
-      const content = await this.plugin.reference.processReferenceContents(keys, fileId)
+      const content = await this.plugin.reference.processReferenceContents(keys, fileId);
       this.plugin.reference.insertContent(this.protyle, content.join(""));
     }
   }
@@ -156,7 +156,7 @@ export class Database {
   private async copyCiteLinkBySelection(keys: string[]) {
     await this.plugin.reference.checkRefDirExist();
     if (this.plugin.isRefPathExist) {
-      const content = await this.plugin.reference.processReferenceContents(keys)
+      const content = await this.plugin.reference.processReferenceContents(keys);
       this.plugin.reference.copyContent(content.join(""), this.plugin.i18n.citeLink);
     }
   }
