@@ -19,7 +19,7 @@ export class SettingTab {
       content: `<div id="${id}" class="b3-dialog__body"/>`,
       width: this.plugin.isMobile ? "92vw" : "850px",
       height: "70vh",
-      destroyCallback: () => { component.$destroy(); }
+      destroyCallback: () => { component?.$destroy(); }
     });
 
     const component = new ExampleComponent({
@@ -38,6 +38,11 @@ export class SettingTab {
       const database = e.detail.database;
       await this.plugin.database.buildDatabase(database as DatabaseType);
       return await this.plugin.reference.checkRefDirExist();
+    });
+
+    component.$on("refresh literature note title", (e: CustomEvent<any>) => {
+      const titleTemplate = e.detail.titleTemplate as string;
+      return this.plugin.reference.refreshLiteratureNoteTitles(titleTemplate);
     });
   }
 }

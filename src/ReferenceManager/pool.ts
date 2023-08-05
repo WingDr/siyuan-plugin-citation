@@ -63,6 +63,11 @@ export class LiteraturePool {
     }
   }
 
+  public empty() {
+    this.id2keyDict = {};
+    this.key2idDict = {};
+  }
+
   private reverse(dict: {[key: string]: string}) {
     return Object.keys(dict).reduce(
       (acc, cur) => ({

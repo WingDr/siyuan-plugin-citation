@@ -1,6 +1,7 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import { type SearchRes, type Match } from "./searchDialog";
+    import { isDev } from "../../utils/constants";
 
     let resList: SearchRes[] = [];
     let selector: number = 0;
@@ -57,7 +58,7 @@
         } else if (ev.key == "ArrowDown") {
             ev.preventDefault();
             changeSelection(true);
-        } else if (ev.key == "Enter") {
+        } else if (!ev.isComposing && ev.key == "Enter") {
             const key = highlightedRes[selector].key;
             onSelection([key]);
             dispatcher("confirm");

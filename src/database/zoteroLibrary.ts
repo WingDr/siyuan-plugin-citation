@@ -166,7 +166,7 @@ export class EntryZoteroAdapter extends Entry {
 
   get files(): string[] {
     const attachments =  this.data.attachments ?? [];
-    return [...attachments.map(attach => {
+    return [...attachments.reduce((acc, attach) => {
       const fileName = attach.title;
       if (attach.path) {
         const res = (attach.path as string).split(".");
@@ -174,16 +174,16 @@ export class EntryZoteroAdapter extends Entry {
         if (fileType === "pdf") {
           const res = (attach.select as string).split("/");
           const itemID = res[res.length - 1];
-          return `[[Open]](zotero://open-pdf/library/items/${itemID})\t|\t[${fileName}](file://${attach.path})`;
+          return [...acc, `[[Open]](zotero://open-pdf/library/items/${itemID})\t|\t[${fileName}](file://${attach.path})`];
         }
-        return `[[Locate]](${attach.select})\t|\t[${fileName}](file://${attach.path})`;
-      }
-    })];
+        return [...acc, `[[Locate]](${attach.select})\t|\t[${fileName}](file://${attach.path})`];
+      } else return acc
+    }, [])];
   }
 
   get fileList(): File[] {
     const attachments =  this.data.attachments ?? [];
-    return [...attachments.map(attach => {
+    return [...attachments.reduce((acc, attach) => {
       const fileName = attach.title;
       if (attach.path) {
         const res = (attach.path as string).split(".");
@@ -194,15 +194,15 @@ export class EntryZoteroAdapter extends Entry {
           const itemID = res[res.length - 1];
           zoteroOpenURI = `zotero://open-pdf/library/items/${itemID}`;
         }
-        return {
+        return [...acc, {
           fileName,
           type: fileType,
           path: "file://" + attach.path.replace(/\\(.?)/g, (m, p1) => p1),
           zoteroOpenURI,
           zoteroSelectURI: attach.select
-        } as File;
-      }
-    })];
+        } as File];
+      } else return acc
+    }, [])];
   }
 
   get authorString() {
@@ -219,7 +219,7 @@ export class EntryZoteroAdapter extends Entry {
       });
       return names.join(", ");
     } else {
-      return "";
+      return null;
     }
   }
 
@@ -288,7 +288,7 @@ export class EntryZoteroAdapter extends Entry {
     } else if (this.type === "thesis") {
       return `${this.publisher} ${this.thesis}`;
     } else {
-      return "";
+      return null;
     }
   }
 

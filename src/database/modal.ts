@@ -40,6 +40,13 @@ export abstract class DataModal {
   public abstract getCollectedNotesFromKey(key: string);
   public abstract showSearching(protyle:Protyle, onSelection: (keys: string[]) => void);
   public abstract getTotalKeys(): string[];
+  public async getSelectedItems(): Promise<string[]> {
+    if (isDev) this.logger.info("改数据模型无法执行此方法，modal=>", this);
+    return [];
+  }
+  public async updateDataSourceItem(key: string, content: {[attr: string]: any}) {
+    if (isDev) this.logger.info("改数据模型无法执行此方法，modal=>", this);
+  }
 }
 
 function processKey(key: string): [number, string] {
@@ -86,7 +93,7 @@ export class FilesModal extends DataModal {
     };
     return this.loadLibrary().then(library => {
       if (library) {
-        this.plugin.noticer.info(this.plugin.i18n.notices.loadLibrarySuccess.replace("${size}", library.size));
+        this.plugin.noticer.info(this.plugin.i18n.notices.loadLibrarySuccess, {size: library.size});
         this.library = library;
         this.fuse = new Fuse(library.entryList, options);
         if (isDev) this.logger.info("Build file modal successfully");
@@ -246,7 +253,7 @@ export class ZoteroModal extends DataModal {
       if (isDev) this.logger.info("获取到citekey =>", {citekey});
       this.onSelection(citekey);
     } else {
-      this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string).replace("${type}", this.type));
+      this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string), {type: this.type});
     }
   }
 
@@ -271,7 +278,7 @@ export class ZoteroModal extends DataModal {
       if (isDev) this.logger.info("文献内容 =>", entry);
       return entry;
     } else {
-      this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string).replace("${type}", this.type));
+      this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string), {type: this.type});
       return null;
     }
   }
@@ -294,7 +301,7 @@ export class ZoteroModal extends DataModal {
         return `\n\n---\n\n###### Note No.${index+1}\n\n\n\n` + htmlNotesProcess(singleNote.replace(/\\(.?)/g, (m, p1) => p1));
       }).join("\n\n");
     } else {
-      this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string).replace("${type}", this.type));
+      this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string), {type: this.type});
       return "";
     }
   }
@@ -398,18 +405,13 @@ export class ZoteroDBModal extends DataModal {
       this.searchDialog = new SearchDialog(this.plugin);
       this.searchDialog.showSearching(this.search.bind(this), onSelection);
     } else {
-      this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string).replace("${type}", this.type));
+      this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string), {type: this.type});
     }
   }
 
   public async getContentFromKey (key: string) {
-    if (await this.checkZoteroRunning()) {
-      let itemKey = this.useItemKey ? key : await this.getItemKeyByCitekey(...processKey(key));
-      if (!(await this.checkItemKeyExist(...processKey(itemKey)))) itemKey = this.useItemKey ? await this.getItemKeyByCitekey(...processKey(key)) : key;
-      if (!processKey(itemKey)[1].length) {
-        this.logger.error("不存在key，key=>", {itemKey});
-        return null;
-      }
+    const itemKey = await this.checkBeforeRunning(key);
+    if (itemKey) {
       const res = await this.getItemByItemKey(...processKey(itemKey));
       if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, res);
       const zoteroEntry = new EntryZoteroAdapter(res as EntryDataZotero, this.useItemKey);
@@ -417,28 +419,59 @@ export class ZoteroDBModal extends DataModal {
       if (entry.files) entry.files = entry.files.join("\n");
       if (isDev) this.logger.info("文献内容 =>", entry);
       return entry;
-    } else {
-      this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string).replace("${type}", this.type));
-      return null;
-    }
+    } else return null;
   }
 
   public async getCollectedNotesFromKey(key: string) {
-    if (await this.checkZoteroRunning()) {
-      const itemKey = this.useItemKey ? key : await this.getItemKeyByCitekey(...processKey(key));
+    const itemKey = await this.checkBeforeRunning(key);
+    if (itemKey) {
       const res = await this.getNotesByItemKey(...processKey(itemKey));
       if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, res);
       return (res as any[]).map((singleNote, index) => {
         return `\n\n---\n\n###### Note No.${index+1}\t[[Locate]](zotero://select/items/0_${singleNote.key}/)\t[[Open]](zotero://note/u/${singleNote.key}/)\n\n\n\n` + htmlNotesProcess(singleNote.note.replace(/\\(.?)/g, (m, p1) => p1));
       }).join("\n\n");
-    } else {
-      this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string).replace("${type}", this.type));
-      return "";
-    }
+    } else return "";
   }
 
   public getTotalKeys(): string[] {
     return this.plugin.literaturePool.keys;
+  }
+
+  public async getSelectedItems(): Promise<string[]> {
+    if (await this.checkZoteroRunning()) {
+      return await this._getSelectedItems();
+    } else {
+      this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string), {type: this.type});
+      return null;
+    }
+  }
+
+  public async updateDataSourceItem(key: string, content: {[attr: string]: any}) {
+    const itemKey = await this.checkBeforeRunning(key);
+    if (itemKey) {
+      if (isDev) this.logger.info("更新Zotero数据, detail=>", {key, content});
+      Object.keys(content).forEach(attr => {
+        switch (attr) {
+          case "backlink": this._updateURLToItem(...processKey(itemKey), content[attr].title, content[attr].url); break;
+          case "tags": this._addTagsToItem(...processKey(itemKey), content[attr]);
+        }
+      });
+    } else return null;
+  }
+
+  private async checkBeforeRunning(key: string): Promise<string | null> {
+    if (await this.checkZoteroRunning()) {
+      let itemKey = this.useItemKey ? key : await this.getItemKeyByCitekey(...processKey(key));
+      if (!(await this.checkItemKeyExist(...processKey(itemKey)))) itemKey = this.useItemKey ? await this.getItemKeyByCitekey(...processKey(key)) : key;
+      if (!processKey(itemKey)[1].length) {
+        this.logger.error("不存在key，key=>", {itemKey});
+        return null;
+      }
+      return itemKey;
+    } else {
+      this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string), {type: this.type});
+      return null;
+    }
   }
 
   private search(pattern: string) {
@@ -446,48 +479,69 @@ export class ZoteroDBModal extends DataModal {
     return this.fuse.search(adaptedSearchPattern);
   }
 
-  private getPort(type: ZoteroType): "23119" | "24119" {
+  private _getPort(type: ZoteroType): "23119" | "24119" {
     return type === "Zotero" ? "23119" : "24119";
+  }
+
+  private async _addTagsToItem(libraryID: number, itemKey: string, tags: string) {
+    return await this._callZoteroJS("addTagsToItem", `
+      var key = "${itemKey}";
+      var libraryID = ${libraryID};
+      var tags = "${tags}";
+    `);
   }
 
   private async checkItemKeyExist(libraryID: number, itemKey: string): Promise<boolean> {
     if (!itemKey.length) return false;
-    return (await this.callZoteroJS("checkItemKeyExist", `
+    return (await this._callZoteroJS("checkItemKeyExist", `
       var key = "${itemKey}";
       var libraryID = ${libraryID};
     `)).itemKeyExist;
   }
 
   private async checkZoteroRunning(): Promise<boolean> {
-    return (await this.callZoteroJS("checkRunning", "")).ready;
+    return (await this._callZoteroJS("checkRunning", "")).ready;
   }
 
   private async getAllItems(): Promise<SearchItem[]> {
-    return await this.callZoteroJS("getAllItems", "");
+    return await this._callZoteroJS("getAllItems", "");
   }
 
   private async getItemByItemKey(libraryID: number, itemKey: string) {
-    return await this.callZoteroJS("getItemByItemKey", `
+    return await this._callZoteroJS("getItemByItemKey", `
       var key = "${itemKey}";
       var libraryID = ${libraryID};
     `);
   }
 
   private async getItemKeyByCitekey(libraryID: number, citekey: string) {
-    return (await this.callZoteroJS("getItemKeyByCiteKey", `
+    return (await this._callZoteroJS("getItemKeyByCiteKey", `
       var citekey = "${citekey}";
       var libraryID = ${libraryID};
     `)).itemKey;
   }
 
   private async getNotesByItemKey(libraryID: number, itemKey: string) {
-    return await this.callZoteroJS("getNotesByItemKey", `
+    return await this._callZoteroJS("getNotesByItemKey", `
       var key = "${itemKey}";
       var libraryID = ${libraryID};
     `);
   }
 
-  private async callZoteroJS(filename: string, prefix: string) {
+  private async _getSelectedItems() {
+    return await this._callZoteroJS("getSelectedItems", "");
+  }
+
+  private async _updateURLToItem(libraryID: number, itemKey: string, title: string, url: string) {
+    return await this._callZoteroJS("updateURLToItem", `
+      var key = "${itemKey}";
+      var libraryID = ${libraryID};
+      var url = "${url}";
+      var title = "${title}";
+    `);
+  }
+
+  private async _callZoteroJS(filename: string, prefix: string) {
     const password = this.plugin.data[STORAGE_NAME].dbPassword;
     const jsContent = fs.readFileSync(path.join(this.absZoteroJSPath, filename+".ts"), "utf-8");
     if (isDev) this.logger.info("向debug-bridge发送数据，fetchData=>", {
@@ -496,12 +550,12 @@ export class ZoteroDBModal extends DataModal {
     });
     const Result = await axios({
       method: "post",
-      url: `http://127.0.0.1:${this.getPort(this.type)}/debug-bridge/execute?password=${password}`,
+      url: `http://127.0.0.1:${this._getPort(this.type)}/debug-bridge/execute?password=${password}`,
       headers: JSHeaders,
       data: prefix + "\n" + jsContent
     }).catch(e => {
       if (isDev) this.logger.error("访问Zotero发生错误, error=>", e);
-      if (e.response.data === "invalid password") this.plugin.noticer.error(this.plugin.i18n.errors.wrongDBPassword);
+      if (e.response?.data === "invalid password") this.plugin.noticer.error(this.plugin.i18n.errors.wrongDBPassword);
       return {
         data: JSON.stringify({
           ready: false

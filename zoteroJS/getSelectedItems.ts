@@ -3,6 +3,7 @@
 var selectedItems = Zotero.getActiveZoteroPane().getSelectedItems();
 var resItems = [];
 selectedItems.forEach(item => {
-  resItems.push(Zotero.Items.get(item.id).key);
+  var item = Zotero.Items.get(item.id);
+  resItems.push(item.libraryID + "_" + item.key);
 })
 return JSON.stringify(resItems);

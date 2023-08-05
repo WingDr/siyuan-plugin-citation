@@ -3,7 +3,7 @@
   "author": "WingDr",
   "url": "https://github.com/WingDr/siyuan-plugin-citation",
   "version": "0.1.2",
-  "minAppVersion": "2.9.4",
+  "minAppVersion": "2.9.8",
   "backends": ["windows", "linux", "darwin"],
   "frontends": ["desktop"],
   "i18n": ["en_US", "zh_CN"],

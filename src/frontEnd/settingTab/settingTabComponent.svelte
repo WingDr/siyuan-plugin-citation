@@ -98,7 +98,8 @@
       icon: "",
     },
   ];
-  $: isDebugBridge = ["Zotero (debug-bridge)", "Juris-M (debug-bridge)"].indexOf(database) != -1;
+
+  $: isDebugBridge = _checkDebugBridge(database);
 
   const dispatcher = createEventDispatcher();
 
@@ -187,6 +188,11 @@
     displayPanels = generatePanels(panels);
   }
 
+  function _checkDebugBridge(dtype): boolean {
+    if (["Zotero (debug-bridge)", "Juris-M (debug-bridge)"].indexOf(dtype) != -1) return true;
+    else return false;
+  }
+
   onMount(async () => {
     const fs = window.require("fs");
     const path = window.require("path");
@@ -238,10 +244,7 @@
       }
       if (refreshName)
         plugin.noticer.info(
-          (plugin.i18n.notices.changeKey as string).replace(
-            "${keyType}",
-            settingData.useItemKey ? "itemKey" : "citekey"
-          )
+          (plugin.i18n.notices.changeKey as string), {keyType: settingData.useItemKey ? "itemKey" : "citekey"}
         );
       if (isDev) logger.info("数据保存成功, settingData=>", settingData);
     });
@@ -337,6 +340,7 @@
             );
           database = event.detail.value;
           displayPanels = generatePanels(panels);
+          if (!_checkDebugBridge(database)) useItemKey = false;
         }}
       />
     </Item>
@@ -443,6 +447,25 @@
                   `Input changed: ${event.detail.key} = ${event.detail.value}`
                 );
               titleTemplate = event.detail.value;
+            }}
+          />
+        </Item>
+        <!-- 刷新全部文档标题 -->
+        <Item
+          block={false}
+          title={plugin.i18n.settingTab.templates.siyuan.refreshLiteratureNoteBtnTitle}
+          text={plugin.i18n.settingTab.templates.siyuan.refreshLiteratureNoteBtnDesciption}
+        >
+          <Input
+            slot="input"
+            block={false}
+            normal={true}
+            type={ItemType.button}
+            settingKey="Button"
+            settingValue={plugin.i18n.settingTab.templates.siyuan.refreshLiteratureNoteBtnText}
+            on:clicked={() => {
+              if (isDev) logger.info("Button clicked");
+              dispatcher("refresh literature note title", { titleTemplate });
             }}
           />
         </Item>

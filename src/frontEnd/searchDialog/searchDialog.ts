@@ -40,7 +40,7 @@ export class SearchDialog {
       content: `<div id="${id}" class="b3-dialog__body"/>`,
       width: this.plugin.isMobile ? "92vw" : "640px",
       height: "40vh",
-      destroyCallback: () => {if (isDev) this.logger.info("关闭搜索界面");}
+      destroyCallback: () => { component?.$destroy(); }
     });
 
     const component = new SearchDialogComponent({
@@ -67,7 +67,8 @@ export class SearchDialog {
     });
 
     component.$on("confirm", ()=> {
-      this.searchDialog.destroy();
+      if (isDev) this.logger.info("关闭搜索界面");
+      return this.searchDialog.destroy();
     });
   }
 }

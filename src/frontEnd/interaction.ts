@@ -12,6 +12,7 @@ import { createLogger, type ILogger } from "../utils/simple-logger";
 import { type DatabaseType } from "../database/database";
 import { EventTrigger } from "./eventTrigger";
 import { SettingTab } from "./settingTab/settingTab";
+import { relativeTimeRounding } from "moment";
 
 interface ICommandSetting {
   supportDatabase?: DatabaseType[];
@@ -39,11 +40,93 @@ export class InteractionManager {
   public plugin: SiYuanPluginCitation;
   public setting: Setting;
   private logger: ILogger;
+  private protyleSlashs: any[];
+  private commands:ICommandSetting[];
 
   constructor (plugin: SiYuanPluginCitation) {
     this.plugin = plugin;
     this.logger = createLogger("interaction manager");
     this.plugin.eventTrigger = new EventTrigger(plugin);
+    this.protyleSlashs = [
+      {
+        filter: [this.plugin.i18n.addCitation, "插入文献引用", "addcitation", "charuwenxianyinyong"],
+        html: `<div class = "b3-list-item__first">
+          <svg class="b3-list-item__graphic">
+            <use xlink:href="#iconRef"></use>
+          </svg>
+          <span class="b3-list-item__text">${this.plugin.i18n.addCitation}</span>
+        </div>`,
+        id: "add-citation",
+        callback: async (protyle: Protyle) => {
+          return this.plugin.database.insertCiteLink(protyle);
+        }
+      },
+      {
+        filter: [this.plugin.i18n.addNotes, "插入文献笔记", "addnotesofliterature", "charuwenxianbiji"],
+        html: `<div class = "b3-list-item__first">
+          <svg class="b3-list-item__graphic">
+            <use xlink:href="#iconRef"></use>
+          </svg>
+          <span class="b3-list-item__text">${this.plugin.i18n.addNotes}</span>
+        </div>`,
+        id: "add-notes",
+        callback: async (protyle: Protyle) => {
+          return this.plugin.database.insertNotes(protyle);
+        }
+      },
+      {
+        filter: [this.plugin.i18n.addSelectedItems, "引用Zotero中选中的条目", "addzoteroselecteditemscitations", "yinyongzoterozhongxuanzhongdetiaomu"],
+        html: `<div class = "b3-list-item__first">
+          <svg class="b3-list-item__graphic">
+            <use xlink:href="#iconRef"></use>
+          </svg>
+          <span class="b3-list-item__text">${this.plugin.i18n.addSelectedItems}</span>
+        </div>`,
+        id: "add-selected-items",
+        callback: async (protyle: Protyle) => {
+          return this.plugin.database.insertSelectedCiteLink(protyle);
+        },
+        supportDatabase: ["Juris-M (debug-bridge)", "Zotero (debug-bridge)"],
+      }
+    ];
+    this.commands = [
+      {
+        langKey: "addCitation",
+        hotkey: "⌥⇧A",
+        editorCallback: (p) => {
+          const protyle = p.getInstance();
+          this.plugin.database.insertCiteLink(protyle);
+        },
+        callback: () => { return this.plugin.database.copyCiteLink(); }
+      },
+      {
+        langKey: "addNotes",
+        hotkey: "",
+        editorCallback: (p) => {
+          const protyle = p.getInstance();
+          this.plugin.database.insertNotes(protyle);
+        },
+        callback: () => { return this.plugin.database.copyNotes(); }
+      },
+      {
+        langKey: "reloadDatabase",
+        hotkey: "",
+        callback: async () => {
+          await this.plugin.reference.checkRefDirExist();
+          return this.plugin.database.buildDatabase(this.plugin.data[STORAGE_NAME].database as DatabaseType);
+        }
+      },
+      {
+        supportDatabase: ["Juris-M (debug-bridge)", "Zotero (debug-bridge)"],
+        langKey: "addSelectedItems",
+        hotkey: "",
+        callback: () => { return this.plugin.database.copySelectedCiteLink();},
+        editorCallback: (p) => {
+          const protyle = p.getInstance();
+          this.plugin.database.insertSelectedCiteLink(protyle);
+        }
+      }
+    ];
   }
 
   /**
@@ -58,75 +141,21 @@ export class InteractionManager {
   }
 
   public async customProtyleSlash() {
-    return [{
-      filter: [this.plugin.i18n.addCitation, "插入文献引用", "addcitation", "charuwenxianyinyong"],
-      html: `<div class = "b3-list-item__first">
-        <svg class="b3-list-item__graphic">
-          <use xlink:href="#iconRef"></use>
-        </svg>
-        <span class="b3-list-item__text">${this.plugin.i18n.addCitation}</span>
-      </div>`,
-      id: "add-literature-citation",
-      callback: async (protyle: Protyle) => {
-        if (isDev) this.logger.info("Slash触发：add literature citation", protyle);
-        return this.plugin.database.insertCiteLink(protyle);
-      }
-    },
-    {
-      filter: [this.plugin.i18n.addNotes, "插入文献笔记", "addnotesofliterature", "charuwenxianbiji"],
-      html: `<div class = "b3-list-item__first">
-        <svg class="b3-list-item__graphic">
-          <use xlink:href="#iconRef"></use>
-        </svg>
-        <span class="b3-list-item__text">${this.plugin.i18n.addNotes}</span>
-      </div>`,
-      id: "add-literature-notes",
-      callback: async (protyle: Protyle) => {
-        if (isDev) this.logger.info("Slash触发：add literature citation", protyle);
-        return this.plugin.database.insertNotes(protyle);
-      }
-    }];
+    return this.protyleSlashs.reduce((acc, ps) => {
+      if (this.validateCommand(ps)) {
+        return [...acc, {
+          filter: ps.filter,
+          html: ps.html,
+          id: ps.id,
+          callback: (protyle: Protyle) => {
+            if (isDev) this.logger.info(`Slash触发：${ps.id}, protyle=>`, protyle);
+            if (this.validateCommand(ps)) ps.callback(protyle);
+            else if (isDev) this.logger.error("Slash调用不合法：, id=>", ps.id);
+          }
+        }]
+      } else return acc;
+    }, []);
   }
-
-  private commands:ICommandSetting[] = [
-    {
-      langKey: "addCitation",
-      hotkey: "⌥⇧A",
-      editorCallback: (p) => {
-        const protyle = p.getInstance();
-        this.plugin.database.insertCiteLink(protyle);
-      }
-    },
-    {
-      langKey: "reloadDatabase",
-      hotkey: "",
-      callback: async () => {
-        await this.plugin.reference.checkRefDirExist();
-        return this.plugin.database.buildDatabase(this.plugin.data[STORAGE_NAME].database as DatabaseType);
-      }
-    },
-    {
-      langKey: "refreshLiteratureNotesTitle",
-      hotkey: "",
-      callback: () => { return this.plugin.reference.refreshLiteratureNoteTitles(); }
-    },
-    {
-      langKey: "copyCiteLink",
-      hotkey: "",
-      callback: () => { return this.plugin.database.copyCiteLink(); }
-    },
-    {
-      langKey: "copyNotes",
-      hotkey: "",
-      callback: () => { return this.plugin.database.copyNotes(); }
-    },
-    {
-      supportDatabase: ["Juris-M (debug-bridge)", "Zotero (debug-bridge)"],
-      langKey: "addSelectedItems",
-      hotkey: "",
-      callback: () => { return ;}
-    }
-  ];
 
   public async customCommand() {
     this.commands.forEach(command => {
@@ -142,6 +171,19 @@ export class InteractionManager {
           editorCallback: (p) => {
             if (isDev) this.logger.info(`Command触发：${command.langKey}`);
             if (command.editorCallback && this.validateCommand(command)) command.editorCallback(p);
+            else if (command.callback && this.validateCommand(command)) command.callback();
+            else if (isDev) this.logger.error(`Command调用不合法：${command.langKey}`);
+          },
+          dockCallback: (e) => {
+            if (isDev) this.logger.info(`Command触发：${command.langKey}`);
+            if (command.dockCallback && this.validateCommand(command)) command.dockCallback(e);
+            else if (command.callback && this.validateCommand(command)) command.callback();
+            else if (isDev) this.logger.error(`Command调用不合法：${command.langKey}`);
+          },
+          fileTreeCallback: (file) => {
+            if (isDev) this.logger.info(`Command触发：${command.langKey}`);
+            if (command.fileTreeCallback && this.validateCommand(command)) command.fileTreeCallback(file);
+            else if (command.callback && this.validateCommand(command)) command.callback();
             else if (isDev) this.logger.error(`Command调用不合法：${command.langKey}`);
           }
         });
@@ -149,7 +191,7 @@ export class InteractionManager {
     });
   }
 
-  private validateCommand(command: ICommandSetting): boolean {
+  private validateCommand(command: {supportDatabase?: DatabaseType[number][]}): boolean {
     const database = this.plugin.data[STORAGE_NAME].database;
     if (!command.supportDatabase || command.supportDatabase.indexOf(database) != -1) return true;
     return false;

@@ -44,6 +44,9 @@
         "title": "SiYuan Content Template",
         "titleTemplateInputTitle": "Literature Note Title Template",
         "titleTemplateInputDescription": "Set the title template for generating literature note documents (User modifications will <b>not</b> be refreshed, can be regenerated with 'Refresh All Literature Note Titles').",
+        "refreshLiteratureNoteBtnTitle": "Refresh All Literature Note Titles",
+        "refreshLiteratureNoteBtnDesciption": "Refresh the titles of all documents in the literature library. It will also update the document names (after switching index variables or updating versions).",
+        "refreshLiteratureNoteBtnText": "Refresh",
         "noteTempTexareaTitle": "Literature Note Template",
         "noteTempTexareaDescription": "Set the content template for storing literature documents in the library.",
         "CustomCiteTextSwitchTitle": "Custom Citation",
@@ -55,8 +58,8 @@
         "title": "Zotero Content Template",
         "notAbleTitle": "Cannot Insert Content into Zotero",
         "notAbleDescription": "The <b>database type</b> being used does not support inserting content into Zotero.",
-        "zoteroLinkTitleTemplateTitle": "Insert Zotero Link Title Template",
-        "zoteroLinkTitleTemplateDescription": "Set the template for inserting SiYuan backlinks into Zotero's corresponding item when inserting literature. Leave it blank to avoid adding backlinks, set it to \"{{siyuan-link}}\" to insert without adding a title.",
+        "zoteroLinkTitleTemplateTitle": "Insert Zotero Back Link Title Template",
+        "zoteroLinkTitleTemplateDescription": "Set the template for inserting SiYuan backlinks into Zotero's corresponding item when inserting literature. Leave it blank to avoid adding backlinks. The variable \"{{siyuan-link}}\" means the back-link-url itself.",
         "zoteroTagTemplateTitle": "Insert Zotero Tag Template",
         "zoteroTagTemplateDescription": "Set the template for adding tags to the corresponding Zotero item when inserting literature. Leave it blank to avoid adding tags; insert multiple tags separated by commas."
       }
@@ -86,6 +89,7 @@
     "loadRefSuccess": "Successfully imported ${size} literature citations",
     "refreshTitleSuccess": "Successfully refreshed ${size} literature note document titles",
     "copyContentSuccess": "${type} has been copied to the clipboard",
-    "changeKey": "Successfully switched indexes. Literature index has been changed to ${keyType}."
+    "changeKey": "Successfully switched indexes. Literature index has been changed to ${keyType}.",
+    "noSelectedItem": "There is no selected item."
   }
 }

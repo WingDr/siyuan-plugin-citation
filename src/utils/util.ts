@@ -83,9 +83,9 @@ function fsStat(path: string) {
 
 export async function loadLocalRef(plugin: SiYuanPluginCitation): Promise<any> {
   const logger = createLogger("load references");
-  const noticer = createNoticer();
   const notebookId = plugin.data[STORAGE_NAME].referenceNotebook as string;
   const refPath = plugin.data[STORAGE_NAME].referencePath as string;
+  plugin.literaturePool.empty();
   const limit = 20;
   let offset = 0;
   let cont = true;
@@ -106,7 +106,7 @@ export async function loadLocalRef(plugin: SiYuanPluginCitation): Promise<any> {
       offset += limit;
   }
   if (isDev) logger.info("成功载入引用，content=>", plugin.literaturePool.content);
-  noticer.info(plugin.i18n.notices.loadRefSuccess.replace("${size}", plugin.literaturePool.size));
+  plugin.noticer.info(plugin.i18n.notices.loadRefSuccess, {size: plugin.literaturePool.size});
 }
 
 export function generateFileLinks(files: string[]) {

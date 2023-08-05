@@ -16,7 +16,7 @@
   "refreshLiteratureNotesTitle": "刷新所有文献内容文档标题",
   "copyCiteLink": "复制文献引用",
   "copyNotes": "复制文献笔记",
-  "addSelectedItems": "插入在Zotero中选中的文献",
+  "addSelectedItems": "引用Zotero中选中的文献",
   "settingTab": {
     "settingTabTitle": "插件版本：${version}",
     "settingTabDescription": "如果有好的想法或者发现了bug，欢迎到github上提<a href=\"${issuesURL}\"><b>issue</b></a>或者发邮件到我的<a href=\"mailto:${e-mail}\"><b>邮箱</b></a>",
@@ -44,6 +44,9 @@
         "title": "思源内容模板",
         "titleTemplateInputTitle": "文献内容文档标题模板",
         "titleTemplateInputDescription": "设置文献内容文档的生成标题（用户修改后<b>不会</b>刷新，可以通过“刷新所有文献内容文档标题”重新生成标题）",
+        "refreshLiteratureNoteBtnTitle": "刷新所有文献内容文档标题",
+        "refreshLiteratureNoteBtnDesciption": "刷新文献库中所有文档的标题，同时也会更新文档的命名（切换索引变量或者更新版本之后）",
+        "refreshLiteratureNoteBtnText": "刷新",
         "noteTempTexareaTitle": "文献内容模板",
         "noteTempTexareaDescription": "设置在文献库中储存的文献文档的内容模板",
         "CustomCiteTextSwitchTitle": "自定义引用",
@@ -55,8 +58,8 @@
         "title": "Zotero内容模板",
         "notAbleTitle": "无法向Zotero中插入内容",
         "notAbleDescription": "当然使用的<b>数据库类型</b>不支持向Zotero中插入内容",
-        "zoteroLinkTitleTemplateTitle": "插入Zotero链接标题模板",
-        "zoteroLinkTitleTemplateDescription": "设置当插入文献的同时插入到Zotero对应条目下的思源反链的标题模板，置空则不会添加反链，设置为\"{{siyuan-link}}\"则插入但不添加标题",
+        "zoteroLinkTitleTemplateTitle": "插入Zotero反向链接标题模板",
+        "zoteroLinkTitleTemplateDescription": "设置当插入文献的同时插入到Zotero对应条目下的思源反链的标题模板，置空则不会添加反链，变量\"{{siyuanLink}}\"代表链接本身",
         "zoteroTagTemplateTitle": "插入Zotero标签模板",
         "zoteroTagTemplateDescription": "设置当插入文献的同时添加到对应条目的标签的模板，置空则默认不添加标签，插入多个标签用逗号隔开"
       }
@@ -86,6 +89,7 @@
     "loadRefSuccess": "成功导入${size}个文献引用",
     "refreshTitleSuccess": "成功刷新${size}篇文献内容文档标题",
     "copyContentSuccess": "${type}已在剪贴板",
-    "changeKey": "切换索引成功，文献索引已经切换到${keyType}。"
+    "changeKey": "切换索引成功，文献索引已经切换到${keyType}。",
+    "noSelectedItem": "没有选中的文献"
   }
 }

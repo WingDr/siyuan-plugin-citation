@@ -22,7 +22,11 @@ export const createNoticer = (): INoticer => {
   const log = (level: "info" | "error", msg: any, timeout: number, obj?: any) => {
     const time = formatDate(new Date());
     if (obj) {
-      showMessage(`[${sign}] [${time}] ${msg}\n` + JSON.stringify(obj), timeout, level);
+      let finalMsg = msg as string;
+      Object.keys(obj).forEach(key => {
+        finalMsg = finalMsg.replaceAll(`$\{${key}\}`, obj[key]);
+      })
+      showMessage(`[${sign}] [${time}] ${finalMsg}`, timeout, level);
     } else {
       showMessage(`[${sign}] [${time}] ${msg}`, timeout, level);
     }

@@ -63,19 +63,13 @@ export class Database {
     loadLocalRef(this.plugin);
   }
 
+
+  // Group: 功能接口
+
   public async insertCiteLink(protyle: Protyle) {
     this.protyle = protyle;
-    await this.plugin.reference.checkRefDirExist();
-    if (this.plugin.data[STORAGE_NAME].referenceNotebook === "") {
-      this.plugin.noticer.error(this.plugin.i18n.errors.notebookUnselected);
-      if (isDev) this.logger.error("未选择笔记本！");
-    } else if (!this.plugin.isRefPathExist) {
-      protyle.insert("", false, true);
-      this.plugin.noticer.error(this.plugin.i18n.errors.refPathInvalid);
-      if (isDev) this.logger.error("文献库路径不存在！");
-    } else {
-      return this.dataModal.showSearching(protyle, this.insertCiteLinkBySelection.bind(this));
-    }
+    if (await this.checkSettings()) return this.dataModal.showSearching(protyle, this.insertCiteLinkBySelection.bind(this));
+    else protyle.insert("", false, true);
   }
 
   public insertNotes(protyle:Protyle) {
@@ -83,13 +77,37 @@ export class Database {
     this.dataModal.showSearching(protyle, this.insertNotesBySelection.bind(this));
   }
 
-  public copyCiteLink() {
-    this.dataModal.showSearching(null, this.copyCiteLinkBySelection.bind(this));
+  public async insertSelectedCiteLink(protyle: Protyle) {
+    this.protyle = protyle;
+    if (await this.checkSettings()) {
+      const keys = await this.dataModal.getSelectedItems();
+      if (isDev) this.logger.info("获得到Zotero中选中的条目, keys=>", keys);
+      if (!keys.length) this.plugin.noticer.info(this.plugin.i18n.notices.noSelectedItem)
+      else this.insertCiteLinkBySelection(keys);
+    } else {
+      protyle.insert("", false, true);
+    }
+  }
+
+  public async copyCiteLink() {
+    if (await this.checkSettings()) return this.dataModal.showSearching(null, this.copyCiteLinkBySelection.bind(this));
   }
 
   public copyNotes() {
     this.dataModal.showSearching(null, this.copyNotesBySelection.bind(this));
   }
+
+  public async copySelectedCiteLink() {
+    if (await this.checkSettings()) {
+      const keys = await this.dataModal.getSelectedItems();
+      if (isDev) this.logger.info("获得到Zotero中选中的条目, keys=>", keys);
+      if (!keys.length) this.plugin.noticer.info(this.plugin.i18n.notices.noSelectedItem)
+      else this.copyCiteLinkBySelection(keys);
+    }
+  }
+
+
+  // Group: 间接通用接口
 
   public async getContentByKey(key: string) {
     const content = await this.dataModal.getContentFromKey(key);
@@ -100,25 +118,29 @@ export class Database {
     return this.dataModal.getTotalKeys();
   }
 
+  public async updateDataSourceItem(key: string, content: {[attr: string]: any}) {
+    return this.dataModal.updateDataSourceItem(key, content);
+  }
+
+  private async checkSettings(): Promise<boolean> {
+    await this.plugin.reference.checkRefDirExist();
+    if (this.plugin.data[STORAGE_NAME].referenceNotebook === "") {
+      this.plugin.noticer.error(this.plugin.i18n.errors.notebookUnselected);
+      if (isDev) this.logger.error("未选择笔记本！");
+    } else if (!this.plugin.isRefPathExist) {
+      this.plugin.noticer.error(this.plugin.i18n.errors.refPathInvalid);
+      if (isDev) this.logger.error("文献库路径不存在！");
+    } else {
+      return true;
+    }
+    return false;
+  }
+
   private async insertCiteLinkBySelection(keys: string[]) {
     const fileId = (this.protyle as any).protyle.block.rootID;
     await this.plugin.reference.checkRefDirExist();
     if (this.plugin.isRefPathExist) {
-      const literatureEnum = await this.plugin.reference.getLiteratureEnum(fileId);
-      const existNotes = this.plugin.literaturePool.keys;
-      const insertContent = keys.map(async key => {
-        const idx = existNotes.indexOf(key);
-        await this.plugin.reference.updateLiteratureNote(key);
-        const citeId = this.plugin.literaturePool.get(key);
-        let link = "";
-        if (idx == -1) {
-          link = await this.plugin.reference.generateCiteLink(key, literatureEnum.length + 1, false);
-        } else {
-          link = await this.plugin.reference.generateCiteLink(key, idx, false);
-        }
-        return await this.plugin.reference.generateCiteRef(citeId, link);
-      });
-      const content = await Promise.all(insertContent);
+      const content = await this.plugin.reference.processReferenceContents(keys, fileId)
       this.plugin.reference.insertContent(this.protyle, content.join(""));
     }
   }
@@ -134,15 +156,7 @@ export class Database {
   private async copyCiteLinkBySelection(keys: string[]) {
     await this.plugin.reference.checkRefDirExist();
     if (this.plugin.isRefPathExist) {
-      const existNotes = this.plugin.literaturePool.keys;
-      const insertContent = keys.map(async key => {
-        const idx = existNotes.indexOf(key);
-        await this.plugin.reference.updateLiteratureNote(key);
-        const citeId = this.plugin.literaturePool.get(key);
-        const link = await this.plugin.reference.generateCiteLink(key, idx, false);
-        return this.plugin.reference.generateCiteRef(citeId, link);
-      });
-      const content = await Promise.all(insertContent);
+      const content = await this.plugin.reference.processReferenceContents(keys)
       this.plugin.reference.copyContent(content.join(""), this.plugin.i18n.citeLink);
     }
   }
