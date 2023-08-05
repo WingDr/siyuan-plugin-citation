@@ -391,19 +391,28 @@ export class ZoteroDBModal extends DataModal {
     this.protyle = protyle;
     if (await this.checkZoteroRunning()) {
       if (isDev) this.logger.info(`${this.type}已运行`);
-      const items = await this.getAllItems();
-      if (isDev) this.logger.info(`从${this.type}接收到数据 =>`, items);
-      if (!this.useItemKey && !items[0].citationKey.length) {
-        this.plugin.noticer.error(this.plugin.i18n.errors.bbtDisabled as string);
-        return null;
+      const dbSearchDialogType = this.plugin.data[STORAGE_NAME].dbSearchDialogType;
+      if (dbSearchDialogType === "SiYuan") {
+        const items = await this.getAllItems();
+        if (isDev) this.logger.info(`从${this.type}接收到数据 =>`, items);
+        if (!this.useItemKey && !items[0].citationKey.length) {
+          this.plugin.noticer.error(this.plugin.i18n.errors.bbtDisabled as string);
+          return null;
+        }
+        const searchItems = items.map(item => {
+          return new EntryZoteroAdapter(item, this.useItemKey);
+        });
+        this.fuse = new Fuse(searchItems, this.searchOptions);
+        if (isDev) this.logger.info("打开搜索界面");
+        this.searchDialog = new SearchDialog(this.plugin);
+        this.searchDialog.showSearching(this.search.bind(this), onSelection);
+      } else if (dbSearchDialogType === "Zotero") {
+        const results = await this._citeWithZoteroDialog();
+        if (isDev) this.logger.info("在Zotero中选择文献, results=>", results);
+        return onSelection(results.map(res => {
+          return `${res.libraryID}_${res.key}`;
+        }));
       }
-      const searchItems = items.map(item => {
-        return new EntryZoteroAdapter(item, this.useItemKey);
-      });
-      this.fuse = new Fuse(searchItems, this.searchOptions);
-      if (isDev) this.logger.info("打开搜索界面");
-      this.searchDialog = new SearchDialog(this.plugin);
-      this.searchDialog.showSearching(this.search.bind(this), onSelection);
     } else {
       this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string), {type: this.type});
     }
@@ -501,6 +510,10 @@ export class ZoteroDBModal extends DataModal {
 
   private async checkZoteroRunning(): Promise<boolean> {
     return (await this._callZoteroJS("checkRunning", "")).ready;
+  }
+
+  private async _citeWithZoteroDialog(): Promise<{key: string, libraryID: number}[]> {
+    return await this._callZoteroJS("citeWithZoteroDialog", "");
   }
 
   private async getAllItems(): Promise<SearchItem[]> {

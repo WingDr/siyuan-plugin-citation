@@ -67,7 +67,9 @@
     "debug_bridge": {
       "title": "debug-bridge插件",
       "dbPasswordInputTitle": "debug-bridge插件密码",
-      "dbPasswordInputDescription": "根据<a href=\"https://www.yuque.com/chentaotao-cf9fr/gthfy4/clqahv57w5ugmdev\"><b>教程</b></a>对debug-bridge插件进行设置时设定的密码，教程中默认为\"CTT\"，本插件也默认为此密码"
+      "dbPasswordInputDescription": "根据<a href=\"https://www.yuque.com/chentaotao-cf9fr/gthfy4/clqahv57w5ugmdev\"><b>教程</b></a>对debug-bridge插件进行设置时设定的密码，教程中默认为\"CTT\"，本插件也默认为此密码",
+      "searchDialogSelectorTitle": "插入文献时使用的搜索面板",
+      "searchDialogSelectorDescription": "选择插入文献时使用的搜索面板：\"SiYuan\" 为基于思源样式类型的搜索面板，搜索速度更快并且更稳定；\"Zotero\"为Zotero自带的搜索面板，可以在Zotero软件中设置是否使用经典视图"
     }
   },
   "errors": {

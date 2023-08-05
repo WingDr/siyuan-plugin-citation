@@ -20,7 +20,8 @@ import {
     defaultReferencePath,
     databaseType,
     defaultTitleTemplate,
-    defaultDBPassword
+    defaultDBPassword,
+    dbSearchDialogTypes
 } from "./utils/constants";
 import {
     createLogger,
@@ -70,6 +71,7 @@ export default class SiYuanPluginCitation extends Plugin {
             zoteroLinkTitleTemplate: "",
             zoteroTagTemplate: "",
             dbPassword: defaultDBPassword,
+            dbSearchDialogType: dbSearchDialogTypes[0]
           };
 
         const frontEnd = getFrontend();

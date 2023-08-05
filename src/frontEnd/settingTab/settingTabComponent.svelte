@@ -14,6 +14,7 @@
     isDev,
     dataDir,
     defaultDBPassword,
+    dbSearchDialogTypes
   } from "../../utils/constants";
   import { type ILogger } from "../../utils/simple-logger";
   import { type DatabaseType } from "../../database/database";
@@ -39,6 +40,7 @@
   let pluginVersion: string;
   let notebookOptions: IOptions;
   let databaseOptions: IOptions;
+  let dbSearchDialogOptions: IOptions;
 
   // 设定数据
   // 基本设定变量
@@ -56,6 +58,7 @@
   let zoteroTagTemplate: string;
   // debug-bridge变量
   let dbPassword: string;
+  let dbSearchDialogType: string;
 
   // 设定数据的默认值
   let defaultSettingData;
@@ -147,6 +150,13 @@
         text: database,
       };
     });
+    // 搜索面板类型选项
+    dbSearchDialogOptions = dbSearchDialogTypes.map((type) => {
+      return {
+        key: type,
+        text: type
+      }
+    })
 
     // 设置默认数据
     defaultSettingData = {
@@ -161,6 +171,7 @@
       zoteroLinkTitleTemplate: "",
       zoteroTagTemplate: "",
       dbPassword: defaultDBPassword,
+      dbSearchDialogType: dbSearchDialogTypes[0]
     }
     // 默认笔记本为第一个打开的笔记本
     referenceNotebook = plugin.data[STORAGE_NAME]?.referenceNotebook ?? defaultSettingData.referenceNotebook;
@@ -184,6 +195,8 @@
     zoteroTagTemplate = plugin.data[STORAGE_NAME]?.zoteroTagTemplate ?? defaultSettingData.zoteroTagTemplate;
     // 默认debug-bridge密码
     dbPassword = plugin.data[STORAGE_NAME]?.dbPassword ?? defaultSettingData.dbPassword;
+    // 默认搜索面板类型
+    dbSearchDialogType = plugin.data[STORAGE_NAME]?.dbSearchDialogType ?? defaultSettingData.dbSearchDialogType;
 
     displayPanels = generatePanels(panels);
   }
@@ -220,6 +233,7 @@
       zoteroLinkTitleTemplate,
       zoteroTagTemplate,
       dbPassword,
+      dbSearchDialogType
     };
     if (settingData.database === "Zotero")
       settingData.database = "Zotero (better-bibtex)";
@@ -621,6 +635,28 @@
               `Input changed: ${event.detail.key} = ${event.detail.value}`
             );
           dbPassword = event.detail.value;
+        }}
+      />
+    </Item>
+    <Item
+      block={false}
+      title={plugin.i18n.settingTab.debug_bridge.searchDialogSelectorTitle}
+      text={plugin.i18n.settingTab.debug_bridge.searchDialogSelectorDescription}
+    >
+      <Input
+        slot="input"
+        block={false}
+        normal={true}
+        type={ItemType.select}
+        settingKey="Select"
+        settingValue={dbSearchDialogType}
+        options={dbSearchDialogOptions}
+        on:changed={(event) => {
+          if (isDev)
+            logger.info(
+              `Select changed: ${event.detail.key} = ${event.detail.value}`
+            );
+          dbSearchDialogType = event.detail.value;
         }}
       />
     </Item>

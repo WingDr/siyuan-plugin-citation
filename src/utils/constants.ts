@@ -13,6 +13,7 @@ export const refRegStatic = /\(\((.*?)\"(.*?)\"\)\)/g;
 export const refRegDynamic = /\(\((.*?)\'(.*?)\'\)\)/g;
 
 export const databaseType = ["BibTex and CSL-JSON", "Zotero (better-bibtex)", "Juris-M (better-bibtex)", "Zotero (debug-bridge)", "Juris-M (debug-bridge)"] as const;
+export const dbSearchDialogTypes = ["SiYuan", "Zotero"];
 export const REF_DIR_PATH = "./references/";
 // 用户指南不应该作为可以写入的笔记本
 export const hiddenNotebook: Set<string> = new Set(["思源笔记用户指南", "SiYuan User Guide"]);
