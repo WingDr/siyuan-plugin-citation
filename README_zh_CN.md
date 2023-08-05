@@ -350,8 +350,9 @@
 
 ## 赞助
 
-> 咱就放个收款码在这，其实大家随便白嫖下就好了，多提 issue 看到更多人用才是对我最大的鼓励
+> 比起赞助，其实更喜欢在github上的issue，你提的每一个问题和需求都会成为我的动力
 
-![ ](./assets/weixin.jpg)
-
-![ ](./assets/alipay.jpg)
+<div style="display:flex;justify-content:space-around">
+  <img src="./assets/weixin.jpg" width="40%" height="40%">
+  <img src="./assets/alipay.jpg" width="40%" height="40%">
+</div>

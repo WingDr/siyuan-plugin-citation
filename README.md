@@ -352,8 +352,9 @@ Thanks to [Geo123abc](https://github.com/Geo123abc) and [ttChen](https://getquic
 
 ## Sponsorship
 
-> I'll just put a QR code here for donations, but feel free to use it for free. Providing feedback and seeing more people using it is the greatest encouragement for me.
+> I actually prefer GitHub issues over sponsorship. Every question and request you raise there becomes my motivation.
 
-![ ](./assets/weixin.jpg)
-
-![ ](./assets/alipay.jpg)
+<div style="display:flex;justify-content:space-around">
+  <img src="./assets/weixin.jpg" width="40%" height="40%">
+  <img src="./assets/alipay.jpg" width="40%" height="40%">
+</div>
