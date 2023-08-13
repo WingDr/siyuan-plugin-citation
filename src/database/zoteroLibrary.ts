@@ -20,6 +20,7 @@ interface Annotation {
 interface AnnotationDetail {
   key: string,
   annotationText: string,
+  annotationType: string,
   annotationPosition: {
     pageIndex: number
   },
@@ -177,7 +178,7 @@ export class EntryZoteroAdapter extends Entry {
           return [...acc, `[[Open]](zotero://open-pdf/library/items/${itemID})\t|\t[${fileName}](file://${attach.path})`];
         }
         return [...acc, `[[Locate]](${attach.select})\t|\t[${fileName}](file://${attach.path})`];
-      } else return acc
+      } else return acc;
     }, [])];
   }
 
@@ -201,7 +202,7 @@ export class EntryZoteroAdapter extends Entry {
           zoteroOpenURI,
           zoteroSelectURI: attach.select
         } as File];
-      } else return acc
+      } else return acc;
     }, [])];
   }
 
@@ -228,7 +229,14 @@ export class EntryZoteroAdapter extends Entry {
     return annotations.map(anno => {
       const title = `\n\n---\n\n###### Annotation in ${anno.parentTitle}\n\n`;
       const content = anno.details.map(detail => {
-        return `[${detail.annotationText}](zotero://open-pdf/library/items/${anno.parentKey}?page=${detail.annotationPosition.pageIndex}&annotation=${detail.key})` + (detail.annotationComment ? `\n\n**[Comment]**: ${detail.annotationComment}` : "");
+        let content = "annotation";
+        switch (detail.annotationType) {
+          case "image": content = "Selected Area"; break;
+          case "highlight": content = detail.annotationText; break;
+        }
+        const openURI = `zotero://open-pdf/library/items/${anno.parentKey}?page=${detail.annotationPosition.pageIndex}&annotation=${detail.key}`;
+        const comment = detail.annotationComment ? `\n\n**[Comment]**: ${detail.annotationComment}` : "";
+        return `[${content}](${openURI})` + comment;
       }).join("\n\n");
       return title + content;
     }).join("\n\n");
