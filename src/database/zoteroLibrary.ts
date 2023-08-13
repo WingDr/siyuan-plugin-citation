@@ -332,7 +332,7 @@ export class EntryZoteroAdapter extends Entry {
     return this._note?.map((singleNote, index) => {
       return {
         index: index,
-        prefix: `\n\n---\n\n###### Note No.${index+1}\t[[Locate]](zotero://select/items/0_${singleNote.key}/)\t[[Open]](zotero://note/u/${singleNote.key}/)\n\n\n\n`,
+        prefix: `\n\n---\n\n###### Note No.${index+1}\t[[Locate]](zotero://select/items/0_${singleNote.key}/)\n\n\n\n`,
         content: `<div>\n${singleNote.note.replace(/\\(.?)/g, (m, p1) => p1)}\n</div>`
       };
     });

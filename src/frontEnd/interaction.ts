@@ -163,24 +163,24 @@ export class InteractionManager {
           langKey: command.langKey,
           hotkey: command.hotkey,
           callback: () => {
-            if (isDev) this.logger.info(`Command触发：${command.langKey}`);
+            if (isDev) this.logger.info(`Command触发：${command.langKey}，callback`);
             if (command.callback && this.validateCommand(command)) command.callback();
             else if (isDev) this.logger.error(`Command调用不合法：${command.langKey}`);
           },
           editorCallback: (p) => {
-            if (isDev) this.logger.info(`Command触发：${command.langKey}`);
+            if (isDev) this.logger.info(`Command触发：${command.langKey}，editorCallback`);
             if (command.editorCallback && this.validateCommand(command)) command.editorCallback(p);
             else if (command.callback && this.validateCommand(command)) command.callback();
             else if (isDev) this.logger.error(`Command调用不合法：${command.langKey}`);
           },
           dockCallback: (e) => {
-            if (isDev) this.logger.info(`Command触发：${command.langKey}`);
+            if (isDev) this.logger.info(`Command触发：${command.langKey}，dockCallback`);
             if (command.dockCallback && this.validateCommand(command)) command.dockCallback(e);
             else if (command.callback && this.validateCommand(command)) command.callback();
             else if (isDev) this.logger.error(`Command调用不合法：${command.langKey}`);
           },
           fileTreeCallback: (file) => {
-            if (isDev) this.logger.info(`Command触发：${command.langKey}`);
+            if (isDev) this.logger.info(`Command触发：${command.langKey}，fileTreeCallback`);
             if (command.fileTreeCallback && this.validateCommand(command)) command.fileTreeCallback(file);
             else if (command.callback && this.validateCommand(command)) command.callback();
             else if (isDev) this.logger.error(`Command调用不合法：${command.langKey}`);
@@ -197,31 +197,46 @@ export class InteractionManager {
   }
 
   public eventBusReaction() {
-    this.plugin.eventTrigger.addEventBusEvent("click-editortitleicon", this.customTitleIconMenu.bind(this));
+    // this.plugin.eventTrigger.addEventBusEvent("click-editortitleicon", this.customTitleIconMenu.bind(this));
     this.plugin.eventTrigger.addEventBusEvent("open-menu-breadcrumbmore", this.customBreadcrumbMore.bind(this));
   }
 
   private customTitleIconMenu(event: CustomEvent<any>) {
     if (isDev) this.logger.info("触发eventBus：click-editortitleicon，=>", event);
-    const label = this.plugin.i18n.refreshCitation;
-    const clickCallback = this.plugin.reference.updateLiteratureLink.bind(this.plugin.reference);
+
     (event.detail.menu as Menu).addItem({
-      iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconRefresh"></use></svg>',
-      label: label,
-      click: () => {clickCallback(event.detail.data.id);}
+      iconHTML: '<div class="b3-menu__icon" style><svg xmlns="http://www.w3.org/2000/svg" version="1.0" viewBox="0 0 160 160"><path d="M71.9 27c-13 2.2-30.2 14.6-34.8 25.2-5.9 13.4-7.5 20.5-6.7 29.8 2 22.2 11.7 36.9 30.5 46.2 7.7 3.8 15.1 5.2 25.1 4.5 9.3-.7 18.4-3.4 24.2-7.2 4.2-2.8 12.8-11.1 12.8-12.4 0-.9-14.5-10.1-16-10.1-.5 0-3 1.5-5.5 3.4-8.3 6.4-19.6 7.9-31.6 4.4-3-.9-4.8-.7-10.2 1.1-7.3 2.3-11.7 2.7-11.7 1 0-.6 1.2-5 2.6-9.7 2.4-7.8 2.5-8.8 1.3-12.6-1.6-4.7-1.5-20.4.1-22 .5-.5 1-1.8 1-2.7 0-2.7 10.5-13.5 15.3-15.8 5.9-2.8 14.8-4 20.5-2.8 4.5.9 14.6 5.9 15.8 7.8.3.5 1.1.9 1.8.9 1.4 0 14.1-7.1 15.9-8.9.6-.6-.8-2.9-3.9-6.5-5.3-6-15-11.6-23.4-13.5-5.2-1.2-16.3-1.2-23.1-.1z"/></svg></div>',
+      label: "文献引用",
+      submenu: [{
+        iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconRefresh"></use></svg>',
+        label: this.plugin.i18n.refreshCitation,
+        click: () => {this.plugin.reference.updateLiteratureLink.bind(this.plugin.reference)(event.detail.data.id);}
+      },
+      // {
+      //   iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconUpload"></use></svg>',
+      //   label: "导出",
+      //   click: () => {this.plugin.exportManager.setExportConfig();}
+      // }
+      ]
     });
   }
 
   private customBreadcrumbMore(event: CustomEvent<any>) {
     if (isDev) this.logger.info("触发eventBus：open-menu-breadcrumbmore，=>", event);
     // 刷新引用
-    event.detail.menu.addItem({
-      iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconRefresh"></use></svg>',
-      label: this.plugin.i18n.refreshCitation,
-      click: () => {
-        if (isDev) this.logger.info("按键触发：刷新引用，=>", event);
-        this.plugin.reference.updateLiteratureLink(event.detail.protyle.block.rootID);
-      }
+    (event.detail.menu as Menu).addItem({
+      iconHTML: '<div class="b3-menu__icon" style><svg xmlns="http://www.w3.org/2000/svg" version="1.0" viewBox="0 0 160 160"><path d="M71.9 27c-13 2.2-30.2 14.6-34.8 25.2-5.9 13.4-7.5 20.5-6.7 29.8 2 22.2 11.7 36.9 30.5 46.2 7.7 3.8 15.1 5.2 25.1 4.5 9.3-.7 18.4-3.4 24.2-7.2 4.2-2.8 12.8-11.1 12.8-12.4 0-.9-14.5-10.1-16-10.1-.5 0-3 1.5-5.5 3.4-8.3 6.4-19.6 7.9-31.6 4.4-3-.9-4.8-.7-10.2 1.1-7.3 2.3-11.7 2.7-11.7 1 0-.6 1.2-5 2.6-9.7 2.4-7.8 2.5-8.8 1.3-12.6-1.6-4.7-1.5-20.4.1-22 .5-.5 1-1.8 1-2.7 0-2.7 10.5-13.5 15.3-15.8 5.9-2.8 14.8-4 20.5-2.8 4.5.9 14.6 5.9 15.8 7.8.3.5 1.1.9 1.8.9 1.4 0 14.1-7.1 15.9-8.9.6-.6-.8-2.9-3.9-6.5-5.3-6-15-11.6-23.4-13.5-5.2-1.2-16.3-1.2-23.1-.1z"/></svg></div>',
+      label: this.plugin.i18n.pluginName,
+      submenu: [{
+        iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconRefresh"></use></svg>',
+        label: this.plugin.i18n.refreshCitation,
+        click: () => {this.plugin.reference.updateLiteratureLink.bind(this.plugin.reference)(event.detail.protyle.block.rootID);}
+      },
+      {
+        iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconUpload"></use></svg>',
+        label: "导出",
+        click: () => {this.plugin.exportManager.export([event.detail.protyle.block.rootID], "markdown", "document");}
+      }]
     });
   }
 }

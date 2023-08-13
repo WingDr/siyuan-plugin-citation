@@ -6,12 +6,9 @@ import {
 
 import KernelApi from "./api/kernel-api";
 import { Database, type DatabaseType } from "./database/database";
-import {
-    Reference
-} from "./ReferenceManager/reference";
-import {
-    InteractionManager
-} from "./frontEnd/interaction";
+import { Reference } from "./ReferenceManager/reference";
+import { InteractionManager } from "./frontEnd/interaction";
+import { ExportManager } from "./export/exportManager";
 import {
     isDev,
     STORAGE_NAME,
@@ -45,6 +42,7 @@ export default class SiYuanPluginCitation extends Plugin {
     public database: Database;
     public reference: Reference;
     public interactionManager: InteractionManager;
+    public exportManager: ExportManager;
     public kernelApi: KernelApi;
     public eventTrigger: EventTrigger;
     public settingTab: SettingTab;
@@ -92,6 +90,8 @@ export default class SiYuanPluginCitation extends Plugin {
             this.protyleSlash.push(slash);
         });
         this.interactionManager.eventBusReaction();
+
+        this.exportManager = new ExportManager(this);
 
         return ;
     }

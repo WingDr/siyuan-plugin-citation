@@ -303,6 +303,18 @@ class KernelApi extends BaseApi {
     };
     return await this.siyuanRequest("/api/query/sql", params);
   }
+
+  public async setExport(options) {
+    return await this.siyuanRequest("/api/setting/setExport", options);
+
+  }
+
+  public async exportMDContent(blockID: string) {
+    const params = {
+      "id": blockID
+    }
+    return await this.siyuanRequest("/api/export/exportMdContent", params);
+  }
 }
 
 export default KernelApi;

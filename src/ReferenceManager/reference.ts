@@ -253,7 +253,7 @@ export class Reference {
       if (isDev) this.logger.info("生成文件标题 =>", noteTitle);
       const noteData = await this._createLiteratureNote(noteTitle);
       // 首先将文献的基本内容塞到用户文档的自定义属性中
-      await this.plugin.kernelApi.setNameOfBlock(noteData.rootId, key);
+      this.plugin.kernelApi.setNameOfBlock(noteData.rootId, key);
       this.plugin.kernelApi.setBlockEntry(noteData.rootId, JSON.stringify(entry));
       // 新建文件之后也要更新对应字典
       this.plugin.literaturePool.set({id: noteData.rootId, key: key});
