@@ -59,6 +59,8 @@ export class Library {
       abstract: entry.abstract,
       author: entry.author,
       authorString: entry.authorString,
+      annotations: entry.annotations,
+      annotationList: entry.annotationList,
       containerTitle: entry.containerTitle,
       DOI: entry.DOI,
       eprint: entry.eprint,
@@ -226,6 +228,14 @@ export abstract class Entry {
           content: el.replace(/\\herf\{(zotero:\/\/.+)\}/g, "[Link]($1)")
         };
       });
+  }
+
+  public get annotations() {
+    return "";
+  }
+
+  public get annotationList() {
+    return [];
   }
 
   public get key(): string {
