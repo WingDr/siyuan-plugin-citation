@@ -5,7 +5,7 @@ import {
   STORAGE_NAME
 } from "./constants";
 import { createLogger } from "./simple-logger";
-import { createNoticer, type INoticer } from "./noticer";
+import { type INoticer } from "./noticer";
 const fs = window.require("fs");
 const path = window.require("path");
 

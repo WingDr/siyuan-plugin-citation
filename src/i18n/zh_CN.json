@@ -13,11 +13,11 @@
   "addCitation": "插入文献引用",
   "addNotes": "插入文献笔记",
   "reloadDatabase": "重新载入数据库",
-  "refreshCitation": "刷新引用",
   "refreshLiteratureNotesTitle": "刷新所有文献内容文档标题",
   "copyCiteLink": "复制文献引用",
   "copyNotes": "复制文献笔记",
   "addSelectedItems": "引用Zotero中选中的文献",
+  "refreshLiteratureNotesContents": "刷新所有文献内容",
   "settingTab": {
     "settingTabTitle": "插件版本：${version}",
     "settingTabDescription": "如果有好的想法或者发现了bug，欢迎到github上提<a href=\"${issuesURL}\"><b>issue</b></a>或者发邮件到我的<a href=\"mailto:${e-mail}\"><b>邮箱</b></a>",
@@ -73,6 +73,10 @@
       "searchDialogSelectorDescription": "选择插入文献时使用的搜索面板：\"SiYuan\" 为基于思源样式类型的搜索面板，搜索速度更快并且更稳定；\"Zotero\"为Zotero自带的搜索面板，可以在Zotero软件中设置是否使用经典视图"
     }
   },
+  "menuItems": {
+    "refreshCitation": "刷新引用",
+    "refreshSingleLiteratureNote": "刷新文献内容"
+  },
   "errors": {
     "notebookUnselected": "未选择笔记本！",
     "refPathInvalid": "文献库路径不存在！请在<b>文档树</b>中新建对应路径的文档。",
@@ -85,7 +89,7 @@
     "wrongDBPassword": "debug-bridge插件密码错误，请在设置界面中设置正确密码"
   },
   "confirms": {
-    "updateWithoutUserData": "未检测到“用户数据（# User Data）”区域（缺少引用或引用失效），确定要更新文献内容吗？"
+    "updateWithoutUserData": "文献内容文档\"${title}\"未检测到“用户数据（# User Data）”区域（缺少引用或引用失效），确定要更新文献内容吗？"
   },
   "notices": {
     "loadLibrarySuccess": "成功导入${size}个文献数据",
@@ -93,6 +97,8 @@
     "refreshTitleSuccess": "成功刷新${size}篇文献内容文档标题",
     "copyContentSuccess": "${type}已在剪贴板",
     "changeKey": "切换索引成功，文献索引已经切换到${keyType}。",
-    "noSelectedItem": "没有选中的文献"
+    "noSelectedItem": "没有选中的文献",
+    "refreshLiteratureNoteContentsSuccess": "成功刷新${size}篇文献内容",
+    "refreshSingleLiteratureNoteSuccess": "成功刷新文献${key}内容"
   }
 }

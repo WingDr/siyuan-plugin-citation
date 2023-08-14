@@ -1,12 +1,14 @@
 import {
   Setting,
   Protyle,
-  Menu
+  Menu,
+  type IMenuItemOption
 } from "siyuan";
 import SiYuanPluginCitation from "../index";
 import {
   STORAGE_NAME,
-  isDev
+  isDev,
+  pluginIconSVG
 } from "../utils/constants";
 import { createLogger, type ILogger } from "../utils/simple-logger";
 import { type DatabaseType } from "../database/database";
@@ -35,12 +37,35 @@ interface ICommandSetting {
   dockCallback?: (element: HTMLElement) => void
 }
 
+type MenuPlace = "TitleIcon" | "BlockIcon" | "BreadcrumbMore";
+
+interface IMenuItemSetting {
+  place?: MenuPlace[],
+  check?: (id: string) => boolean,
+  clickCallback?: (id: string) => void,
+  label?: string,
+  click?: (element: HTMLElement) => void,
+  type?: "separator" | "submenu" | "readonly",
+  accelerator?: string,
+  action?: string,
+  id?: string,
+  submenu?: IMenuItemOption[]
+  disabled?: boolean
+  icon?: string
+  iconHTML?: string
+  current?: boolean
+  bind?: (element: HTMLElement) => void
+  index?: number
+  element?: HTMLElement
+}
+
 export class InteractionManager {
   public plugin: SiYuanPluginCitation;
   public setting: Setting;
   private logger: ILogger;
   private protyleSlashs: any[];
   private commands:ICommandSetting[];
+  private menuItems: IMenuItemSetting[];
 
   constructor (plugin: SiYuanPluginCitation) {
     this.plugin = plugin;
@@ -116,6 +141,13 @@ export class InteractionManager {
         }
       },
       {
+        langKey: "refreshLiteratureNotesContents",
+        hotkey: "",
+        callback: async () => {
+          return this.plugin.reference.refreshLiteratureNoteContents();
+        }
+      },
+      {
         supportDatabase: ["Juris-M (debug-bridge)", "Zotero (debug-bridge)"],
         langKey: "addSelectedItems",
         hotkey: "",
@@ -124,6 +156,27 @@ export class InteractionManager {
           const protyle = p.getInstance();
           this.plugin.database.insertSelectedCiteLink(protyle);
         }
+      }
+    ];
+    this.menuItems = [
+      {
+        place: ["BreadcrumbMore"],
+        iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconRefresh"></use></svg>',
+        label: this.plugin.i18n.menuItems.refreshCitation,
+        clickCallback: (id) => {this.plugin.reference.updateLiteratureLink.bind(this.plugin.reference)(id);}
+      },
+      {
+        place: ["BreadcrumbMore"],
+        check: this.isLiteratureNote.bind(this),
+        iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconRefresh"></use></svg>',
+        label: this.plugin.i18n.menuItems.refreshSingleLiteratureNote,
+        clickCallback: (id) => {this.plugin.reference.refreshSingleLiteratureNote(id);}
+      },
+      {
+        place: ["BreadcrumbMore"],
+        iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconUpload"></use></svg>',
+        label: "导出",
+        clickCallback: (id) => {this.plugin.exportManager.export([id], "markdown");}
       }
     ];
   }
@@ -209,7 +262,7 @@ export class InteractionManager {
       label: "文献引用",
       submenu: [{
         iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconRefresh"></use></svg>',
-        label: this.plugin.i18n.refreshCitation,
+        label: this.plugin.i18n.menuItems.refreshCitation,
         click: () => {this.plugin.reference.updateLiteratureLink.bind(this.plugin.reference)(event.detail.data.id);}
       },
       // {
@@ -223,20 +276,28 @@ export class InteractionManager {
 
   private customBreadcrumbMore(event: CustomEvent<any>) {
     if (isDev) this.logger.info("触发eventBus：open-menu-breadcrumbmore，=>", event);
-    // 刷新引用
-    (event.detail.menu as Menu).addItem({
-      iconHTML: '<div class="b3-menu__icon" style><svg xmlns="http://www.w3.org/2000/svg" version="1.0" viewBox="0 0 160 160"><path d="M71.9 27c-13 2.2-30.2 14.6-34.8 25.2-5.9 13.4-7.5 20.5-6.7 29.8 2 22.2 11.7 36.9 30.5 46.2 7.7 3.8 15.1 5.2 25.1 4.5 9.3-.7 18.4-3.4 24.2-7.2 4.2-2.8 12.8-11.1 12.8-12.4 0-.9-14.5-10.1-16-10.1-.5 0-3 1.5-5.5 3.4-8.3 6.4-19.6 7.9-31.6 4.4-3-.9-4.8-.7-10.2 1.1-7.3 2.3-11.7 2.7-11.7 1 0-.6 1.2-5 2.6-9.7 2.4-7.8 2.5-8.8 1.3-12.6-1.6-4.7-1.5-20.4.1-22 .5-.5 1-1.8 1-2.7 0-2.7 10.5-13.5 15.3-15.8 5.9-2.8 14.8-4 20.5-2.8 4.5.9 14.6 5.9 15.8 7.8.3.5 1.1.9 1.8.9 1.4 0 14.1-7.1 15.9-8.9.6-.6-.8-2.9-3.9-6.5-5.3-6-15-11.6-23.4-13.5-5.2-1.2-16.3-1.2-23.1-.1z"/></svg></div>',
-      label: this.plugin.i18n.pluginName,
-      submenu: [{
-        iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconRefresh"></use></svg>',
-        label: this.plugin.i18n.refreshCitation,
-        click: () => {this.plugin.reference.updateLiteratureLink.bind(this.plugin.reference)(event.detail.protyle.block.rootID);}
-      },
-      {
-        iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconUpload"></use></svg>',
-        label: "导出",
-        click: () => {this.plugin.exportManager.export([event.detail.protyle.block.rootID], "markdown", "document");}
-      }]
+    const place = "BreadcrumbMore" as MenuPlace;
+    const submenu = [] as IMenuItemOption[];
+    const id  = event.detail.protyle.block.rootID;
+    this.menuItems.forEach(item => {
+      if (!item.place || item.place.indexOf(place) != -1) {
+        if (!item.check || item.check(id)) {
+          submenu.push({
+            iconHTML: item.iconHTML,
+            label: item.label,
+            click: () => {item.clickCallback(id);}
+          });
+        }
+      }
     });
+    (event.detail.menu as Menu).addItem({
+      iconHTML: `<div class="b3-menu__icon" style>${pluginIconSVG}</div>`,
+      label: this.plugin.i18n.pluginName,
+      submenu: submenu
+    });
+  }
+
+  private isLiteratureNote(documentId: string): boolean {
+    return this.plugin.literaturePool.get(documentId) ? true : false;
   }
 }

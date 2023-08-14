@@ -221,13 +221,13 @@ export abstract class Entry {
 
   public get note(): SingleNote[] {
     return this._note
-      ?.map((el, index) => {
+      ? this._note.map((el, index) => {
         return {
           index: index,
           prefix: "",
           content: el.replace(/\\herf\{(zotero:\/\/.+)\}/g, "[Link]($1)")
         };
-      });
+      }) : [];
   }
 
   public get annotations() {

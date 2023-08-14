@@ -21,7 +21,7 @@ interface ExportOption {
 
 export class ExportManager {
   private userConfig: {[key: string]: string};
-  private logger: ILogger
+  private logger: ILogger;
 
   constructor (private plugin: SiYuanPluginCitation) {
     this.logger = createLogger("export manager");
@@ -30,7 +30,7 @@ export class ExportManager {
   public async export(exportIDs: string[], exportType: ExportType ) {
     switch (exportType) {
       case "markdown": {
-        this.exportMarkdown(exportIDs);
+        return await this.exportMarkdown(exportIDs);
       }
     }
 
@@ -56,12 +56,13 @@ export class ExportManager {
         } else {
           return p1;
         }
-      })
+      });
     });
 
     const exportContents = await Promise.all(pList);
     if (isDev) this.logger.info("获得处理后的导出内容, contents=>", exportContents);
-    this.resetExportConfig();
+    await this.resetExportConfig();
+    return exportContents;
   }
 
   private async setExportConfig(changedOptions: ExportOption) {
@@ -71,7 +72,7 @@ export class ExportManager {
     const setConfig = Object.assign({}, this.userConfig);
     Object.keys(changedOptions).forEach(key => {
       setConfig[key] = changedOptions[key];
-    })
+    });
     await this.plugin.kernelApi.setExport(setConfig);
   }
 

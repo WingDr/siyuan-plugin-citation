@@ -56,8 +56,9 @@ export class EventTrigger {
   }
 
   private addEvent(name: EventType, event: TriggeredEvent) {
-    console.log(this.eventQueue[name]);
+    if (isDev) this.logger.info(`向触发队列${name}中添加事件, queue=>`, this.eventQueue[name]);
     if (!this.eventQueue[name]) {
+      if (isDev) this.logger.info(`新建触发队列${name}`);
       this.eventQueue[name] = new QueueT<TriggeredEvent>;
     }
     this.eventQueue[name].push(event);

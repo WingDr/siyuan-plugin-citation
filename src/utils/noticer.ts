@@ -25,7 +25,7 @@ export const createNoticer = (): INoticer => {
       let finalMsg = msg as string;
       Object.keys(obj).forEach(key => {
         finalMsg = finalMsg.replaceAll(`$\{${key}\}`, obj[key]);
-      })
+      });
       showMessage(`[${sign}] [${time}] ${finalMsg}`, timeout, level);
     } else {
       showMessage(`[${sign}] [${time}] ${msg}`, timeout, level);

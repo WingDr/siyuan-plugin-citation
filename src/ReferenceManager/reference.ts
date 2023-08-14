@@ -154,6 +154,36 @@ export class Reference {
     });
   }
 
+  public async refreshLiteratureNoteContents() {
+    // 在刷新之前先更新一下文献池
+    await loadLocalRef(this.plugin);
+    const ids = this.plugin.literaturePool.ids;
+    const pList = ids.map(async id => {
+      await this.refreshSingleLiteratureNote(id, false);
+    });
+    await Promise.all(pList).then(() => {
+      if (isDev) this.logger.info("所有文献内容刷新完毕");
+      this.plugin.noticer.info(this.plugin.i18n.notices.refreshLiteratureNoteContentsSuccess, {size: this.plugin.literaturePool.size});
+    });
+  }
+
+  public async refreshSingleLiteratureNote(literatureId: string, needRefresh=true) {
+    // 在刷新之前先更新一下文献池
+    if (needRefresh) await loadLocalRef(this.plugin);
+    const key = this.plugin.literaturePool.get(literatureId);
+    const entry = await this.plugin.database.getContentByKey(key);
+    if (isDev) this.logger.info("从database中获得文献内容 =>", entry);
+    if (!entry) {
+      if (isDev) this.logger.error("找不到文献数据");
+      this.plugin.noticer.error(this.plugin.i18n.errors.getLiteratureFailed);
+      return null;
+    }
+    await this.updateLiteratureNote(key, entry);
+    if (isDev) this.logger.info("文献内容刷新完毕, literatureId=>", {literatureId, key, title: entry.title});
+    if (needRefresh) this.plugin.noticer.info(this.plugin.i18n.notices.refreshSingleLiteratureNoteSuccess, {key});
+    return;
+  }
+
   public async insertContent(protyle, content: string) {
     const blockId = protyle.protyle.breadcrumb.id;
     const rootId = protyle.protyle.block.rootID;
@@ -226,7 +256,7 @@ export class Reference {
           });
           // 执行后续操作之前先更新文献池
           this.plugin.literaturePool.set({id: literatureId, key: key});
-          return confirm("⚠️", this.plugin.i18n.confirms.updateWithoutUserData, async () => {
+          return confirm("⚠️", this.plugin.i18n.confirms.updateWithoutUserData.replaceAll("${title}", entry.title), async () => {
             // 不存在用户数据区域，整个更新
             deleteList = dataIds;
             userDataId = await this._updateEmptyNote(literatureId);
@@ -253,7 +283,7 @@ export class Reference {
       if (isDev) this.logger.info("生成文件标题 =>", noteTitle);
       const noteData = await this._createLiteratureNote(noteTitle);
       // 首先将文献的基本内容塞到用户文档的自定义属性中
-      this.plugin.kernelApi.setNameOfBlock(noteData.rootId, key);
+      await this.plugin.kernelApi.setNameOfBlock(noteData.rootId, key);
       this.plugin.kernelApi.setBlockEntry(noteData.rootId, JSON.stringify(entry));
       // 新建文件之后也要更新对应字典
       this.plugin.literaturePool.set({id: noteData.rootId, key: key});
