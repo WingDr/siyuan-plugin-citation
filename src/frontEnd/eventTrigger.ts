@@ -10,7 +10,14 @@ class QueueT<T> {
   private data: Array<T>;
   constructor() {this.data = new Array<T>;}
   push = (item: T) => this.data.push(item);
-  pop = (): T|undefined => this.data.pop();
+  pop = (): T|undefined => {
+    if (!this.data.length) return undefined;
+    else {
+      const result = this.data[0];
+      this.data = this.data.slice(1);
+      return result;
+    }
+  };
 }
 
 export interface TriggeredEvent {

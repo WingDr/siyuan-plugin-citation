@@ -261,8 +261,7 @@ export class Reference {
             deleteList = dataIds;
             userDataId = await this._updateEmptyNote(literatureId);
             if (!userDataLink.length) userDataLink = `((${userDataId} 'User Data'))`;
-            this._insertNoteContent(literatureId, userDataId, userDataLink, entry, deleteList);
-            return;
+            return this._insertNoteContent(literatureId, userDataId, userDataLink, entry, deleteList);
           });
         }
       } else {
@@ -274,8 +273,7 @@ export class Reference {
       this.plugin.literaturePool.set({id: literatureId, key: key});
       // 插入前置片段
       if (!userDataLink.length) userDataLink = `((${userDataId} 'User Data'))`;
-      this._insertNoteContent(literatureId, userDataId, userDataLink, entry, deleteList);
-      return;
+      return this._insertNoteContent(literatureId, userDataId, userDataLink, entry, deleteList);
     } else {
       //文件不存在就新建文件
       let noteTitle = generateFromTemplate(titleTemplate, entry);
@@ -287,8 +285,7 @@ export class Reference {
       this.plugin.kernelApi.setBlockEntry(noteData.rootId, JSON.stringify(entry));
       // 新建文件之后也要更新对应字典
       this.plugin.literaturePool.set({id: noteData.rootId, key: key});
-      this._insertNoteContent(noteData.rootId, noteData.userDataId, `(( ${noteData.userDataId} 'User Data'))`, entry, []);
-      return;
+      return this._insertNoteContent(noteData.rootId, noteData.userDataId, `(( ${noteData.userDataId} 'User Data'))`, entry, []);
     }
   }
 
@@ -347,6 +344,19 @@ export class Reference {
     });
     res = await this.plugin.kernelApi.getBlocksWithContent(notebookId, literatureId, `{ {note${index}} }`);
     const data = res.data as any[];
+    if (!data.length) {
+      // 还没更新出来就重新塞回队列
+      if (isDev) this.logger.info("文档尚未更新到数据库，等下一次数据库更新，detail=>", { index, content, literatureId, userDataId });
+      return this.plugin.eventTrigger.addSQLIndexEvent({
+        triggerFn: this._insertNotes.bind(this),
+        params: {
+          index,
+          content,
+          literatureId,
+          userDataId
+        }
+      });
+    }
     const pList = data.map(async d => {
       // 只有在userDataID之前的才会更新
       if (dataIds.indexOf(d.id) != -1 && dataIds.indexOf(d.id) < dataIds.indexOf(userDataId)) {
