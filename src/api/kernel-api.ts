@@ -312,7 +312,7 @@ class KernelApi extends BaseApi {
   public async exportMDContent(blockID: string) {
     const params = {
       "id": blockID
-    }
+    };
     return await this.siyuanRequest("/api/export/exportMdContent", params);
   }
 }
