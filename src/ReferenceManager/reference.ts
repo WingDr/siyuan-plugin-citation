@@ -261,7 +261,8 @@ export class Reference {
             deleteList = dataIds;
             userDataId = await this._updateEmptyNote(literatureId);
             if (!userDataLink.length) userDataLink = `((${userDataId} 'User Data'))`;
-            return this._insertNoteContent(literatureId, userDataId, userDataLink, entry, deleteList);
+            this._insertNoteContent(literatureId, userDataId, userDataLink, entry, deleteList);
+            return;
           });
         }
       } else {
@@ -273,7 +274,8 @@ export class Reference {
       this.plugin.literaturePool.set({id: literatureId, key: key});
       // 插入前置片段
       if (!userDataLink.length) userDataLink = `((${userDataId} 'User Data'))`;
-      return this._insertNoteContent(literatureId, userDataId, userDataLink, entry, deleteList);
+      this._insertNoteContent(literatureId, userDataId, userDataLink, entry, deleteList);
+      return;
     } else {
       //文件不存在就新建文件
       let noteTitle = generateFromTemplate(titleTemplate, entry);
@@ -285,7 +287,8 @@ export class Reference {
       this.plugin.kernelApi.setBlockEntry(noteData.rootId, JSON.stringify(entry));
       // 新建文件之后也要更新对应字典
       this.plugin.literaturePool.set({id: noteData.rootId, key: key});
-      return this._insertNoteContent(noteData.rootId, noteData.userDataId, `(( ${noteData.userDataId} 'User Data'))`, entry, []);
+      this._insertNoteContent(noteData.rootId, noteData.userDataId, `(( ${noteData.userDataId} 'User Data'))`, entry, []);
+      return;
     }
   }
 
@@ -318,7 +321,7 @@ export class Reference {
     }).join("\n\n");
     const literatureNote = generateFromTemplate(noteTemplate, entry);
     if (deleteList.length) await this._deleteBlocks(deleteList);
-    await this.plugin.kernelApi.prependBlock(literatureId, userDataLink + "\n\n" + literatureNote);
+    this.plugin.kernelApi.prependBlock(literatureId, userDataLink + "\n\n" + literatureNote);
     note.forEach(n => {
       this.plugin.eventTrigger.addSQLIndexEvent({
         triggerFn: this._insertNotes.bind(this),
