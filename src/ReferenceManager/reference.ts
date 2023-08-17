@@ -38,7 +38,6 @@ export class Reference {
         return null;
       }
       await this.updateLiteratureNote(key, entry);
-      this.updateDataSourceItem(key, entry);
       const citeId = this.plugin.literaturePool.get(key);
       const link = await this.generateCiteLink(key, idx, false);
       return this.generateCiteRef(citeId, link);
@@ -262,6 +261,7 @@ export class Reference {
             userDataId = await this._updateEmptyNote(literatureId);
             if (!userDataLink.length) userDataLink = `((${userDataId} 'User Data'))`;
             this._insertNoteContent(literatureId, userDataId, userDataLink, entry, deleteList);
+            this.updateDataSourceItem(key, entry);
             return;
           });
         }
@@ -275,6 +275,7 @@ export class Reference {
       // 插入前置片段
       if (!userDataLink.length) userDataLink = `((${userDataId} 'User Data'))`;
       this._insertNoteContent(literatureId, userDataId, userDataLink, entry, deleteList);
+      this.updateDataSourceItem(key, entry);
       return;
     } else {
       //文件不存在就新建文件
@@ -288,6 +289,7 @@ export class Reference {
       // 新建文件之后也要更新对应字典
       this.plugin.literaturePool.set({id: noteData.rootId, key: key});
       this._insertNoteContent(noteData.rootId, noteData.userDataId, `(( ${noteData.userDataId} 'User Data'))`, entry, []);
+      this.updateDataSourceItem(key, entry);
       return;
     }
   }

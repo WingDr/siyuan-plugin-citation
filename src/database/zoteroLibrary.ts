@@ -105,6 +105,7 @@ const ZOTERO_PROPERTY_MAPPING: Record<string, string> = {
   proceedingsTitle: "_containerTitle",
   publicationTitle: "_containerTitle",
   relations: "_relations",
+  shortTitle: "titleShort",
   tags: "_tags",
   university: "publisher",
   url: "URL",
