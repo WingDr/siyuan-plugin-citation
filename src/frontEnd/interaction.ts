@@ -172,12 +172,12 @@ export class InteractionManager {
         label: this.plugin.i18n.menuItems.refreshSingleLiteratureNote,
         clickCallback: (id) => {this.plugin.reference.refreshSingleLiteratureNote(id);}
       },
-      {
-        place: ["BreadcrumbMore"],
-        iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconUpload"></use></svg>',
-        label: "导出",
-        clickCallback: (id) => {this.plugin.exportManager.export([id], "markdown");}
-      }
+      // {
+      //   place: ["BreadcrumbMore"],
+      //   iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconUpload"></use></svg>',
+      //   label: "导出",
+      //   clickCallback: (id) => {this.plugin.exportManager.export([id], "markdown");}
+      // }
     ];
   }
 
