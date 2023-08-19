@@ -217,10 +217,10 @@ class KernelApi extends BaseApi {
     return await this.siyuanRequest("/api/block/getChildBlocks", params);
   }
 
-  public async updateBlockContent(blockId: string, dataType: "markdown" | "dom", md: string) {
+  public async updateBlockContent(blockId: string, dataType: "markdown" | "dom", data: string) {
     const params = {
       "dataType": dataType,
-      "data": md,
+      "data": data,
       "id": blockId
     };
     return await this.siyuanRequest("/api/block/updateBlock", params);

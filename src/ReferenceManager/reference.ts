@@ -24,7 +24,7 @@ export class Reference {
     this.logger = createLogger("reference");
   }
 
-  public async processReferenceContents(keys: string[], fileId?: string): Promise<string[]> {
+  public async processReferenceContents(keys: string[], fileId?: string, returnDetail=false): Promise<any[]> {
     let literatureEnum = [];
     if (fileId) literatureEnum = await this.getLiteratureEnum(fileId);
     const existNotes = this.plugin.literaturePool.keys;
@@ -41,6 +41,17 @@ export class Reference {
       const citeId = this.plugin.literaturePool.get(key);
       const link = await this._generateCiteLink(key, idx, false);
       const name = await this._generateLiteratureName(key);
+      if (returnDetail) {
+        let content = link;
+        const customCiteText = this.plugin.data[STORAGE_NAME].customCiteText;
+        const useDynamicRefLink = this.plugin.data[STORAGE_NAME].useDynamicRefLink;
+        if (customCiteText) content = await this._generateCiteLink(key, idx, true);
+        if (customCiteText && useDynamicRefLink) content = name;
+        return {
+          citeId,
+          content
+        };
+      }
       return await this._generateCiteRef(citeId, link, name);
     });
     return await Promise.all(insertContent);
@@ -342,7 +353,8 @@ export class Reference {
           content: n.content,
           literatureId,
           userDataId
-        }
+        },
+        type: "once"
       });
     });
   }
@@ -369,7 +381,8 @@ export class Reference {
           content,
           literatureId,
           userDataId
-        }
+        },
+        type: "once"
       });
     }
     const pList = data.map(async d => {
