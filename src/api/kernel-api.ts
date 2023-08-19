@@ -189,9 +189,9 @@ class KernelApi extends BaseApi {
     return await this.siyuanRequest("/api/query/sql", params);
   }
 
-  public async searchFileWithName(notebook: string, hpath: string, name: string): Promise<SiyuanData> {
+  public async searchFileWithKey(notebook: string, hpath: string, key: string): Promise<SiyuanData> {
     const params = {
-      "stmt": `SELECT * FROM blocks WHERE box LIKE'${notebook}' and hpath LIKE'${hpath}%' and name LIKE'${name}' and type LIKE'd'`
+      "stmt": `SELECT * FROM blocks WHERE box LIKE'${notebook}' and hpath LIKE'${hpath}%' and ial LIKE"%custom-literature-key=_${key}%" and type LIKE'd'`
     };
     return await this.siyuanRequest("/api/query/sql", params);
   }

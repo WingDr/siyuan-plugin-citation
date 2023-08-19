@@ -2,7 +2,7 @@ import { confirm } from "siyuan";
 import SiYuanPluginCitation from "../index";
 import { type SiyuanData } from "../api/base-api";
 import {
-  STORAGE_NAME, isDev, citeLink, 
+  STORAGE_NAME, isDev, citeLinkStatic, citeLinkDynamic, 
   DISALLOWED_FILENAME_CHARACTERS_RE, 
   refReg, refRegStatic, refRegDynamic
 } from "../utils/constants";
@@ -39,13 +39,15 @@ export class Reference {
       }
       await this.updateLiteratureNote(key, entry);
       const citeId = this.plugin.literaturePool.get(key);
-      const link = await this.generateCiteLink(key, idx, false);
-      return this.generateCiteRef(citeId, link);
+      const link = await this._generateCiteLink(key, idx, false);
+      const name = await this._generateLiteratureName(key);
+      return await this._generateCiteRef(citeId, link, name);
     });
     return await Promise.all(insertContent);
   }
 
   public async updateLiteratureLink(fileId: string): Promise<SiyuanData[]> {
+    const useDynamicRefLink = this.plugin.data[STORAGE_NAME].useDynamicRefLink as boolean;
     // 获得所有含有文献引用的块，用于内容更新
     const res = await this.plugin.kernelApi.getCitedBlocks(fileId);
     const data = res.data as any[];
@@ -69,13 +71,21 @@ export class Reference {
         const anchor = match[1].slice(key.length + 1);
         const idx = literatureEnum.indexOf(key);
         if (idx != -1) {
-          const link = await this.generateCiteLink(this.plugin.literaturePool.get(key), idx, this.plugin.data[STORAGE_NAME].customCiteText);
+          const link = await this._generateCiteLink(this.plugin.literaturePool.get(key), idx, this.plugin.data[STORAGE_NAME].customCiteText);
           if (isDev) this.logger.info("更新文献引用 =>", link);
           if (!link) continue;
-          if (anchor != `"${link}"`) {
-            isModified = true;
+          if (useDynamicRefLink) {
+            if (anchor != "''") {
+              isModified = true;
+            }
+            replaceList[key] = citeLinkDynamic.replace("${id}", key);
+          } else {
+            if (anchor != `"${link}"`) {
+              isModified = true;
+            }
+            replaceList[key] = citeLinkStatic.replace("${id}", key).replace("${link}", link);
           }
-          replaceList[key] = citeLink.replace("${id}", key).replace("${link}", link);
+          
         }
       }
       const newContent = block.content.replace(reg, (match, p1) => {
@@ -104,14 +114,6 @@ export class Reference {
     const refPath = this.plugin.data[STORAGE_NAME].referencePath as string;
     const res = await this.plugin.kernelApi.searchFileInSpecificPath(notebookId, refPath);
     this.plugin.isRefPathExist = (res.data as any[]).length ? true: false;
-  }
-
-  public generateCiteRef(citeFileId: string, link: string) {
-    if (this.plugin.data[STORAGE_NAME].customCiteText) {
-      return link;
-    } else {
-      return citeLink.replace("${id}", citeFileId).replace("${link}", link);
-    }
   }
 
   public async refreshLiteratureNoteTitles(titleTemplate: string) {
@@ -211,73 +213,14 @@ export class Reference {
     const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
     const refPath = this.plugin.data[STORAGE_NAME].referencePath as string;
     const titleTemplate = this.plugin.data[STORAGE_NAME].titleTemplate as string;
-    const res = this.plugin.kernelApi.searchFileWithName(notebookId, refPath + "/", key);
+    const res = this.plugin.kernelApi.searchFileWithKey(notebookId, refPath + "/", key);
     const data = (await res).data as any[];
     if (data.length) {
       const literatureId = data[0].id;
       if (isDev) this.logger.info("已存在文献文档，id=>", {literatureId});
-      // 文件存在就更新文件内容
-      let deleteList = [];
-      // 首先将文献的基本内容塞到用户文档的自定义属性中
-      this.plugin.kernelApi.setBlockEntry(literatureId, JSON.stringify(entry));
-      // 查找用户自定义片段
-      let res = await this.plugin.kernelApi.getChidBlocks(literatureId);
-      const dataIds = (res.data as any[]).map(data => {
-        return data.id as string;
-      });
-      let userDataId = "";
-      let userDataLink = "";
-      if (dataIds.length) {
-        // 查找第一个块的内容中是否包含用户自定义片段
-        res = await this.plugin.kernelApi.getBlock(dataIds[0]);
-        const dyMatch = (res.data[0].markdown as string).match(refRegDynamic);
-        const stMatch = (res.data[0].markdown as string).match(refRegStatic);
-        if (dyMatch && dyMatch.length && dyMatch[0] && dataIds.indexOf(dyMatch[0].split(" ")[0].slice(2)) != -1) {
-          // 如果能查找到链接，并且链接存在于文本中，则说明存在用户数据区域
-          const idx = dataIds.indexOf(dyMatch[0].split(" ")[0].slice(2));
-          userDataId = dataIds[idx];
-          userDataLink = dyMatch[0];
-          if (isDev) this.logger.info("匹配到用户片段动态锚文本链接 =>", {dyMatch: dyMatch, id: userDataId});
-          // 删除所有需要更新的片段
-          deleteList = dataIds.slice(0, idx);
-        } else if (stMatch && stMatch.length && stMatch[0] && dataIds.indexOf(stMatch[0].split(" ")[0].slice(2)) != -1) {
-          // 如果能查找到链接，并且链接存在于文本中，则说明存在用户数据区域
-          const idx = dataIds.indexOf(stMatch[0].split(" ")[0].slice(2));
-          userDataId = dataIds[idx];
-          userDataLink = stMatch[0];
-          if (isDev) this.logger.info("匹配到用户片段静态锚文本链接 =>", {stMatch: stMatch, id: userDataId});
-          // 删除所有需要更新的片段
-          deleteList = dataIds.slice(0, idx);
-        } else {
-          if (isDev) this.logger.info("未匹配到用户片段链接 =>", {
-            markdown: res.data[0].markdown,
-            stMatch,
-            dyMatch,
-            totalIds: dataIds
-          });
-          // 执行后续操作之前先更新文献池
-          this.plugin.literaturePool.set({id: literatureId, key: key});
-          return confirm("⚠️", this.plugin.i18n.confirms.updateWithoutUserData.replaceAll("${title}", entry.title), async () => {
-            // 不存在用户数据区域，整个更新
-            deleteList = dataIds;
-            userDataId = await this._updateEmptyNote(literatureId);
-            if (!userDataLink.length) userDataLink = `((${userDataId} 'User Data'))`;
-            this._insertNoteContent(literatureId, userDataId, userDataLink, entry, deleteList);
-            this.updateDataSourceItem(key, entry);
-            return;
-          });
-        }
-      } else {
-        if (isDev) this.logger.info("文献内容文档中没有内容");
-        // 更新空的文档内容
-        userDataId = await this._updateEmptyNote(literatureId);
-      }
-      // 执行后续操作之前先更新文献池
-      this.plugin.literaturePool.set({id: literatureId, key: key});
-      // 插入前置片段
-      if (!userDataLink.length) userDataLink = `((${userDataId} 'User Data'))`;
-      this._insertNoteContent(literatureId, userDataId, userDataLink, entry, deleteList);
-      this.updateDataSourceItem(key, entry);
+      // 保险起见更新一下字典
+      this.plugin.literaturePool.set({id: literatureId, key});
+      this._processExistedLiteratureNote(literatureId, key, entry);
       return;
     } else {
       //文件不存在就新建文件
@@ -294,6 +237,71 @@ export class Reference {
       this.updateDataSourceItem(key, entry);
       return;
     }
+  }
+
+  private async _processExistedLiteratureNote(literatureId: string, key: string, entry: any) {
+    // 文件存在就更新文件内容
+    let deleteList = [];
+    // 首先将文献的基本内容塞到用户文档的自定义属性中
+    this.plugin.kernelApi.setBlockEntry(literatureId, JSON.stringify(entry));
+    // 查找用户自定义片段
+    let res = await this.plugin.kernelApi.getChidBlocks(literatureId);
+    const dataIds = (res.data as any[]).map(data => {
+      return data.id as string;
+    });
+    let userDataId = "";
+    let userDataLink = "";
+    if (dataIds.length) {
+      // 查找第一个块的内容中是否包含用户自定义片段
+      res = await this.plugin.kernelApi.getBlock(dataIds[0]);
+      const dyMatch = (res.data[0].markdown as string).match(refRegDynamic);
+      const stMatch = (res.data[0].markdown as string).match(refRegStatic);
+      if (dyMatch && dyMatch.length && dyMatch[0] && dataIds.indexOf(dyMatch[0].split(" ")[0].slice(2)) != -1) {
+        // 如果能查找到链接，并且链接存在于文本中，则说明存在用户数据区域
+        const idx = dataIds.indexOf(dyMatch[0].split(" ")[0].slice(2));
+        userDataId = dataIds[idx];
+        userDataLink = dyMatch[0];
+        if (isDev) this.logger.info("匹配到用户片段动态锚文本链接 =>", {dyMatch: dyMatch, id: userDataId});
+        // 删除所有需要更新的片段
+        deleteList = dataIds.slice(0, idx);
+      } else if (stMatch && stMatch.length && stMatch[0] && dataIds.indexOf(stMatch[0].split(" ")[0].slice(2)) != -1) {
+        // 如果能查找到链接，并且链接存在于文本中，则说明存在用户数据区域
+        const idx = dataIds.indexOf(stMatch[0].split(" ")[0].slice(2));
+        userDataId = dataIds[idx];
+        userDataLink = stMatch[0];
+        if (isDev) this.logger.info("匹配到用户片段静态锚文本链接 =>", {stMatch: stMatch, id: userDataId});
+        // 删除所有需要更新的片段
+        deleteList = dataIds.slice(0, idx);
+      } else {
+        if (isDev) this.logger.info("未匹配到用户片段链接 =>", {
+          markdown: res.data[0].markdown,
+          stMatch,
+          dyMatch,
+          totalIds: dataIds
+        });
+        // 执行后续操作之前先更新文献池
+        this.plugin.literaturePool.set({id: literatureId, key: key});
+        return confirm("⚠️", this.plugin.i18n.confirms.updateWithoutUserData.replaceAll("${title}", entry.title), async () => {
+          // 不存在用户数据区域，整个更新
+          deleteList = dataIds;
+          userDataId = await this._updateEmptyNote(literatureId);
+          if (!userDataLink.length) userDataLink = `((${userDataId} 'User Data'))`;
+          this._insertNoteContent(literatureId, userDataId, userDataLink, entry, deleteList);
+          this.updateDataSourceItem(key, entry);
+          return;
+        });
+      }
+    } else {
+      if (isDev) this.logger.info("文献内容文档中没有内容");
+      // 更新空的文档内容
+      userDataId = await this._updateEmptyNote(literatureId);
+    }
+    // 执行后续操作之前先更新文献池
+    this.plugin.literaturePool.set({id: literatureId, key: key});
+    // 插入前置片段
+    if (!userDataLink.length) userDataLink = `((${userDataId} 'User Data'))`;
+    this._insertNoteContent(literatureId, userDataId, userDataLink, entry, deleteList);
+    this.updateDataSourceItem(key, entry);
   }
 
   private async _createLiteratureNote(noteTitle: string): Promise<{rootId: string, userDataId: string}> {
@@ -445,11 +453,12 @@ export class Reference {
 
   // Group: 引用链接相关
 
-  private async generateCiteLink(key: string, index: number, onlyLink: boolean) {
+  private async _generateCiteLink(key: string, index: number, onlyLink: boolean) {
     const linkTemplate = this.plugin.data[STORAGE_NAME].linkTemplate as string;
+    const useDynamicRefLink = this.plugin.data[STORAGE_NAME].useDynamicRefLink as boolean;
     let template = "";
     if (onlyLink) {
-      const linkReg = refRegStatic;
+      const linkReg = useDynamicRefLink ? refRegDynamic : refRegStatic;
       const matchRes = linkTemplate.matchAll(linkReg);
       let modifiedTemplate = "";
       for (const match of matchRes) {
@@ -474,5 +483,37 @@ export class Reference {
       citeFileID: this.plugin.literaturePool.get(key),
       ...entry
     });
+  }
+
+  private async _generateLiteratureName(key: string) {
+    const nameTemplate = this.plugin.data[STORAGE_NAME].nameTemplate;
+    const customCiteText = this.plugin.data[STORAGE_NAME].customCiteText;
+    const useDynamicRefLink = this.plugin.data[STORAGE_NAME].useDynamicRefLink;
+    // 如果本身不同时使用自定义链接和动态链接，就不需要生成文档的命名
+    if (!(customCiteText && useDynamicRefLink)) return "";
+    const entry = await this.plugin.database.getContentByKey(key);
+    if (!entry) {
+      if (isDev) this.logger.error("找不到文献数据");
+      this.plugin.noticer.error(this.plugin.i18n.errors.getLiteratureFailed);
+      return null;
+    }
+    return generateFromTemplate(nameTemplate, {
+      citeFileID: this.plugin.literaturePool.get(key),
+      ...entry
+    });
+  }
+
+  private async _generateCiteRef(citeFileId: string, link: string, name: string) {
+    const customCiteText = this.plugin.data[STORAGE_NAME].customCiteText;
+    const useDynamicRefLink = this.plugin.data[STORAGE_NAME].useDynamicRefLink;
+    if (customCiteText) {
+      if (useDynamicRefLink) await this.plugin.kernelApi.setNameOfBlock(citeFileId, name);
+      return link;
+    } else if (useDynamicRefLink) {
+      await this.plugin.kernelApi.setNameOfBlock(citeFileId, link);
+      return citeLinkDynamic.replace("${id}", citeFileId);
+    } else {
+      return citeLinkStatic.replace("${id}", citeFileId).replace("${link}", link);
+    }
   }
 }

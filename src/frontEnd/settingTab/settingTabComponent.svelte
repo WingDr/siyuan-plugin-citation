@@ -53,6 +53,8 @@
   let noteTemplate: string;
   let linkTemplate: string;
   let customCiteText: boolean;
+  let useDynamicRefLink: boolean;
+  let nameTemplate: string;
   // Zotero模板设定变量
   let zoteroLinkTitleTemplate: string;
   let zoteroTagTemplate: string;
@@ -166,8 +168,10 @@
       titleTemplate: defaultTitleTemplate,
       noteTemplate: defaultNoteTemplate,
       linkTemplate: defaultLinkTemplate,
+      nameTemplate: "",
       customCiteText: false,
       useItemKey: false,
+      useDynamicRefLink: false,
       zoteroLinkTitleTemplate: "",
       zoteroTagTemplate: "",
       dbPassword: defaultDBPassword,
@@ -187,6 +191,10 @@
     noteTemplate = plugin.data[STORAGE_NAME]?.noteTemplate ?? defaultSettingData.noteTemplate;
     // 默认不开启自定义引用
     customCiteText = plugin.data[STORAGE_NAME]?.customCiteText ?? defaultSettingData.customCiteText;
+    // 默认使用静态锚文本（不使用动态锚文本）
+    useDynamicRefLink = plugin.data[STORAGE_NAME]?.useDynamicRefLink ?? defaultSettingData.useDynamicRefLink;
+    // 默认不更新命名
+    nameTemplate = plugin.data[STORAGE_NAME]?.nameTemplate ?? defaultSettingData.nameTemplate;
     // 默认引用链接模板
     linkTemplate = plugin.data[STORAGE_NAME]?.linkTemplate ?? defaultSettingData.linkTemplate;
     // 默认Zotero链接标题模板
@@ -228,8 +236,10 @@
       titleTemplate,
       noteTemplate,
       linkTemplate,
+      nameTemplate,
       customCiteText,
       useItemKey,
+      useDynamicRefLink,
       zoteroLinkTitleTemplate,
       zoteroTagTemplate,
       dbPassword,
@@ -552,6 +562,53 @@
             }}
           />
         </Item>
+        <!-- 是否使用动态锚文本-->
+        <Item
+          block={false}
+          title={plugin.i18n.settingTab.templates.siyuan.useDynamicRefLinkSwitchTitle}
+          text={plugin.i18n.settingTab.templates.siyuan.useDynamicRefLinkSwitchDescription}
+        >
+          <Input
+            slot="input"
+            block={false}
+            normal={true}
+            type={ItemType.checkbox}
+            settingKey="Checkbox"
+            settingValue={useDynamicRefLink}
+            on:changed={(event) => {
+              if (isDev)
+                logger.info(
+                  `Checkbox changed: ${event.detail.key} = ${event.detail.value}`
+                );
+                useDynamicRefLink = event.detail.value;
+            }}
+          />
+        </Item>
+        {#if customCiteText && useDynamicRefLink}
+          <!-- 文献内容文档命名模板 -->
+          <Item
+            block={false}
+            title={plugin.i18n.settingTab.templates.siyuan.nameTempInputTitle}
+            text={plugin.i18n.settingTab.templates.siyuan.nameTempInputDescription}
+          >
+            <Input
+              slot="input"
+              block={false}
+              normal={true}
+              type={ItemType.text}
+              settingKey="Text"
+              settingValue={nameTemplate}
+              placeholder="Input the literature note's name template"
+              on:changed={(event) => {
+                if (isDev)
+                  logger.info(
+                    `Input changed: ${event.detail.key} = ${event.detail.value}`
+                  );
+                nameTemplate = event.detail.value;
+              }}
+            />
+          </Item>
+        {/if}
       </div>
 
       <!-- 标签页 2 内容 -->
