@@ -129,7 +129,8 @@ export class Reference {
       const noteTitle = generateFromTemplate(titleTemplate, entry);
       noteTitle.replace(DISALLOWED_FILENAME_CHARACTERS_RE, "_");
       // 不对的时候才更新
-      const res = await this.plugin.kernelApi.getBlock(this.plugin.literaturePool.get(key));
+      const literatureId = this.plugin.literaturePool.get(key);
+      const res = await this.plugin.kernelApi.getBlock(literatureId);
       if (!(res.data as any[]).length) {
         // 如果这个文档没有了，那就在池子里去掉它
         this.plugin.literaturePool.delete(key);
@@ -137,11 +138,12 @@ export class Reference {
       } 
       const title = res.data[0].content;
       if (noteTitle != title) await this.plugin.kernelApi.renameDoc(notebookId, res.data[0].path , noteTitle);
-      if (res.data[0].name != entry.key) {
-        if (isDev) this.logger.info("给文档刷新命名，detail=>", {id: this.plugin.literaturePool.get(key), name: entry.key});
-        await this.plugin.kernelApi.setNameOfBlock(this.plugin.literaturePool.get(key), entry.key);
+      const literatureKey = (await this.plugin.kernelApi.getBlockAttrs(literatureId)).data["custom-literature-key"];
+      if (literatureKey != entry.key) {
+        if (isDev) this.logger.info("给文档刷新key，detail=>", {id: literatureId, name: entry.key});
+        await this.plugin.kernelApi.setBlockKey(literatureId, entry.key);
       }
-      if (isDev) this.logger.info("文档无需刷新命名，detail=>", {id: this.plugin.literaturePool.get(key), name: entry.key});
+      if (isDev) this.logger.info("文档无需刷新key，detail=>", {id: literatureId, name: entry.key});
     });
     return await Promise.all(pList).then(async () => {
       if (isDev) this.logger.info("所有文件标题已更新");
@@ -284,7 +286,7 @@ export class Reference {
       if (isDev) this.logger.info("生成文件标题 =>", noteTitle);
       const noteData = await this._createLiteratureNote(noteTitle);
       // 首先将文献的基本内容塞到用户文档的自定义属性中
-      await this.plugin.kernelApi.setNameOfBlock(noteData.rootId, key);
+      await this.plugin.kernelApi.setBlockKey(noteData.rootId, key);
       this.plugin.kernelApi.setBlockEntry(noteData.rootId, JSON.stringify(entry));
       // 新建文件之后也要更新对应字典
       this.plugin.literaturePool.set({id: noteData.rootId, key: key});

@@ -89,22 +89,41 @@ export async function loadLocalRef(plugin: SiYuanPluginCitation): Promise<any> {
   const limit = 20;
   let offset = 0;
   let cont = true;
+  let promiseList = [];
   while (cont) {
-      const res  = await plugin.kernelApi.getFileTitleInPath(notebookId, refPath + "/", offset, limit);
-      if ((res.data as any[]).length < limit) {
-          cont = false;
-      }
-      (res.data as any[]).forEach(async file => {
+    /**
+     * 通过读取文献库中的文献构建文献池，用于快速索引和对应key与文档id
+     * 文献的索引位置经过两次更新，因此目前要考虑将更新前的情况进行转化：
+     * 1. key在文档标题位置
+     * 2. key在文档的命名中
+     * 3. key在文档的自定义字段“custom-literature-key”中
+     */
+    const literatureDocs  = (await plugin.kernelApi.getFileTitleInPath(notebookId, refPath + "/", offset, limit)).data as any[];
+    if (literatureDocs.length < limit) {
+      // 已经提取到所有了
+      cont = false;
+    }
+    const pList = literatureDocs.map(async file => {
+      let key = "";
+      const literatureKey = (await plugin.kernelApi.getBlockAttrs(file.id)).data["custom-literature-key"];
+      if (!literatureKey) {
+        // 如果没有这个自定义属性，就在标题和命名里找一下
         if (file.name === "") {
-          // 命名为空，那么就把标题赋给命名
-          await plugin.kernelApi.setNameOfBlock(file.id, file.content);
-          plugin.literaturePool.set({ id: file.id, key: file.content });
+          // 如果命名为空就从标题里拿
+          await plugin.kernelApi.setBlockKey(file.id, file.content);
+          key = file.content;
         } else {
-          plugin.literaturePool.set({ id: file.id, key: file.name });
+          // 命名不为空那就在命名里
+          await plugin.kernelApi.setBlockKey(file.id, file.name);
+          key = file.name;
         }
-      });
-      offset += limit;
+      } else key = literatureKey;
+      plugin.literaturePool.set({id: file.id, key});
+    });
+    promiseList = [...promiseList, ...pList];
+    offset += limit;
   }
+  await Promise.all(promiseList);
   if (isDev) logger.info("成功载入引用，content=>", plugin.literaturePool.content);
   plugin.noticer.info(plugin.i18n.notices.loadRefSuccess, {size: plugin.literaturePool.size});
 }

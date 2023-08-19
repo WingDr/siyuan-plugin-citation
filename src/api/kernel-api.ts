@@ -258,6 +258,13 @@ class KernelApi extends BaseApi {
     return await this.siyuanRequest("/api/query/sql", params);
   }
 
+  public async getBlockAttrs(blockId: string): Promise<SiyuanData> {
+    const params = {
+      "id": blockId
+    };
+    return await this.siyuanRequest("/api/attr/getBlockAttrs", params);
+  }
+
   public async renameDoc(notebook: string, path: string, title: string) {
     const params = {
       "notebook": notebook,
@@ -267,11 +274,11 @@ class KernelApi extends BaseApi {
     return await this.siyuanRequest("/api/filetree/renameDoc", params);
   }
 
-  public async setBlockCited(blockId: string, isSet: boolean): Promise<SiyuanData> {
+  public async setBlockKey(blockId: string, key: string): Promise<SiyuanData> {
     const attrParams = {
       "id": blockId,
       "attrs": {
-        "custom-cited": isSet ? "true" : ""
+        "custom-literature-key": key
       }
     };
     return await this.siyuanRequest("/api/attr/setBlockAttrs", attrParams);
