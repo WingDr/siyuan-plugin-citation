@@ -4,14 +4,14 @@
 
 > A citation plugin that implements basic functionality, hoping to make your SiYuan more academically oriented.
 
-**Version 0.1.3 Major Update:**
+**Version 0.2.0 Update**
 
-1. **Both the search panel and the setting panel have been rebuilt. It is recommended that all users check their settings after updating.**
-2. **Considering that the "Refresh All Literature Note Titles" function is not frequently used, it has been moved to the setting interface.**
-3. **All commands related to "copy" have been merged with the corresponding "insert" commands. When the cursor is not in the document, the result will be automatically copied to the clipboard.**
-4. **debug-bridge plugin:**
-   1. **Support using Zotero's "Add/Edit Citation" panel, which can be set in the settings panel.**
-   2. **Support automatically inserting SiYuan backlinks to the corresponding Zotero items after citing (clicking the link will navigate to the literature content document in SiYuan), and update the tags of that item.**
+1. **Moved the key of literature note documents to a custom attribute 'literature-key', allowing flexible naming of document titles.**
+2. **Citation links now support dynamic anchor text. When inserted, these links will update the names of literature note documents based on the citation link template (displayed content of dynamic anchor text).**
+3. **Supports direct dragging and dropping of selected content/annotations from Zotero's PDF reader for automatic referencing.**
+4. **{{annotations}} now supports annotation selections (however, images within the selected region are not displayed yet, I'm working to understand this behavior).**
+5. **Added the "Refresh Literature Note" and "Refresh All Literature Notes" functions, which also refresh Zotero's SiYuan backlinks and tags simultaneously.**
+6. **Enhanced the speed of referencing literature by moving most of the content updating functions to the background.**
 
 **Due to changes in the literature naming rules, it is recommended that all users execute the "Refresh All Literature Note Titles" command after updating. This command will refresh the names of all literature note documents in the library.**
 
@@ -30,7 +30,7 @@ Add citations to your notes, which refer to literature note generated in a speci
 1. **Notebook**: Refers to a notebook in the SiYuan note document tree. The library can only be placed in one of the open notebooks. If you switch to another notebook for the library, the previously selected notebook's library will become invalid.
 2. **Database**: The original data source of the literature, currently supports three types: data files (BibTeX and CSL-JSON), Zotero, and Juris-M. The data files are reimported every time the software is launched, but if the files themselves change during use, you need to **"Reload the Database"** (through the settings panel or command) or **"Restart the SiYuan software"** for the changes to take effect.
 3. **Library**: The location where the inserted citation links point to the literature note. It is essentially a *document located at a specific path*. Its sub-documents are all literature note that has been referenced. The content of this document itself will not be modified, but it will be updated and refreshed when citations are inserted.
-4. **Literature Note**: This document is generated based on the original data of the literature and the "Literature Note Template" filled in the settings interface. The title and naming of the new document will be set as the `citekey` or `itemKey` of the literature. Currently, the content of this document will be refreshed each time the corresponding literature is referenced. Therefore, **please do not modify the document's naming in the document properties**. The Literature Note now supports the user data area. For more details, refer to [Literature Note Details](#literature-note-details). **Please avoid inserting personal content outside the user data area**.
+4. **Literature Note Document**: Generated documents based on the original data of the literature and the "Literature Note Template" set in the settings. *The titles and names of newly created documents are set to the corresponding literature's citekey or itemKey*. Currently, the content of this document refreshes every time the corresponding literature is referenced. Hence, **please refrain from modifying the custom attribute 'literature-key' within the document properties**. The literature content now supports a user data area, see [Detailed Explanation of Literature Content](#detailed-explanation-of-literature-content), **please avoid inserting personal content in non-user data areas**.
 5. **Citation Link**: The reference link inserted in the document (or copied to the clipboard), which points to the corresponding literature note in the library. The anchor text of the link is generated based on the literature's original data and the "Citation Link Template" filled in the settings panel.
 
 ## Preparation before Use
@@ -48,6 +48,7 @@ Currently, you can use three different sources for literature data: Data Files (
 | Compatible with Zotero 7 | - | × (temporarily) | √ |
 | Compatible with Other Reference Managers | ✓ | × | × |
 | Supports Importing PDF Annotations | × | × | ✓ |
+| Support for Automatic Referencing from Zotero Drag-and-Drop | × | ✓ | ✓ |
 | Supports Inserting Multiple Literature at Once via Search Panel | × | ✓ | × (Citation plugin panel)<br>✓ (Zotero panel) |
 | Insert Zotero Selected Items | × | × | ✓ |
 | Insert Custom Tags into Zotero Items | × | × | ✓ |
@@ -65,7 +66,9 @@ Currently, you can use three different sources for literature data: Data Files (
 8. If you believe you are an experienced user familiar with regular expression searching and SiYuan citation logic and want to be compatible with workflows outside of SiYuan, you can choose to enable the "Customize Citation Link" switch. For the specific effect of enabling this switch, refer to the section [What Happens If I Enable the "Customize Citation Link" Switch?](#what-happens-if-i-enable-the-customize-citation-link-switch)
 9. Fill in the [citation link](#glossary) template: Fill in the template for generating the anchor text of the citation link. Refer to the section [Template Syntax](#how-to-write-templates) for specific template syntax.
 10. If you want to redesign your templates and data or want to see the default settings set by the plugin author, you can click the ["Delete Data"](#what-happens-when-i-click-the-delete-data-button) button to delete all the saved settings data.
-11. Click "Save" to store and apply the settings.
+11. Choose whether to use dynamic anchor text for citation links (if the "Custom Citation" switch is also turned on, you will need to input a document naming template to customize the naming of literature note documents during insertion). Refer to [Choosing Between Static and Dynamic Anchor Text for Citation Links](#choosing-between-static-and-dynamic-anchor-text-for-citation-links) for more details.
+12. Settings information will be automatically saved after closing the settings panel.
+13. Restart SiYuan (fully exit if in the system tray). If the settings are not taking effect after a restart or if there is a version mismatch after updating the plugin, restart one or two more times. This might help resolve issues, but some bugs might still exist.
 
 **If you have any doubts about this process, please refer to the [tutorial video](https://www.bilibili.com/video/BV17u411j79z/?vd_source=b4b4ca14b1a866918dcef4ca52896f03) created by [Geo123abc](https://github.com/Geo123abc). If you still have questions, feel free to [raise an issue](https://github.com/WingDr/siyuan-plugin-citation/issues) on the plugin's GitHub repository or contact me via email (siyuan_citation@126.com)**
 
@@ -111,12 +114,10 @@ Currently, you can use three different sources for literature data: Data Files (
   - Insert Literature Citation: Open the literature search panel, select the literature, and insert its [citation link](#glossary) at the current cursor position, and update the literature library. If not called by a shortcut key or the cursor is not focused in the editor, it will be copied to the clipboard instead.
   - Insert Literature Note: Open the literature search panel, select the literature, and insert its note at the current cursor position. If not called by a shortcut key or the cursor is not focused in the editor, it will be copied to the clipboard instead.
   - Cite Zotero Selected Items: Same function as in the Slash Menu. If not called by a shortcut key or the cursor is not focused in the editor, it will be copied to the clipboard instead.
-- Title Block Icon Menu:
-  - Refresh Citation:
-
- Use the current [citation link template](#configuring-the-plugin) to refresh all [citation links](#glossary) in the current document (**in the [literature library](#glossary) set to store [literature content](#glossary)**). When the citation link template changes, you can use this function to refresh all citation links in the document.
-- Document Top-Right Menu:
-  - Refresh Citation: Same function as the Title Block's Refresh Citation.
+  - Refresh All Literature Notes: Refresh the content of all literature note documents in the library. It's recommended to wait for a while before proceeding with the next action.
+- Document's upper-right "More" menu:
+  - Refresh Citation: Use the current [citation link template](#configuring-the-plugin) to refresh all [citation links](#glossary) in the current document (**in the [literature library](#glossary) set to store [literature content](#glossary)**). When the citation link template changes, you can use this function to refresh all citation links in the document.
+  - Refresh Literature Note (Only if the document is in the literature library and loaded): Refresh the content of the current document, which is equivalent to referencing the same literature again without copying the citation link.
 
 ![ ](./assets/protyleslash.png)
 
@@ -285,6 +286,12 @@ The [citation link template](#configure-the-plugin) will be fully customized, me
 **The regular expression for finding citation links is /\\(\\((.\*?)\\\"(.\*?)\\\"\\)\\)/g. Please make sure your template format conforms to this expression.**
 
 ⚠️**Note: After enabling the switch, please make sure your template includes `...(({{citeFileID}} "..."))...`, otherwise the generated links will not be able to reference the literature note.**
+
+## Choosing Between Static and Dynamic Anchor Text for Citation Links
+
+This plugin strongly recommends using static anchor text for citation links (meaning the anchor text is enclosed in double quotes within the link and is not updated when the referenced document's name changes). This approach is not only more stable but also allows for the possibility of adding parameters to the citation links in future updates, allowing for different link formats (similar to \citep and \citet in LaTeX).
+
+If dynamic anchor text for citation links is used, the document ID of the literature content will be temporarily displayed after referencing. The content will only appear after refreshing with `F5`.
 
 ## What Happens When I Click the "Delete Data" Button?
 
