@@ -263,13 +263,13 @@ export class InteractionManager {
     const detail = params.event.detail.data[0].doOperations[0];
     // 拖过来的时候只会产生uodate事件
     if (detail.action == "update") {
-      const id = detail.id;
+      let id = detail.id;
       const data = detail.data as string;
-      const insertedNode = document.querySelector(`div[data-node-id="${id}"]`);
+      let insertedNode = document.querySelector(`div[data-node-id="${id}"]`);
       const zoteroURLReg = /data-href=\"zotero:\/\/select\/library\/items\/(.*?)\"/;
       const zoteroURLMatch = data.match(zoteroURLReg);
       // 在data里面找到zotero链接才是zotero传过来的
-      if (zoteroURLMatch && zoteroURLMatch.length) {
+      if (insertedNode && zoteroURLMatch && zoteroURLMatch.length) {
         const itemKey = zoteroURLMatch[1];
         const key = "1_" + itemKey;
         const linkNode = insertedNode.querySelector(`span[data-href="zotero://select/library/items/${itemKey}"]`);
@@ -285,6 +285,8 @@ export class InteractionManager {
           const insertHTML = `<span data-type="block-ref" data-subtype="${useDynamicRefLink ? "d" : "s"}" data-id="${content[0].citeId}">${content[0].content}</span>`;
           const newRefNode = (new DOMParser()).parseFromString(insertHTML, "text/html").querySelector(`span[data-id="${content[0].citeId}"]`);
           linkNode.parentNode.replaceChild(newRefNode, linkNode);
+          insertedNode = this.getNode(linkNode as HTMLElement);
+          id = insertedNode.getAttribute("data-node-id");
           const updateHTML = insertedNode.children.item(0);
           await this.plugin.kernelApi.updateBlockContent(id, "dom", updateHTML.innerHTML);
           if (isDev) this.logger.info("从Zotero拖拽/粘贴事件处理完成");
@@ -338,5 +340,13 @@ export class InteractionManager {
 
   private isLiteratureNote(documentId: string): boolean {
     return this.plugin.literaturePool.get(documentId) ? true : false;
+  }
+
+  private getNode(node:HTMLElement) {
+    let nowNode = node;
+    while (!nowNode.getAttribute("data-node-id")) {
+      nowNode = nowNode.parentElement;
+    }
+    return nowNode;
   }
 }

@@ -181,7 +181,7 @@ export class Reference {
     });
   }
 
-  public async refreshSingleLiteratureNote(literatureId: string, needRefresh=true) {
+  public async refreshSingleLiteratureNote(literatureId: string, needRefresh=true, confirmUserData=false) {
     // 在刷新之前先更新一下文献池
     if (needRefresh) await loadLocalRef(this.plugin);
     const key = this.plugin.literaturePool.get(literatureId);
