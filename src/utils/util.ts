@@ -134,3 +134,13 @@ export function generateFileLinks(files: string[]) {
     return `[${fileName}]` + "\(file://" + file.replace(/\\(.?)/g, (m, p1) => p1) + "\)";
   }).join("\n") : files;
 }
+
+export function filePathProcess(path: string) {
+  const illegalSigns = /([\(\)])/g;
+  return path.replace(illegalSigns, (m, p1) => `\\${p1}`);
+}
+
+export function fileNameProcess(path: string) {
+  const illegalSigns = /([\(\)\[\]])/g;
+  return path.replace(illegalSigns, (m, p1) => `\\${p1}`);
+}

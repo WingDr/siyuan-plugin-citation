@@ -2,6 +2,7 @@ import type { TEventBus } from "siyuan";
 import type SiYuanPluginCitation from "../index";
 import { isDev } from "../utils/constants";
 import { createLogger, type ILogger } from "../utils/simple-logger";
+import { CustomEventBus } from "./customEventBus";
 
 class QueueT<T> {
   private data: Array<T>;
@@ -34,12 +35,14 @@ export interface TriggeredEvent {
 export class EventTrigger {
   private eventQueue: {[name: string]: EventQueue};
   private logger: ILogger;
+  private customEvent: CustomEventBus;
 
 
   constructor(private plugin: SiYuanPluginCitation){
     this.eventQueue = {};
     this.logger = createLogger("event trigger");
     this.plugin.eventBus.on("ws-main", this.wsMainTrigger.bind(this));
+    this.customEvent = new CustomEventBus(this.plugin);
   }
 
   private wsMainTrigger(event: CustomEvent<any>) {

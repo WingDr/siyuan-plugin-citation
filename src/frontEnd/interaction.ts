@@ -12,7 +12,7 @@ import {
 } from "../utils/constants";
 import { createLogger, type ILogger } from "../utils/simple-logger";
 import { type DatabaseType } from "../database/database";
-import { EventTrigger } from "./eventTrigger";
+import { EventTrigger } from "../eventManager/eventTrigger";
 import { SettingTab } from "./settingTab/settingTab";
 
 interface ICommandSetting {
@@ -261,11 +261,18 @@ export class InteractionManager {
 
   private async hookTransactions(params: {event: CustomEvent<any>}) {
     const detail = params.event.detail.data[0].doOperations[0];
+    const autoReplace = this.plugin.data[STORAGE_NAME].autoReplace;
     // 拖过来的时候只会产生uodate事件
-    if (detail.action == "update") {
+    if (autoReplace && detail.action == "update") {
       let id = detail.id;
       const data = detail.data as string;
+      const selection = window.getSelection();
       let insertedNode = document.querySelector(`div[data-node-id="${id}"]`);
+      // 不管是拖进来还是复制的，光标应该都在原位
+      if (selection.anchorNode.parentElement && (this.getNode(selection.anchorNode.parentElement)?.getAttribute("data-node-id") != id)) {
+        if (isDev) this.logger.info("触发位置不为光标位置, detail=>", {selection, detail});
+        return;
+      }
       const zoteroURLReg = /data-href=\"zotero:\/\/select\/library\/items\/(.*?)\"/;
       const zoteroURLMatch = data.match(zoteroURLReg);
       // 在data里面找到zotero链接才是zotero传过来的
@@ -344,8 +351,10 @@ export class InteractionManager {
 
   private getNode(node:HTMLElement) {
     let nowNode = node;
+    if (!nowNode) return null;
     while (!nowNode.getAttribute("data-node-id")) {
       nowNode = nowNode.parentElement;
+      if (!nowNode) return null;
     }
     return nowNode;
   }

@@ -48,6 +48,7 @@
   let referencePath: string;
   let database: string;
   let useItemKey: boolean;
+  let autoReplace: boolean;
   // 思源模板设定变量
   let titleTemplate: string;
   let noteTemplate: string;
@@ -171,6 +172,7 @@
       nameTemplate: "",
       customCiteText: false,
       useItemKey: false,
+      autoReplace: false,
       useDynamicRefLink: false,
       zoteroLinkTitleTemplate: "",
       zoteroTagTemplate: "",
@@ -183,6 +185,8 @@
     referencePath = plugin.data[STORAGE_NAME]?.referencePath ?? defaultSettingData.referencePath;
     // 使用itemKey默认关闭
     useItemKey = plugin.data[STORAGE_NAME]?.useItemKey ?? defaultSettingData.useItemKey;
+    // 默认会自动替换zotero链接
+    autoReplace = plugin.data[STORAGE_NAME]?.autoReplace ?? defaultSettingData.autoReplace;
     // 数据库类型默认为第一种
     database = plugin.data[STORAGE_NAME]?.database ?? defaultSettingData.database;
     // 默认标题模板
@@ -239,6 +243,7 @@
       nameTemplate,
       customCiteText,
       useItemKey,
+      autoReplace,
       useDynamicRefLink,
       zoteroLinkTitleTemplate,
       zoteroTagTemplate,
@@ -393,6 +398,29 @@
         />
       </Item>
     {/if}
+
+    <!-- 是否开启zotero链接自动替换 -->
+    <Item
+      block={false}
+      title={plugin.i18n.settingTab.basic.AutoReplaceSwitchTitle}
+      text={plugin.i18n.settingTab.basic.AutoReplaceSwitchDescription}
+    >
+      <Input
+        slot="input"
+        block={false}
+        normal={true}
+        type={ItemType.checkbox}
+        settingKey="Checkbox"
+        settingValue={autoReplace}
+        on:changed={(event) => {
+          if (isDev)
+            logger.info(
+              `Checkbox changed: ${event.detail.key} = ${event.detail.value}`
+            );
+            autoReplace = event.detail.value;
+        }}
+      />
+    </Item>
 
     <!-- 重载数据库 -->
     <Item

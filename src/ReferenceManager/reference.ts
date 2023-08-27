@@ -168,12 +168,12 @@ export class Reference {
     });
   }
 
-  public async refreshLiteratureNoteContents() {
+  public async refreshLiteratureNoteContents(confirmUserData=false) {
     // 在刷新之前先更新一下文献池
     await loadLocalRef(this.plugin);
     const ids = this.plugin.literaturePool.ids;
     const pList = ids.map(async id => {
-      await this.refreshSingleLiteratureNote(id, false);
+      await this.refreshSingleLiteratureNote(id, false, confirmUserData);
     });
     await Promise.all(pList).then(() => {
       if (isDev) this.logger.info("所有文献内容刷新完毕");
@@ -192,7 +192,7 @@ export class Reference {
       this.plugin.noticer.error(this.plugin.i18n.errors.getLiteratureFailed);
       return null;
     }
-    await this.updateLiteratureNote(key, entry);
+    await this.updateLiteratureNote(key, entry, confirmUserData);
     if (isDev) this.logger.info("文献内容刷新完毕, literatureId=>", {literatureId, key, title: entry.title});
     if (needRefresh) this.plugin.noticer.info(this.plugin.i18n.notices.refreshSingleLiteratureNoteSuccess, {key});
     return;
@@ -220,7 +220,7 @@ export class Reference {
 
   // Group: 更新文献内容
 
-  private async updateLiteratureNote(key: string, entry: any) {
+  private async updateLiteratureNote(key: string, entry: any, confirmUserData=false) {
     const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
     const refPath = this.plugin.data[STORAGE_NAME].referencePath as string;
     const titleTemplate = this.plugin.data[STORAGE_NAME].titleTemplate as string;
@@ -231,7 +231,7 @@ export class Reference {
       if (isDev) this.logger.info("已存在文献文档，id=>", {literatureId});
       // 保险起见更新一下字典
       this.plugin.literaturePool.set({id: literatureId, key});
-      this._processExistedLiteratureNote(literatureId, key, entry);
+      this._processExistedLiteratureNote(literatureId, key, entry, confirmUserData);
       return;
     } else {
       //文件不存在就新建文件
@@ -250,7 +250,7 @@ export class Reference {
     }
   }
 
-  private async _processExistedLiteratureNote(literatureId: string, key: string, entry: any) {
+  private async _processExistedLiteratureNote(literatureId: string, key: string, entry: any, confirmUserData=false) {
     // 文件存在就更新文件内容
     let deleteList = [];
     // 首先将文献的基本内容塞到用户文档的自定义属性中
@@ -292,7 +292,7 @@ export class Reference {
         });
         // 执行后续操作之前先更新文献池
         this.plugin.literaturePool.set({id: literatureId, key: key});
-        return confirm("⚠️", this.plugin.i18n.confirms.updateWithoutUserData.replaceAll("${title}", entry.title), async () => {
+        if (confirmUserData) return confirm("⚠️", this.plugin.i18n.confirms.updateWithoutUserData.replaceAll("${title}", entry.title), async () => {
           // 不存在用户数据区域，整个更新
           deleteList = dataIds;
           userDataId = await this._updateEmptyNote(literatureId);
@@ -301,6 +301,10 @@ export class Reference {
           this.updateDataSourceItem(key, entry);
           return;
         });
+        else {
+          deleteList = dataIds;
+          userDataId = await this._updateEmptyNote(literatureId);
+        }
       }
     } else {
       if (isDev) this.logger.info("文献内容文档中没有内容");

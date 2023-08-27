@@ -1,6 +1,7 @@
 import moment from "moment";
 import { Entry, type Author, type IIndexable, type File, type SingleNote } from "./filesLibrary";
 import { htmlNotesProcess } from "../utils/notes";
+import { filePathProcess, fileNameProcess } from "../utils/util";
 
 interface Creator {
   firstName?: string,
@@ -176,9 +177,9 @@ export class EntryZoteroAdapter extends Entry {
         if (fileType === "pdf") {
           const res = (attach.select as string).split("/");
           const itemID = res[res.length - 1];
-          return [...acc, `[[Open]](zotero://open-pdf/library/items/${itemID})\t|\t[${fileName}](file://${attach.path})`];
+          return [...acc, `[[Open]](zotero://open-pdf/library/items/${itemID})\t|\t[${fileName}](file://${filePathProcess(attach.path)})`];
         }
-        return [...acc, `[[Locate]](${attach.select})\t|\t[${fileName}](file://${attach.path})`];
+        return [...acc, `[[Locate]](${attach.select})\t|\t[${fileName}](file://${filePathProcess(attach.path)})`];
       } else return acc;
     }, [])];
   }
@@ -199,7 +200,7 @@ export class EntryZoteroAdapter extends Entry {
         return [...acc, {
           fileName,
           type: fileType,
-          path: "file://" + attach.path.replace(/\\(.?)/g, (m, p1) => p1),
+          path: "file://" + filePathProcess(attach.path.replace(/\\(.?)/g, (m, p1) => p1)),
           zoteroOpenURI,
           zoteroSelectURI: attach.select
         } as File];
@@ -363,7 +364,7 @@ export class EntryZoteroAdapter extends Entry {
 export function getTemplateVariablesForZoteroEntry(entry: EntryZoteroAdapter): Record<string, any> {
   const shortcuts = {
     key: entry.key,
-    citekey: entry.id.length ? entry.id : entry.itemKey,
+    citekey: entry.id?.length ? entry.id : entry.itemKey,
 
     abstract: entry.abstract,
     author: entry.author,

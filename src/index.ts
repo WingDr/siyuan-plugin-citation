@@ -29,7 +29,7 @@ import "./index.scss";
 import { createNoticer, type INoticer } from "./utils/noticer";
 import { changeUpdate } from "./utils/updates";
 import { LiteraturePool } from "./referenceManager/pool";
-import type { EventTrigger } from "./frontEnd/eventTrigger";
+import type { EventTrigger } from "./eventManager/eventTrigger";
 import { SettingTab } from "./frontEnd/settingTab/settingTab";
 
 export default class SiYuanPluginCitation extends Plugin {
@@ -67,6 +67,7 @@ export default class SiYuanPluginCitation extends Plugin {
             nameTemplate: "",
             customCiteText: false,
             useItemKey: false,
+            autoReplace: false,
             useDynamicRefLink: false,
             zoteroLinkTitleTemplate: "",
             zoteroTagTemplate: "",
@@ -94,7 +95,6 @@ export default class SiYuanPluginCitation extends Plugin {
         this.interactionManager.eventBusReaction();
 
         this.exportManager = new ExportManager(this);
-
         return ;
     }
 
@@ -102,6 +102,8 @@ export default class SiYuanPluginCitation extends Plugin {
         this.database = new Database(this);
         await this.database.buildDatabase(this.data[STORAGE_NAME].database as DatabaseType);
         this.reference = new Reference(this);
+        // // @ts-ignore
+        // this.eventBus.emit("Refresh", {type: "literature note", refreshAll: true, confirmUserData: false});
     }
 
     openSetting(): void {

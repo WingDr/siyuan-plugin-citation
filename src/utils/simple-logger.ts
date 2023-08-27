@@ -41,7 +41,7 @@ export interface ILogger {
  * @since 1.0.0
  */
 export const createLogger = (name: string): ILogger => {
-  const sign = "importer";
+  const sign = "citation";
 
   const formatDate = (date: Date) => {
     const year = date.getFullYear();

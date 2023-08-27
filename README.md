@@ -4,6 +4,10 @@
 
 > A citation plugin that implements basic functionality, hoping to make your SiYuan more academically oriented.
 
+**Version 0.2.3 Update**
+1. **Added a switch for automatic replacement of Zotero links with citation links.**
+2. **Introduced developer features to facilitate interaction with other plugins.**
+
 **Version 0.2.0 Update**
 
 1. **Moved the key of literature note documents to a custom attribute 'literature-key', allowing flexible naming of document titles.**
@@ -336,6 +340,35 @@ It is welcomed to raise an [issue](https://github.com/WingDr/siyuan-plugin-citat
   - [x] Remove invalid functions from the command panel (Waiting for updates from the SiYuan team)
   - [ ] Support using indexes in citation links (Waiting for updates from the SiYuan team)
   - [ ] Adaptation for mobile devices (Anyone willing to test?)
+
+## Developers
+
+This plugin exposes specific events for external calls. Here's how you can utilize them:
+
+1. Get the `eventBus` object of this plugin under `window.siyuan.ws.app.plugins`
+
+   `window.siyuan.ws.app.plugins.find(p => p.name === "siyuan-plugin-citation").eventBus`
+
+2. Use `eventBus.emit(rule: TRuleType, e: CustomEventDetail)` to send requests
+
+```typescript
+  type TRuleType = "GetFromPool" | "Refresh";
+  interface RefreshEventDetail extends CustomEventDetail {
+    type: "database" | "literature note";
+    docIDs?: string[];
+    keys?: string[];
+    refreshAll?: boolean;
+    confirmUserData?: boolean;
+  }
+
+  interface GetEventDetail extends CustomEventDetail {
+    keyorid: string;
+    triggerFn: (idorkey: string) => any;
+  }
+```
+
+- For the `GetFromPool` rule, the parameter `e` has a type of `GetEventDetail`.
+- For the `Refresh` rule, the parameter `e` has a type of `RefreshEventDetail`. Use the `type` to choose whether to reload the database or refresh literature content. Set `confirmUserData` to `false` to avoid displaying the "User data not found" prompt.
 
 ## Acknowledgments
 

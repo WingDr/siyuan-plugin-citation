@@ -4,6 +4,10 @@
 
 > 已经实现了基本功能的引用插件，从这里开始将思源变得更加学术
 
+**0.2.3版本更新**
+1. **添加了自动将Zotero链接替换为引用功能的开关**
+2. **添加了开发者功能，方便其它插件调用**
+
 **0.2.0版本更新**
 
 1. **将文献内容文档的key转移到自定义属性literature-key，文档的命名以后可以自由设定**
@@ -336,6 +340,34 @@
   - [x] 命令面板中去掉无效功能 `等V姐更新`
   - [ ] 支持 citation link 中使用 index `等V姐更新`
   - [ ] 适配移动端 `有没有大哥先试试`
+
+## 开发者
+
+本插件对外暴露特定的Event以供外部调用。调用方法如下：
+
+1. 获取`window.siyuan.ws.app.plugins`下本插件的`eventBus`对象
+  
+  `window.siyuan.ws.app.plugins.find(p => p.name === "siyuan-plugin-citation").eventBus`
+2. 使用`eventBus.emit(rule: TRuleType, e: CustomEventDetail)`来发送请求
+
+```typescript
+  type TRuleType = "GetFromPool" | "Refresh";
+  interface RefreshEventDetail extends CustomEventDetail {
+    type: "database" | "literature note";
+    docIDs?: string[];
+    keys?: string[];
+    refreshAll?: boolean;
+    confirmUserData?:boolean;
+  }
+
+  interface GetEventDetail extends CustomEventDetail {
+    keyorid: string;
+    triggerFn: (idorkey: string) => any;
+  }
+```
+
+- `GetFromPool`对应的参数e的类型为`GetEventDetail`
+- `Refresh`对应的参数e的类型为`RefreshEventDetail`，通过`type`选择重新载入数据库或者刷新文献内容，`confirmUserData`设置为`false`可以不弹出“未找到用户数据”的提示
 
 ## 感谢
 
