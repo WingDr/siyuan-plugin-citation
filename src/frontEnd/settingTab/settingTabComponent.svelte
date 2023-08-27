@@ -49,6 +49,7 @@
   let database: string;
   let useItemKey: boolean;
   let autoReplace: boolean;
+  let deleteUserDataWithoutConfirm: boolean;
   // 思源模板设定变量
   let titleTemplate: string;
   let noteTemplate: string;
@@ -173,6 +174,7 @@
       customCiteText: false,
       useItemKey: false,
       autoReplace: false,
+      deleteUserDataWithoutConfirm: false,
       useDynamicRefLink: false,
       zoteroLinkTitleTemplate: "",
       zoteroTagTemplate: "",
@@ -187,6 +189,8 @@
     useItemKey = plugin.data[STORAGE_NAME]?.useItemKey ?? defaultSettingData.useItemKey;
     // 默认会自动替换zotero链接
     autoReplace = plugin.data[STORAGE_NAME]?.autoReplace ?? defaultSettingData.autoReplace;
+    // 默认在删除用户数据时会弹出提示
+    deleteUserDataWithoutConfirm = plugin.data[STORAGE_NAME]?.deleteUserDataWithoutConfirm ?? defaultSettingData.deleteUserDataWithoutConfirm;
     // 数据库类型默认为第一种
     database = plugin.data[STORAGE_NAME]?.database ?? defaultSettingData.database;
     // 默认标题模板
@@ -244,6 +248,7 @@
       customCiteText,
       useItemKey,
       autoReplace,
+      deleteUserDataWithoutConfirm,
       useDynamicRefLink,
       zoteroLinkTitleTemplate,
       zoteroTagTemplate,
@@ -280,10 +285,6 @@
   });
 </script>
 
-<!--
-    You can use this template to quickly create a setting panel,
-    with the same UI style in SiYuan
--->
 <Panels panels={displayPanels} focus={panel_focus_key} let:focus={panel_focus}>
   <Panel display={panels[0].key === panel_focus}>
     <Item>
@@ -418,6 +419,29 @@
               `Checkbox changed: ${event.detail.key} = ${event.detail.value}`
             );
             autoReplace = event.detail.value;
+        }}
+      />
+    </Item>
+
+    <!-- 是否选择不提示删除用户数据 -->
+    <Item
+      block={false}
+      title={plugin.i18n.settingTab.basic.DeleteUserDataWithoutConfirmSwitchTitle}
+      text={plugin.i18n.settingTab.basic.DeleteUserDataWithoutConfirmSwitchDescription}
+    >
+      <Input
+        slot="input"
+        block={false}
+        normal={true}
+        type={ItemType.checkbox}
+        settingKey="Checkbox"
+        settingValue={deleteUserDataWithoutConfirm}
+        on:changed={(event) => {
+          if (isDev)
+            logger.info(
+              `Checkbox changed: ${event.detail.key} = ${event.detail.value}`
+            );
+            deleteUserDataWithoutConfirm = event.detail.value;
         }}
       />
     </Item>

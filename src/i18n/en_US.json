@@ -33,6 +33,8 @@
       "UseItemKeySwitchDescription": "Use the unique key of literature in Zotero as the index. When enabled, it can work without relying on the better bibtex plugin.<br><b>Only available when using the debug-bridge plugin</b>.",
       "AutoReplaceSwitchTitle": "Automatic Replacement of Zotero Links with Citation Links",
       "AutoReplaceSwitchDescription": "If a block of text contains links pointing to Zotero items (including annotations copied from Zotero's PDF viewer or selected areas dragged into SiYuan), these links will be automatically replaced with citations of the respective items. This feature is intended for users who predominantly use this plugin.",
+      "DeleteUserDataWithoutConfirmSwitchTitle": "Disable User Data Safety Prompt",
+      "DeleteUserDataWithoutConfirmSwitchDescription": "When enabled, if user data would be deleted while updating literature content, the confirmation dialog will not appear.<br>❗❗❗<b>Do not enable this unless you have specific requirements</b>",
       "reloadBtnTitle": "Reload Database",
       "reloadBtnDescription": "Reload the database, including checking if the literature library path exists.",
       "reloadBtnText": "Reload",

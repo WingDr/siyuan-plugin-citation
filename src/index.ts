@@ -69,6 +69,7 @@ export default class SiYuanPluginCitation extends Plugin {
             useItemKey: false,
             autoReplace: false,
             useDynamicRefLink: false,
+            deleteUserDataWithoutConfirm: false,
             zoteroLinkTitleTemplate: "",
             zoteroTagTemplate: "",
             dbPassword: defaultDBPassword,

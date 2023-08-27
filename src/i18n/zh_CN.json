@@ -33,6 +33,8 @@
       "UseItemKeySwitchDescription": "使用文献在Zotero中的唯一key作为索引，开启后可以不依赖better bibtex插件<br><b>仅使用debug-bridge插件时可以开启</b>",
       "AutoReplaceSwitchTitle": "自动替换指向Zotero链接为引用链接",
       "AutoReplaceSwitchDescription": "如果编辑包含指向Zotero条目的链接的块（包括从Zotero的pdf浏览器复制批注/拖动选区到思源），自动将链接替换为该条目的引用。适用于主要使用本插件的用户。",
+      "DeleteUserDataWithoutConfirmSwitchTitle": "关闭用户数据安全提示",
+      "DeleteUserDataWithoutConfirmSwitchDescription": "若开启，在更新文献内容时如果会删除用户数据，则不会弹出确认框。<br>❗❗❗<b>如果没有特殊需求请勿开启</b>",
       "reloadBtnTitle": "重新载入数据库",
       "reloadBtnDescription": "重新载入数据库，包括检查文献库路径是否存在",
       "reloadBtnText": "重载",
