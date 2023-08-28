@@ -24,7 +24,7 @@ export class Reference {
     this.logger = createLogger("reference");
   }
 
-  public async processReferenceContents(keys: string[], fileId?: string, returnDetail=false): Promise<any[]> {
+  public async processReferenceContents(keys: string[], fileId?: string, returnDetail=false, errorReminder=true): Promise<any[]> {
     let literatureEnum = [];
     if (fileId) literatureEnum = await this.getLiteratureEnum(fileId);
     const existNotes = this.plugin.literaturePool.keys;
@@ -32,9 +32,9 @@ export class Reference {
       const idx = existNotes.indexOf(key);
       const entry = await this.plugin.database.getContentByKey(key);
       if (isDev) this.logger.info("从database中获得文献内容 =>", entry);
-      if (!entry) {
+      if (!entry || !entry.key) {
         if (isDev) this.logger.error("找不到文献数据");
-        this.plugin.noticer.error(this.plugin.i18n.errors.getLiteratureFailed);
+        if (errorReminder) this.plugin.noticer.error(this.plugin.i18n.errors.getLiteratureFailed);
         return null;
       }
       await this.updateLiteratureNote(key, entry);
@@ -178,10 +178,6 @@ export class Reference {
     }
     if (isDev) this.logger.info("所有文献内容刷新完毕");
     this.plugin.noticer.info(this.plugin.i18n.notices.refreshLiteratureNoteContentsSuccess, {size: this.plugin.literaturePool.size});
-    // await Promise.all(pList).then(() => {
-    //   if (isDev) this.logger.info("所有文献内容刷新完毕");
-    //   this.plugin.noticer.info(this.plugin.i18n.notices.refreshLiteratureNoteContentsSuccess, {size: this.plugin.literaturePool.size});
-    // });
   }
 
   public async refreshSingleLiteratureNote(literatureId: string, needRefresh=true, noConfirmUserData=this.plugin.data[STORAGE_NAME].deleteUserDataWithoutConfirm) {
@@ -349,6 +345,7 @@ export class Reference {
       return n.prefix + `\n\n{ {note${n.index}} }`;
       // return `${n.prefix}\n\n${n.content}`;
     }).join("\n\n");
+    const annotations = entry.annotations;
     const literatureNote = generateFromTemplate(noteTemplate, entry);
     if (deleteList.length) await this.plugin.networkManager.sendNetworkMission([deleteList], this._deleteBlocks.bind(this));
     this.plugin.kernelApi.prependBlock(literatureId, userDataLink + "\n\n" + literatureNote);

@@ -283,7 +283,8 @@ export class InteractionManager {
         // 事件会执行两次，但是其实只需要替换一次
         if (linkNode && linkNode.parentNode) {
           if (isDev) this.logger.info("确认到从Zotero拖拽事件, itemKey=>", {itemKey});
-          const content = await this.plugin.reference.processReferenceContents([key], null, true);
+          const content = await this.plugin.reference.processReferenceContents([key], null, true, false);
+          if (!content[0]) return;
           if (isDev) this.logger.info("获取到插入内容, content=>", {content:content[0]});
           // const noteContent = (await this.plugin.kernelApi.getBlock(id)).data[0].markdown as string;
           // const insertContent = noteContent.replace(/\([(.*?)]\(zotero:\/\/select\/library\/items\/(.*?)\)\)/, content[0]);

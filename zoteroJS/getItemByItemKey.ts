@@ -2,7 +2,9 @@
 /* eslint-disable */
 var item = await Zotero.Items.getByLibraryAndKeyAsync(libraryID, key);
 
-if (!item) return {
+var notItemType = ["attachment", "annotation"]
+
+if (!item || (notItemType.indexOf(item.itemType) != -1)) return {
   itemExist: false
 }
 
