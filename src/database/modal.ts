@@ -561,7 +561,7 @@ export class ZoteroDBModal extends DataModal {
       command: filename,
       data: prefix + "\n" + jsContent
     });
-    const Result = await axios({
+    const Result = await this.plugin.networkManager.sendRequest({
       method: "post",
       url: `http://127.0.0.1:${this._getPort(this.type)}/debug-bridge/execute?password=${password}`,
       headers: JSHeaders,

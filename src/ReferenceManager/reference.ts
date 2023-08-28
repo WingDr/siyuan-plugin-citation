@@ -172,13 +172,16 @@ export class Reference {
     // 在刷新之前先更新一下文献池
     await loadLocalRef(this.plugin);
     const ids = this.plugin.literaturePool.ids;
-    const pList = ids.map(async id => {
+    for (let i = 0; i < ids.length; i++) {
+      const id = ids[i];
       await this.refreshSingleLiteratureNote(id, false, noConfirmUserData);
-    });
-    await Promise.all(pList).then(() => {
-      if (isDev) this.logger.info("所有文献内容刷新完毕");
-      this.plugin.noticer.info(this.plugin.i18n.notices.refreshLiteratureNoteContentsSuccess, {size: this.plugin.literaturePool.size});
-    });
+    }
+    if (isDev) this.logger.info("所有文献内容刷新完毕");
+    this.plugin.noticer.info(this.plugin.i18n.notices.refreshLiteratureNoteContentsSuccess, {size: this.plugin.literaturePool.size});
+    // await Promise.all(pList).then(() => {
+    //   if (isDev) this.logger.info("所有文献内容刷新完毕");
+    //   this.plugin.noticer.info(this.plugin.i18n.notices.refreshLiteratureNoteContentsSuccess, {size: this.plugin.literaturePool.size});
+    // });
   }
 
   public async refreshSingleLiteratureNote(literatureId: string, needRefresh=true, noConfirmUserData=this.plugin.data[STORAGE_NAME].deleteUserDataWithoutConfirm) {
@@ -244,7 +247,7 @@ export class Reference {
       this.plugin.kernelApi.setBlockEntry(noteData.rootId, JSON.stringify(entry));
       // 新建文件之后也要更新对应字典
       this.plugin.literaturePool.set({id: noteData.rootId, key: key});
-      this._insertNoteContent(noteData.rootId, noteData.userDataId, `(( ${noteData.userDataId} 'User Data'))`, entry, []);
+      this._insertComplexContents(noteData.rootId, noteData.userDataId, `(( ${noteData.userDataId} 'User Data'))`, entry, []);
       this.updateDataSourceItem(key, entry);
       return;
     }
@@ -297,7 +300,7 @@ export class Reference {
           deleteList = dataIds;
           userDataId = await this._updateEmptyNote(literatureId);
           if (!userDataLink.length) userDataLink = `((${userDataId} 'User Data'))`;
-          this._insertNoteContent(literatureId, userDataId, userDataLink, entry, deleteList);
+          this._insertComplexContents(literatureId, userDataId, userDataLink, entry, deleteList);
           this.updateDataSourceItem(key, entry);
           return;
         });
@@ -315,7 +318,7 @@ export class Reference {
     this.plugin.literaturePool.set({id: literatureId, key: key});
     // 插入前置片段
     if (!userDataLink.length) userDataLink = `((${userDataId} 'User Data'))`;
-    this._insertNoteContent(literatureId, userDataId, userDataLink, entry, deleteList);
+    this._insertComplexContents(literatureId, userDataId, userDataLink, entry, deleteList);
     this.updateDataSourceItem(key, entry);
   }
 
@@ -339,15 +342,15 @@ export class Reference {
     return Promise.all(p);
   }
 
-  private async _insertNoteContent(literatureId: string, userDataId: string, userDataLink: string, entry: any, deleteList: string[]) {
+  private async _insertComplexContents(literatureId: string, userDataId: string, userDataLink: string, entry: any, deleteList: string[]) {
     const noteTemplate = this.plugin.data[STORAGE_NAME].noteTemplate as string;
     const note = entry.note;
-    entry.note = entry.note.map(n => {
+    entry.note = entry.note?.map(n => {
       return n.prefix + `\n\n{ {note${n.index}} }`;
       // return `${n.prefix}\n\n${n.content}`;
     }).join("\n\n");
     const literatureNote = generateFromTemplate(noteTemplate, entry);
-    if (deleteList.length) await this._deleteBlocks(deleteList);
+    if (deleteList.length) await this.plugin.networkManager.sendNetworkMission([deleteList], this._deleteBlocks.bind(this));
     this.plugin.kernelApi.prependBlock(literatureId, userDataLink + "\n\n" + literatureNote);
     note.forEach(n => {
       this.plugin.eventTrigger.addSQLIndexEvent({

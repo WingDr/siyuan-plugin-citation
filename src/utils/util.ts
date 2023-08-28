@@ -144,3 +144,11 @@ export function fileNameProcess(path: string) {
   const illegalSigns = /([\(\)\[\]])/g;
   return path.replace(illegalSigns, (m, p1) => `\\${p1}`);
 }
+
+export async function sleep(time: number) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve(true);
+    }, time);
+  });
+}

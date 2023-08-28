@@ -70,6 +70,7 @@ for (let attachmentID of attachmentIDs) {
           annotationText: annoItem.annotationText,
           annotationPosition: JSON.parse(annoItem.annotationPosition),
           annotationComment: annoItem.annotationComment,
+          imagePath: Zotero.Annotations.getCacheImagePath(annoItem),
           ...getAllFields(annoItem)
         })
       }
