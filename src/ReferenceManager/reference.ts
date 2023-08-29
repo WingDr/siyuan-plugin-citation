@@ -4,7 +4,7 @@ import { type SiyuanData } from "../api/base-api";
 import {
   STORAGE_NAME, isDev, citeLinkStatic, citeLinkDynamic, 
   DISALLOWED_FILENAME_CHARACTERS_RE, 
-  refReg, refRegStatic, refRegDynamic
+  refReg, refRegStatic, refRegDynamic, dataDir
 } from "../utils/constants";
 import {
   generateFromTemplate
@@ -346,8 +346,14 @@ export class Reference {
       // return `${n.prefix}\n\n${n.content}`;
     }).join("\n\n");
     const annotations = entry.annotations;
+    entry.annotations = entry.annotations.map(anno => {
+      return anno.title + anno.content.map(content => {
+        return `{ {annotation-${anno.index}-${content.index}} }`;
+      }).join("\n\n");
+    }).join("\n\n");
     const literatureNote = generateFromTemplate(noteTemplate, entry);
     if (deleteList.length) await this.plugin.networkManager.sendNetworkMission([deleteList], this._deleteBlocks.bind(this));
+    if (isDev) this.logger.info("向literature note发起插入请求, content=>", {literatureNote});
     this.plugin.kernelApi.prependBlock(literatureId, userDataLink + "\n\n" + literatureNote);
     note.forEach(n => {
       this.plugin.eventTrigger.addSQLIndexEvent({
@@ -359,6 +365,20 @@ export class Reference {
           userDataId
         },
         type: "once"
+      });
+    });
+    annotations.forEach(anno => {
+      anno.content.forEach(content => {
+        this.plugin.eventTrigger.addSQLIndexEvent({
+          triggerFn: this._insertAnnotations.bind(this),
+          params: {
+            fatherIndex: anno.index,
+            content,
+            literatureId,
+            userDataId
+          },
+          type: "once"
+        });
       });
     });
   }
@@ -396,6 +416,94 @@ export class Reference {
       }
     });
     return await Promise.all(pList);
+  }
+
+  private async _insertAnnotations(params: {fatherIndex: number, content: any, literatureId: string, userDataId: string}) {
+    const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
+    const fatherIndex = params.fatherIndex;
+    const content = params.content;
+    const literatureId = params.literatureId;
+    const userDataId = params.userDataId;
+    let res = await this.plugin.kernelApi.getChidBlocks(literatureId);
+    const dataIds = (res.data as any[]).map(data => {
+      return data.id as string;
+    });
+    res = await this.plugin.kernelApi.getBlocksWithContent(notebookId, literatureId, `{ {annotation-${fatherIndex}-${content.index}} }`);
+    const data = res.data as any[];
+    if (!data.length) {
+      // 还没更新出来就重新塞回队列
+      if (isDev) this.logger.info("文档尚未更新到数据库，等下一次数据库更新，detail=>", { fatherIndex, content, literatureId, userDataId });
+      return this.plugin.eventTrigger.addSQLIndexEvent({
+        triggerFn: this._insertNotes.bind(this),
+        params: {
+          fatherIndex,
+          content,
+          literatureId,
+          userDataId
+        },
+        type: "once"
+      });
+    }
+    const pList = data.map(async d => {
+      // 只有在userDataID之前的才会更新
+      if (dataIds.indexOf(d.id) != -1 && dataIds.indexOf(d.id) < dataIds.indexOf(userDataId)) {
+        const annoContent = await this._generateSingleAnnotation(content);
+        await this.plugin.kernelApi.updateBlockContent(d.id, "markdown", annoContent);
+        await this.plugin.kernelApi.setBlockAttr(d.id, {"custom-annotation-color": content.detail.annotationColor});
+      }
+    });
+    return await Promise.all(pList);
+  }
+
+  private async _generateAnnotationContent(annotations: any) {
+    const pList = annotations.map( async anno => {
+       const ps = anno.content.map(async content => {
+        return await this._generateSingleAnnotation(content);
+      });
+      return anno.title + "\n\n" + (await Promise.all(ps).then(res => res.join("\n\n")));
+    });
+    return await Promise.all(pList).then(res => res.join("\n\n"));
+  }
+
+  private async _generateSingleAnnotation(content: any) {
+    const detail = content.detail;
+    const type = detail.annotationType;
+    let quoteContent = `${type} on page ${detail.annotationPageLabel}`;
+    switch (type) {
+      case "image": {
+        quoteContent = await this._moveImgToAssets(detail.imagePath, detail);
+        break;
+      }
+      case "highlight": {
+        quoteContent = `<span data-type="text" style="background-color: ${detail.annotationColor}">${detail.annotationText.replace(/\n+/g, "\n")}</span>`;
+        break;
+      }
+      case "underline": {
+        quoteContent = `<span data-type="text" style="text-decoration: underline solid 0.2em ${detail.annotationColor} ">${detail.annotationText.replace(/\n+/g, "\n")}</span>`;
+        break;
+      }
+      case "ink": {
+        quoteContent = await this._moveImgToAssets(detail.imagePath, detail);
+        break;
+      }
+    }
+    return `{{{row\n> ${quoteContent}\n[Open on Zotero](${content.openURI})\n\n${content.detail.annotationComment ? content.detail.annotationComment : ""}\n}}}`;
+  }
+
+  private async _moveImgToAssets(imgPath: string, detail: any) {
+    const fs = window.require("fs");
+    const path = window.require("path");
+    const time = detail.dateAdded.replace(/[-:\s]/g, "");
+    // 用于欺骗思源的随机（伪）字符串，是7位的小写字母和数字（itemKey是8位）
+    const randomStr = (detail.key as string).toLowerCase().slice(1);
+    const name = `zotero-annotations-${detail.annotationType}-${detail.parentKey}-${detail.key}-${time}-${randomStr}`;
+    const assetPath = `assets/${name}.png`;
+    const assetsAbsPath = path.join(dataDir, "./" + assetPath);
+    if (!(await fs.existsSync(assetsAbsPath))) {
+      // 如果文件不存在（同时会检验添加时间、父条目key和annotation自己的key，基本可以确定不存在了）
+      await fs.copyFileSync(imgPath, assetsAbsPath);
+    } 
+    return `![img](${assetPath})`;
   }
 
   private async _updateEmptyNote(rootId: string): Promise<string> {

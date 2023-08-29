@@ -226,22 +226,24 @@ export class EntryZoteroAdapter extends Entry {
     }
   }
 
-  get annotations(): string {
+  get annotations(): any[] {
     const annotations = this.data.annotations ?? [];
-    return annotations.map(anno => {
+    return annotations.map((anno, index) => {
       const title = `\n\n---\n\n###### Annotation in ${anno.parentTitle}\n\n`;
-      const content = anno.details.map(detail => {
-        let content = "annotation";
-        switch (detail.annotationType) {
-          case "image": content = "Selected Area"; break;
-          case "highlight": content = detail.annotationText; break;
-        }
+      const content = anno.details.map((detail, idx) => {
         const openURI = `zotero://open-pdf/library/items/${anno.parentKey}?page=${detail.annotationPosition.pageIndex}&annotation=${detail.key}`;
-        const comment = detail.annotationComment ? `\n\n**[Comment]**: ${detail.annotationComment}` : "";
-        return `[${content}](${openURI})` + comment;
-      }).join("\n\n");
-      return title + content;
-    }).join("\n\n");
+        return {
+          index: idx,
+          detail,
+          openURI
+        };
+      });
+      return {
+        title,
+        index,
+        content
+      };
+    });
   }
 
   get annotationList() {

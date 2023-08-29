@@ -231,7 +231,7 @@ export abstract class Entry {
   }
 
   public get annotations() {
-    return "";
+    return [];
   }
 
   public get annotationList() {

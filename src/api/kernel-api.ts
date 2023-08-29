@@ -294,6 +294,14 @@ class KernelApi extends BaseApi {
     return await this.siyuanRequest("/api/attr/setBlockAttrs", attrParams);
   }
 
+  public async setBlockAttr(blockId: string, attrs: {[key: string]: string}): Promise<SiyuanData> {
+    const attrParams = {
+      "id": blockId,
+      "attrs": attrs
+    };
+    return await this.siyuanRequest("/api/attr/setBlockAttrs", attrParams);
+  }
+
   public async setBlockEntry(blockId: string, entryData: string): Promise<SiyuanData> {
     const attrParams = {
       "id": blockId,

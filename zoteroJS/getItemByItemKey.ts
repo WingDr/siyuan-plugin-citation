@@ -47,6 +47,7 @@ for (let noteID of noteIDs) {
 // 获得attachments和annotations
 var attachmentIDs = item.getAttachments();
 let attachments = [];
+var annotationFileType = ["pdf", "equb"];
 let annotations = [];
 for (let attachmentID of attachmentIDs) {
   var attachment = Zotero.Items.get(attachmentID);
@@ -58,7 +59,9 @@ for (let attachmentID of attachmentIDs) {
     ...getAllFields(attachment)
   }
   attachments.push(attachDetail);
-  if (attachDetail.path && attachDetail.path.split(".").slice(-1) == "pdf") {
+  if (attachDetail.path 
+    && (attachDetail.path.split(".").slice(-1) == "pdf"
+    || attachDetail.path.split(".").slice(-1) == "equb")) {
     var annoItems = attachment.getAnnotations();
     if (annoItems.length) {
       var annoDetail = {

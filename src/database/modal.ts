@@ -423,7 +423,7 @@ export class ZoteroDBModal extends DataModal {
     if (itemKey) {
       const res = await this.getItemByItemKey(...processKey(itemKey));
       if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, res);
-      if (!res.ready || !res.itemExist) return null;
+      if (("ready" in res && !res.ready) || !res.itemExist) return null;
       const zoteroEntry = new EntryZoteroAdapter(res as EntryDataZotero, this.useItemKey);
       const entry = getTemplateVariablesForZoteroEntry(zoteroEntry);
       if (entry.files) entry.files = entry.files.join("\n");
@@ -578,7 +578,6 @@ export class ZoteroDBModal extends DataModal {
     });
     const resData = JSON.parse(Result.data);
     if (isDev) this.logger.info("从debug-bridge接收到数据，resJson=>", resData);
-    if ("ready" in resData) return resData;
-    else return {...resData, ready: true};
+    return resData;
   }
 }
