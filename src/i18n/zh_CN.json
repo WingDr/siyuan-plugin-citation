@@ -7,7 +7,7 @@
   "byePlugin": "再见，插件！",
   "showDialog": "弹出一个对话框",
   "removedData": "数据已删除",
-  "prefix": "Citation: ",
+  "prefix": "文献引用：",
   "citeLink": "引用链接",
   "notes": "笔记",
   "addCitation": "插入文献引用",
@@ -17,6 +17,7 @@
   "copyCiteLink": "复制文献引用",
   "copyNotes": "复制文献笔记",
   "addSelectedItems": "引用Zotero中选中的文献",
+  "refreshSingleLiteratureNote": "刷新文献内容",
   "refreshLiteratureNotesContents": "刷新所有文献内容",
   "settingTab": {
     "settingTabTitle": "插件版本：${version}",

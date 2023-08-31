@@ -141,6 +141,14 @@ export class InteractionManager {
         }
       },
       {
+        langKey: "refreshSingleLiteratureNote",
+        hotkey: "",
+        editorCallback: (p) => {
+          const id = p.block.rootID;
+          this.plugin.reference.refreshSingleLiteratureNote(id);
+        }
+      },
+      {
         langKey: "refreshLiteratureNotesContents",
         hotkey: "",
         callback: async () => {
@@ -326,24 +334,24 @@ export class InteractionManager {
   private customBreadcrumbMore(event: CustomEvent<any>) {
     if (isDev) this.logger.info("触发eventBus：open-menu-breadcrumbmore，=>", event);
     const place = "BreadcrumbMore" as MenuPlace;
-    const submenu = [] as IMenuItemOption[];
+    // const submenu = [] as IMenuItemOption[];
     const id  = event.detail.protyle.block.rootID;
     this.menuItems.forEach(item => {
       if (!item.place || item.place.indexOf(place) != -1) {
         if (!item.check || item.check(id)) {
-          submenu.push({
+          (event.detail.menu as Menu).addItem({
             iconHTML: item.iconHTML,
-            label: item.label,
+            label: this.plugin.i18n.prefix + item.label,
             click: () => {item.clickCallback(id);}
           });
         }
       }
     });
-    (event.detail.menu as Menu).addItem({
-      iconHTML: `<div class="b3-menu__icon" style>${pluginIconSVG}</div>`,
-      label: this.plugin.i18n.pluginName,
-      submenu: submenu
-    });
+    // (event.detail.menu as Menu).addItem({
+    //   iconHTML: `<div class="b3-menu__icon" style>${pluginIconSVG}</div>`,
+    //   label: ,
+    //   submenu: submenu
+    // });
   }
 
   private isLiteratureNote(documentId: string): boolean {

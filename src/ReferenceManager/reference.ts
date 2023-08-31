@@ -198,7 +198,8 @@ export class Reference {
   }
 
   public async insertContent(protyle, content: string) {
-    const blockId = protyle.protyle.breadcrumb.id;
+    if (isDev) this.logger.info("插入内容, detail=>", {protyle, content});
+    const blockId = protyle.protyle.block.id;
     const rootId = protyle.protyle.block.rootID;
     if (isDev) this.logger.info("Protyle块ID =>", blockId);
     if (isDev) this.logger.info("Protyle文档ID =>", rootId);
@@ -362,7 +363,8 @@ export class Reference {
           index: n.index,
           content: n.content,
           literatureId,
-          userDataId
+          userDataId,
+          callbackTimes: 0
         },
         type: "once"
       });
@@ -375,7 +377,8 @@ export class Reference {
             fatherIndex: anno.index,
             content,
             literatureId,
-            userDataId
+            userDataId,
+            callbackTimes: 0
           },
           type: "once"
         });
@@ -383,12 +386,13 @@ export class Reference {
     });
   }
 
-  private async _insertNotes(params: {index: number, content: string, literatureId: string, userDataId: string}) {
+  private async _insertNotes(params: {index: number, content: string, literatureId: string, userDataId: string, callbackTimes: number}) {
     const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
     const index = params.index;
     const content = params.content;
     const literatureId = params.literatureId;
     const userDataId = params.userDataId;
+    const callbackTimes = params.callbackTimes;
     let res = await this.plugin.kernelApi.getChidBlocks(literatureId);
     const dataIds = (res.data as any[]).map(data => {
       return data.id as string;
@@ -396,15 +400,20 @@ export class Reference {
     res = await this.plugin.kernelApi.getBlocksWithContent(notebookId, literatureId, `{ {note${index}} }`);
     const data = res.data as any[];
     if (!data.length) {
+      if (callbackTimes >= 1) {
+        if (isDev) this.logger.info("更新次数到极限，本次暂停更新, detail=>", { index, content, literatureId, userDataId, callbackTimes});
+        return;
+      }
       // 还没更新出来就重新塞回队列
-      if (isDev) this.logger.info("文档尚未更新到数据库，等下一次数据库更新，detail=>", { index, content, literatureId, userDataId });
+      if (isDev) this.logger.info("文档尚未更新到数据库，等下一次数据库更新，detail=>", { index, content, literatureId, userDataId, callbackTimes });
       return this.plugin.eventTrigger.addSQLIndexEvent({
         triggerFn: this._insertNotes.bind(this),
         params: {
           index,
           content,
           literatureId,
-          userDataId
+          userDataId,
+          callbackTimes: callbackTimes + 0.2
         },
         type: "once"
       });
@@ -418,12 +427,13 @@ export class Reference {
     return await Promise.all(pList);
   }
 
-  private async _insertAnnotations(params: {fatherIndex: number, content: any, literatureId: string, userDataId: string}) {
+  private async _insertAnnotations(params: {fatherIndex: number, content: any, literatureId: string, userDataId: string, callbackTimes: number}) {
     const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
     const fatherIndex = params.fatherIndex;
     const content = params.content;
     const literatureId = params.literatureId;
     const userDataId = params.userDataId;
+    const callbackTimes = params.callbackTimes;
     let res = await this.plugin.kernelApi.getChidBlocks(literatureId);
     const dataIds = (res.data as any[]).map(data => {
       return data.id as string;
@@ -431,6 +441,10 @@ export class Reference {
     res = await this.plugin.kernelApi.getBlocksWithContent(notebookId, literatureId, `{ {annotation-${fatherIndex}-${content.index}} }`);
     const data = res.data as any[];
     if (!data.length) {
+      if (callbackTimes >= 1) {
+        if (isDev) this.logger.info("更新次数到极限，本次暂停更新, detail=>", { fatherIndex, content, literatureId, userDataId, callbackTimes});
+        return;
+      }
       // 还没更新出来就重新塞回队列
       if (isDev) this.logger.info("文档尚未更新到数据库，等下一次数据库更新，detail=>", { fatherIndex, content, literatureId, userDataId });
       return this.plugin.eventTrigger.addSQLIndexEvent({
@@ -439,7 +453,8 @@ export class Reference {
           fatherIndex,
           content,
           literatureId,
-          userDataId
+          userDataId,
+          callbackTimes: callbackTimes + 0.2
         },
         type: "once"
       });

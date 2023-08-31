@@ -36,16 +36,19 @@ export class EventTrigger {
   private eventQueue: {[name: string]: EventQueue};
   private logger: ILogger;
   private customEvent: CustomEventBus;
+  private onProcessing: boolean;
 
 
   constructor(private plugin: SiYuanPluginCitation){
     this.eventQueue = {};
+    this.onProcessing = false;
     this.logger = createLogger("event trigger");
     this.plugin.eventBus.on("ws-main", this.wsMainTrigger.bind(this));
     this.customEvent = new CustomEventBus(this.plugin);
   }
 
   private wsMainTrigger(event: CustomEvent<any>) {
+    if (this.onProcessing) return;
     if ( Object.keys(this.eventQueue).indexOf(event.detail.cmd) != -1 ) {
       if (isDev) this.logger.info("事件触发，event =>", {type: "ws-main", cmd: event.detail.cmd});
       this.execEvent(event.detail.cmd, event);
@@ -61,6 +64,7 @@ export class EventTrigger {
   }
 
   private async execEvent(name: string, event: CustomEvent<any>) {
+    this.onProcessing = true;
     if (this.eventQueue[name].type == "repeated") {
       const triggerEvent = this.eventQueue[name];
       if (isDev) this.logger.info("事件执行，event=>", {...triggerEvent, name});
@@ -77,6 +81,7 @@ export class EventTrigger {
       }
     }
     if (isDev) this.logger.info("事件执行完毕");
+    this.onProcessing = false;
   }
 
   public addEvent(name: string, event: TriggeredEvent) {
