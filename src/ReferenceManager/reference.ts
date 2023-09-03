@@ -413,7 +413,7 @@ export class Reference {
           content,
           literatureId,
           userDataId,
-          callbackTimes: callbackTimes + 0.2
+          callbackTimes: callbackTimes + 0.05
         },
         type: "once"
       });
@@ -448,13 +448,13 @@ export class Reference {
       // 还没更新出来就重新塞回队列
       if (isDev) this.logger.info("文档尚未更新到数据库，等下一次数据库更新，detail=>", { fatherIndex, content, literatureId, userDataId });
       return this.plugin.eventTrigger.addSQLIndexEvent({
-        triggerFn: this._insertNotes.bind(this),
+        triggerFn: this._insertAnnotations.bind(this),
         params: {
           fatherIndex,
           content,
           literatureId,
           userDataId,
-          callbackTimes: callbackTimes + 0.2
+          callbackTimes: callbackTimes + 0.05
         },
         type: "once"
       });
