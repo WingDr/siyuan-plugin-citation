@@ -307,14 +307,14 @@ export class EntryZoteroAdapter extends Entry {
   get issuedDate() {
     if (this.issued) {
       const splits = ["-", "/", "\\", "=", " "];
-      splits.forEach(s => {
+      for (const s of splits) {
         const conditions = [
           `YYYY${s}MM${s}DD`, `DD${s}MM${s}YY`, `MM${s}YYYY`, `YYYY${s}MM`
         ];
         if (this.issued.split(s).length > 1) {
           return moment(this.issued, conditions).toDate();
         }
-      });
+      }
       return moment(this.issued, "YYYY").toDate();
     } else return null;
   }
