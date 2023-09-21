@@ -301,7 +301,8 @@ export class InteractionManager {
           const insertHTML = `<span data-type="block-ref" data-subtype="${useDynamicRefLink ? "d" : "s"}" data-id="${content[0].citeId}">${content[0].content}</span>`;
           const newRefNode = (new DOMParser()).parseFromString(insertHTML, "text/html").querySelector(`span[data-id="${content[0].citeId}"]`);
           linkNode.parentNode.replaceChild(newRefNode, linkNode);
-          insertedNode = this.getNode(linkNode as HTMLElement);
+          insertedNode = this.getNode(newRefNode as HTMLElement);
+          if (isDev) this.logger.info("获取到链接和包含链接的最小节点, node=>", {newRefNode, insertedNode});
           id = insertedNode.getAttribute("data-node-id");
           const updateHTML = insertedNode.children.item(0);
           await this.plugin.kernelApi.updateBlockContent(id, "dom", updateHTML.innerHTML);
