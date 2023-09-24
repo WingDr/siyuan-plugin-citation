@@ -52,3 +52,4 @@ export const defaultNoteTemplate = `
 `;
 export const defaultLinkTemplate = "({{shortAuthor}} {{year}})";
 export const defaultDBPassword = "CTT";
+export const defaultUserDataTile = "User Data";
