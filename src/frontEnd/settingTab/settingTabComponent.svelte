@@ -11,6 +11,7 @@
     defaultNoteTemplate,
     defaultLinkTemplate,
     defaultReferencePath,
+    defaultUserDataTile,
     isDev,
     dataDir,
     defaultDBPassword,
@@ -52,6 +53,7 @@
   let deleteUserDataWithoutConfirm: boolean;
   // 思源模板设定变量
   let titleTemplate: string;
+  let userDataTitle: string;
   let noteTemplate: string;
   let linkTemplate: string;
   let customCiteText: boolean;
@@ -168,6 +170,7 @@
       referencePath: defaultReferencePath,
       database: databaseType[0],
       titleTemplate: defaultTitleTemplate,
+      userDataTitle: defaultUserDataTile,
       noteTemplate: defaultNoteTemplate,
       linkTemplate: defaultLinkTemplate,
       nameTemplate: "",
@@ -195,6 +198,8 @@
     database = plugin.data[STORAGE_NAME]?.database ?? defaultSettingData.database;
     // 默认标题模板
     titleTemplate = plugin.data[STORAGE_NAME]?.titleTemplate ?? defaultSettingData.titleTemplate;
+    // 默认用户数据标题
+    userDataTitle = plugin.data[STORAGE_NAME]?.userDataTitle ?? defaultSettingData.userDataTitle;
     // 默认文献内容模板
     noteTemplate = plugin.data[STORAGE_NAME]?.noteTemplate ?? defaultSettingData.noteTemplate;
     // 默认不开启自定义引用
@@ -242,6 +247,7 @@
       referencePath,
       database,
       titleTemplate,
+      userDataTitle,
       noteTemplate,
       linkTemplate,
       nameTemplate,
@@ -523,6 +529,29 @@
                   `Input changed: ${event.detail.key} = ${event.detail.value}`
                 );
               titleTemplate = event.detail.value;
+            }}
+          />
+        </Item>
+        <!-- 自定义用户数据标题 -->
+        <Item
+          block={false}
+          title={plugin.i18n.settingTab.templates.siyuan.titleUserDataInput}
+          text={plugin.i18n.settingTab.templates.siyuan.titleUserDataInputDescription}
+        >
+          <Input
+            slot="input"
+            block={false}
+            normal={true}
+            type={ItemType.text}
+            settingKey="Text"
+            settingValue={userDataTitle}
+            placeholder="Input the 'User Data' title"
+            on:changed={(event) => {
+              if (isDev)
+                logger.info(
+                `Input changed: ${event.detail.key} = ${event.detail.value}`
+              );
+              userDataTitle = event.detail.value; 
             }}
           />
         </Item>

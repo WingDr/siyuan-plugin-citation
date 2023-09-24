@@ -50,6 +50,8 @@
         "title": "SiYuan Content Template",
         "titleTemplateInputTitle": "Literature Note Document Title Template",
         "titleTemplateInputDescription": "Set the title template for generating literature content documents (user modifications will <b>not</b> be refreshed, titles can be regenerated using \"Refresh All Literature Note Titles\").",
+        "titleUserDataInput": "Custom 'User Data' headers",
+        "titleUserDataInputDescription": "The default is 'User Data', which can be customized",
         "refreshLiteratureNoteBtnTitle": "Refresh All Literature Note Titles",
         "refreshLiteratureNoteBtnDesciption": "Refresh the titles of all documents in the literature library. It will also update the document names (after switching index variables or updating versions).",
         "refreshLiteratureNoteBtnText": "Refresh",

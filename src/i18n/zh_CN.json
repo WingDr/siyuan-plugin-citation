@@ -50,6 +50,8 @@
         "title": "思源内容模板",
         "titleTemplateInputTitle": "文献内容文档标题模板",
         "titleTemplateInputDescription": "设置文献内容文档的生成标题（用户修改后<b>不会</b>刷新，可以通过“刷新所有文献内容文档标题”重新生成标题）",
+        "titleUserDataInput": "自定义用户数据标题",
+        "titleUserDataInputDescription": "默认是 User Data，可以自定义",
         "refreshLiteratureNoteBtnTitle": "刷新所有文献内容文档标题",
         "refreshLiteratureNoteBtnDesciption": "刷新文献库中所有文档的标题，同时也会更新文档的命名（切换索引变量或者更新版本之后）",
         "refreshLiteratureNoteBtnText": "刷新",

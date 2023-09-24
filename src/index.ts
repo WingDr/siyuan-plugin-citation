@@ -6,7 +6,7 @@ import {
 
 import KernelApi from "./api/kernel-api";
 import { Database, type DatabaseType } from "./database/database";
-import { Reference } from "./referenceManager/reference";
+import { Reference } from "./ReferenceManager/reference";
 import { InteractionManager } from "./frontEnd/interaction";
 import { ExportManager } from "./export/exportManager";
 import {
@@ -15,6 +15,7 @@ import {
     defaultLinkTemplate,
     defaultNoteTemplate,
     defaultReferencePath,
+    defaultUserDataTile,
     databaseType,
     defaultTitleTemplate,
     defaultDBPassword,
@@ -28,7 +29,7 @@ import {
 import "./index.scss";
 import { createNoticer, type INoticer } from "./utils/noticer";
 import { changeUpdate } from "./utils/updates";
-import { LiteraturePool } from "./referenceManager/pool";
+import { LiteraturePool } from "./ReferenceManager/pool";
 import type { EventTrigger } from "./eventManager/eventTrigger";
 import { SettingTab } from "./frontEnd/settingTab/settingTab";
 import { NetworkMananger } from "./api/networkManager";
@@ -65,6 +66,7 @@ export default class SiYuanPluginCitation extends Plugin {
             referencePath: defaultReferencePath,
             database: databaseType[0],
             titleTemplate: defaultTitleTemplate,
+            userDataTitle: defaultUserDataTile,
             noteTemplate: defaultNoteTemplate,
             linkTemplate: defaultLinkTemplate,
             nameTemplate: "",
