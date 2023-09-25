@@ -6,7 +6,7 @@ import {
 
 import KernelApi from "./api/kernel-api";
 import { Database, type DatabaseType } from "./database/database";
-import { Reference } from "./ReferenceManager/reference";
+import { Reference } from "./referenceManager/reference";
 import { InteractionManager } from "./frontEnd/interaction";
 import { ExportManager } from "./export/exportManager";
 import {
@@ -29,7 +29,7 @@ import {
 import "./index.scss";
 import { createNoticer, type INoticer } from "./utils/noticer";
 import { changeUpdate } from "./utils/updates";
-import { LiteraturePool } from "./ReferenceManager/pool";
+import { LiteraturePool } from "./referenceManager/pool";
 import type { EventTrigger } from "./eventManager/eventTrigger";
 import { SettingTab } from "./frontEnd/settingTab/settingTab";
 import { NetworkMananger } from "./api/networkManager";

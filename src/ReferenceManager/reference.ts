@@ -245,7 +245,7 @@ export class Reference {
       this.plugin.kernelApi.setBlockEntry(noteData.rootId, JSON.stringify(entry));
       // 新建文件之后也要更新对应字典
       this.plugin.literaturePool.set({id: noteData.rootId, key: key});
-      this._insertComplexContents(noteData.rootId, noteData.userDataId, `(( ${noteData.userDataId} ${userDataTitle}))`, entry, []);
+      this._insertComplexContents(noteData.rootId, noteData.userDataId, `(( ${noteData.userDataId} '${userDataTitle}'))`, entry, []);
       this.updateDataSourceItem(key, entry);
       return;
     }
@@ -298,7 +298,7 @@ export class Reference {
           // 不存在用户数据区域，整个更新
           deleteList = dataIds;
           userDataId = await this._updateEmptyNote(literatureId);
-          if (!userDataLink.length) userDataLink = `((${userDataId} ${userDataTitle}))`;
+          if (!userDataLink.length) userDataLink = `((${userDataId} '${userDataTitle}'))`;
           this._insertComplexContents(literatureId, userDataId, userDataLink, entry, deleteList);
           this.updateDataSourceItem(key, entry);
           return;
@@ -316,7 +316,7 @@ export class Reference {
     // 执行后续操作之前先更新文献池
     this.plugin.literaturePool.set({id: literatureId, key: key});
     // 插入前置片段
-    if (!userDataLink.length) userDataLink = `((${userDataId} ${userDataTitle}))`;
+    if (!userDataLink.length) userDataLink = `((${userDataId} '${userDataTitle}'))`;
     this._insertComplexContents(literatureId, userDataId, userDataLink, entry, deleteList);
     this.updateDataSourceItem(key, entry);
   }
