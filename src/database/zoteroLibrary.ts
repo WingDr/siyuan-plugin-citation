@@ -200,7 +200,7 @@ export class EntryZoteroAdapter extends Entry {
         return [...acc, {
           fileName,
           type: fileType,
-          path: "file://" + filePathProcess(attach.path.replace(/\\(.?)/g, (m, p1) => p1)),
+          path: "file://" + filePathProcess(attach.path),
           zoteroOpenURI,
           zoteroSelectURI: attach.select
         } as File];
