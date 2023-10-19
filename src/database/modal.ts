@@ -473,8 +473,8 @@ export class ZoteroDBModal extends DataModal {
     if (await this.checkZoteroRunning()) {
       let itemKey = this.useItemKey ? key : await this.getItemKeyByCitekey(...processKey(key));
       if (!(await this.checkItemKeyExist(...processKey(itemKey)))) itemKey = this.useItemKey ? await this.getItemKeyByCitekey(...processKey(key)) : key;
-      if (!processKey(itemKey)[1].length) {
-        this.logger.error("不存在key，key=>", {itemKey});
+      if (!processKey(itemKey)[1]?.length) {
+        this.logger.error("不存在key，key=>", {itemKey, key, processed: processKey(key)});
         return null;
       }
       return itemKey;
