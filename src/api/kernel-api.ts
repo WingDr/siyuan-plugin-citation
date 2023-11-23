@@ -184,21 +184,21 @@ class KernelApi extends BaseApi {
 
   public async searchFileInSpecificPath(notebook: string, hpath: string): Promise<SiyuanData> {
     const params = {
-      "stmt": `SELECT * FROM blocks WHERE box LIKE'${notebook}' and hpath LIKE'${hpath}' and type LIKE'd'`
+      "stmt": `SELECT * FROM blocks WHERE box like '${notebook}' and hpath like '${hpath}' and type like 'd'`
     };
     return await this.siyuanRequest("/api/query/sql", params);
   }
 
   public async searchFileWithKey(notebook: string, hpath: string, key: string): Promise<SiyuanData> {
     const params = {
-      "stmt": `SELECT * FROM blocks WHERE box LIKE'${notebook}' and hpath LIKE'${hpath}%' and ial LIKE"%custom-literature-key=_${key}%" and type LIKE'd'`
+      "stmt": `SELECT * FROM blocks WHERE box like '${notebook}' and hpath like '${hpath}%' and ial like "%custom-literature-key=_${key}%" and type like 'd'`
     };
     return await this.siyuanRequest("/api/query/sql", params);
   }
 
   public async getFileTitleInPath(notebook: string, dir_hpath: string, offset: number, limit: number): Promise<SiyuanData> {
     const params = {
-      "stmt": `SELECT * FROM blocks WHERE box LIKE'${notebook}' and hpath LIKE'${dir_hpath}%' and type LIKE'd' limit ${offset}, ${limit}`
+      "stmt": `SELECT * FROM blocks WHERE box like '${notebook}' and hpath like '${dir_hpath}%' and type like 'd' limit ${limit}, ${offset}`
     };
     return await this.siyuanRequest("/api/query/sql", params);
   }
