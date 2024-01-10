@@ -7,6 +7,8 @@ const CopyPlugin = require("copy-webpack-plugin");
 const ZipPlugin = require("zip-webpack-plugin");
 const sveltePreprocess = require("svelte-preprocess");
 
+const pluginDir = "D:/Documents/SiYuan/data/plugins/siyuan-plugin-citation/";
+
 module.exports = (env, argv) => {
     const isPro = argv.mode === "production";
     const plugins = [
@@ -38,6 +40,7 @@ module.exports = (env, argv) => {
                 {from: "sample-data/sample.bib", to: "./dist/sample-data/"},
                 {from: "sample-data/sample.json", to: "./dist/sample-data/"},
                 {from: "zoteroJS/", to: "./dist/zoteroJS/"},
+                {from: "./dist/", to: pluginDir, force: true}
             ],
         }));
         plugins.push(new ZipPlugin({
@@ -49,10 +52,23 @@ module.exports = (env, argv) => {
             },
         }));
     } else {
+        
         plugins.push(new CopyPlugin({
             patterns: [
                 {from: "src/i18n/", to: "./i18n/"},
-            ],
+                {from: "index.css", to: pluginDir, force: true},
+                {from: "index.js", to: pluginDir, force: true},
+                {from: "preview.png", to: pluginDir, force: true},
+                {from: "icon.png", to: pluginDir, force: true},
+                {from: "citeIcon.ico", to: pluginDir, force: true},
+                {from: "README*.md", to: pluginDir, force: true},
+                {from: "plugin.json", to: pluginDir, force: true},
+                {from: "src/i18n/", to: path.resolve(pluginDir, "./i18n/"), force: true},
+                {from: "assets/", to: path.resolve(pluginDir, "./assets/"), force: true},
+                {from: "sample-data/sample.bib", to: path.resolve(pluginDir, "./sample-data/"), force: true},
+                {from: "sample-data/sample.json", to: path.resolve(pluginDir, "./sample-data/"), force: true},
+                {from: "zoteroJS/", to: path.resolve(pluginDir, "./zoteroJS/"), force: true}
+            ]
         }));
     }
     return {
