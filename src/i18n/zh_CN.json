@@ -69,7 +69,7 @@
       "zotero": {
         "title": "Zotero内容模板",
         "notAbleTitle": "无法向Zotero中插入内容",
-        "notAbleDescription": "当然使用的<b>数据库类型</b>不支持向Zotero中插入内容",
+        "notAbleDescription": "当前使用的<b>数据库类型</b>不支持向Zotero中插入内容",
         "zoteroLinkTitleTemplateTitle": "插入Zotero反向链接标题模板",
         "zoteroLinkTitleTemplateDescription": "设置当插入文献的同时插入到Zotero对应条目下的思源反链的标题模板，置空则不会添加反链，变量\"{{siyuanLink}}\"代表链接本身",
         "zoteroTagTemplateTitle": "插入Zotero标签模板",
