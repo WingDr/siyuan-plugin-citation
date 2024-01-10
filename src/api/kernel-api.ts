@@ -196,9 +196,18 @@ class KernelApi extends BaseApi {
     return await this.siyuanRequest("/api/query/sql", params);
   }
 
-  public async getFileTitleInPath(notebook: string, dir_hpath: string, offset: number, limit: number): Promise<SiyuanData> {
+  public async getLiteratureDocInPath(notebook: string, dir_hpath: string, offset: number, limit: number): Promise<SiyuanData> {
     const params = {
-      "stmt": `SELECT * FROM blocks WHERE box like '${notebook}' and hpath like '${dir_hpath}%' and type like 'd' limit ${limit}, ${offset}`
+      "stmt": `SELECT 
+          b.id, b.root_id, b.box, b."path", b.hpath, b.name, b.content, a.value as literature_key 
+        FROM blocks b 
+          left outer join (
+            select * FROM "attributes" WHERE name = "custom-literature-key"
+          ) as a on b.id = a.block_id 
+        WHERE 
+          b.box like '${notebook}' and 
+          b.hpath like '${dir_hpath}%' and 
+          b.type like 'd' limit ${limit}, ${offset}`
     };
     return await this.siyuanRequest("/api/query/sql", params);
   }

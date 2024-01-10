@@ -86,7 +86,7 @@ export async function loadLocalRef(plugin: SiYuanPluginCitation): Promise<any> {
   const notebookId = plugin.data[STORAGE_NAME].referenceNotebook as string;
   const refPath = plugin.data[STORAGE_NAME].referencePath as string;
   plugin.literaturePool.empty();
-  const limit = 20;
+  const limit = 64;
   let offset = 0;
   let cont = true;
   let promiseList = [];
@@ -98,14 +98,15 @@ export async function loadLocalRef(plugin: SiYuanPluginCitation): Promise<any> {
      * 2. key在文档的命名中
      * 3. key在文档的自定义字段“custom-literature-key”中
      */
-    const literatureDocs  = (await plugin.kernelApi.getFileTitleInPath(notebookId, refPath + "/", offset, limit)).data as any[];
+    const literatureDocs  = (await plugin.kernelApi.getLiteratureDocInPath(notebookId, refPath + "/", offset, limit)).data as any[];
     if (literatureDocs.length < limit) {
       // 已经提取到所有了
       cont = false;
     }
+    console.log(literatureDocs);
     const pList = literatureDocs.map(async file => {
       let key = "";
-      const literatureKey = (await plugin.kernelApi.getBlockAttrs(file.id)).data["custom-literature-key"];
+      const literatureKey = file.literature_key;
       if (!literatureKey) {
         // 如果没有这个自定义属性，就在标题和命名里找一下
         if (file.name === "") {
