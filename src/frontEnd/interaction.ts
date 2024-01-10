@@ -73,7 +73,7 @@ export class InteractionManager {
     this.plugin.eventTrigger = new EventTrigger(plugin);
     this.protyleSlashs = [
       {
-        filter: [this.plugin.i18n.addCitation, "插入文献引用", "addcitation", "charuwenxianyinyong"],
+        filter: [this.plugin.i18n.addCitation, "插入文献引用", "addcitation", "cite", "charuwenxianyinyong"],
         html: `<div class = "b3-list-item__first">
           <svg class="b3-list-item__graphic">
             <use xlink:href="#iconRef"></use>
