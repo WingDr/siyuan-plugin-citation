@@ -35,6 +35,11 @@
   export let plugin: SiYuanPluginCitation;
   export let logger: ILogger;
 
+  /**
+   * 设置面板的设计
+   * 1. 
+  */
+
   // 显示数据
   const eMail = "siyuan_citation@126.com";
   const issuesURL = "https://github.com/WingDr/siyuan-plugin-citation/issues";
