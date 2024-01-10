@@ -101,13 +101,13 @@ export default class SiYuanPluginCitation extends Plugin {
         this.interactionManager.eventBusReaction();
 
         this.exportManager = new ExportManager(this);
+        this.database = new Database(this);
+        await this.database.buildDatabase(this.data[STORAGE_NAME].database as DatabaseType);
+        this.reference = new Reference(this);
         return ;
     }
 
     async onLayoutReady() {
-        this.database = new Database(this);
-        await this.database.buildDatabase(this.data[STORAGE_NAME].database as DatabaseType);
-        this.reference = new Reference(this);
         // // @ts-ignore
         // this.eventBus.emit("Refresh", {type: "literature note", refreshAll: true, confirmUserData: false});
     }
