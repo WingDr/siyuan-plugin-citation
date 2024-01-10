@@ -223,6 +223,7 @@ export class InteractionManager {
         this.plugin.addCommand({
           langKey: command.langKey,
           hotkey: command.hotkey,
+          customHotkey: "",
           callback: () => {
             if (isDev) this.logger.info(`Command触发：${command.langKey}，callback`);
             if (command.callback && this.validateCommand(command)) command.callback();

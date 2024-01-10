@@ -102,9 +102,10 @@ export default class SiYuanPluginCitation extends Plugin {
 
         this.exportManager = new ExportManager(this);
         this.database = new Database(this);
-        await this.database.buildDatabase(this.data[STORAGE_NAME].database as DatabaseType);
-        this.reference = new Reference(this);
-        return ;
+        return this.database.buildDatabase(this.data[STORAGE_NAME].database as DatabaseType)
+            .then(() => {
+                this.reference = new Reference(this);
+            });
     }
 
     async onLayoutReady() {
