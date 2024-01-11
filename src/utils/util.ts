@@ -153,3 +153,15 @@ export async function sleep(time: number) {
     }, time);
   });
 }
+
+export function cleanEmptyKey(obj: object) {
+  Object.keys(obj).forEach(key => {
+    if (obj[key] == null || obj[key] == undefined) delete obj[key];
+    else if (typeof obj[key] == "object") {
+      if (Object.prototype.toString.call(obj[key]) === "[object Array]") {
+        if (obj[key].length > 0) obj[key].forEach(o => cleanEmptyKey(o));
+      } else cleanEmptyKey(obj[key]);
+    }
+  });
+  return obj;
+}

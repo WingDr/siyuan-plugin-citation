@@ -10,7 +10,7 @@ import {
   generateFromTemplate
 } from "../utils/templates";
 import { type ILogger, createLogger } from "../utils/simple-logger";
-import { loadLocalRef } from "../utils/util";
+import { loadLocalRef, cleanEmptyKey } from "../utils/util";
 
 
 // 根据输入更新文献库和引用文档，并维护本文档中的引用次序
@@ -242,7 +242,7 @@ export class Reference {
       const noteData = await this._createLiteratureNote(noteTitle);
       // 首先将文献的基本内容塞到用户文档的自定义属性中
       await this.plugin.kernelApi.setBlockKey(noteData.rootId, key);
-      this.plugin.kernelApi.setBlockEntry(noteData.rootId, JSON.stringify(entry));
+      this.plugin.kernelApi.setBlockEntry(noteData.rootId, JSON.stringify(cleanEmptyKey(Object.assign({}, entry))));
       // 新建文件之后也要更新对应字典
       this.plugin.literaturePool.set({id: noteData.rootId, key: key});
       this._insertComplexContents(noteData.rootId, noteData.userDataId, `(( ${noteData.userDataId} '${userDataTitle}'))`, entry, []);
@@ -255,7 +255,7 @@ export class Reference {
     // 文件存在就更新文件内容
     let deleteList = [];
     // 首先将文献的基本内容塞到用户文档的自定义属性中
-    this.plugin.kernelApi.setBlockEntry(literatureId, JSON.stringify(entry));
+    this.plugin.kernelApi.setBlockEntry(literatureId, JSON.stringify(cleanEmptyKey(Object.assign({}, entry))));
     // 查找用户自定义片段
     let res = await this.plugin.kernelApi.getChidBlocks(literatureId);
     const dataIds = (res.data as any[]).map(data => {
