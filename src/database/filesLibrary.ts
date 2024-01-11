@@ -62,6 +62,7 @@ export class Library {
       annotations: entry.annotations,
       annotationList: entry.annotationList,
       containerTitle: entry.containerTitle,
+      containerTitleShort: entry.containerTitleShort,
       DOI: entry.DOI,
       eprint: entry.eprint,
       eprinttype: entry.eprinttype,
@@ -177,6 +178,7 @@ export abstract class Entry {
    * the name of the journal.
    */
   public abstract containerTitle?: string;
+  public abstract containerTitleShort?: string;
 
   public abstract DOI?: string;
   public abstract files?: string[];
@@ -349,6 +351,10 @@ export class EntryCSLAdapter extends Entry {
   }
 
   get containerTitle() {
+    return this.data["container-title"];
+  }
+
+  get containerTitleShort() {
     return this.data["container-title"];
   }
 
