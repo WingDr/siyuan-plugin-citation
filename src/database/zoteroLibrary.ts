@@ -374,6 +374,7 @@ export function getTemplateVariablesForZoteroEntry(entry: EntryZoteroAdapter): R
     annotations: entry.annotations,
     annotationList: entry.annotationList,
     containerTitle: entry.containerTitle,
+    containerTitleShort: entry.containerTitleShort,
     DOI: entry.DOI,
     eprint: entry.eprint,
     eprinttype: entry.eprinttype,
