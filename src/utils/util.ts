@@ -155,13 +155,17 @@ export async function sleep(time: number) {
 }
 
 export function cleanEmptyKey(obj: object) {
-  Object.keys(obj).forEach(key => {
-    if (obj[key] == null || obj[key] == undefined) delete obj[key];
+  const cleanedObj = Object.keys(obj).reduce((prv, key) => {
+    if (obj[key] == null || obj[key] == undefined || obj[key] == "") return prv;
     else if (typeof obj[key] == "object") {
       if (Object.prototype.toString.call(obj[key]) === "[object Array]") {
-        if (obj[key].length > 0) obj[key].forEach(o => cleanEmptyKey(o));
-      } else cleanEmptyKey(obj[key]);
-    }
-  });
-  return obj;
+        if (obj[key].length > 0) prv[key] = obj[key].map(o => {
+          if (typeof o == "object") return cleanEmptyKey(o);
+          else return o;
+        });
+      } else prv[key] = cleanEmptyKey(obj[key]);
+    } else prv[key] = obj[key];
+    return prv;
+  }, {});
+  return cleanedObj;
 }
