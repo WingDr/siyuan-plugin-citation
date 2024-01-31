@@ -8,6 +8,7 @@ const ZipPlugin = require("zip-webpack-plugin");
 const sveltePreprocess = require("svelte-preprocess");
 
 module.exports = (env, argv) => {
+    const targetDir = "D:/Documents/SiYuan/data/plugins/siyuan-plugin-citation/";
     const isPro = argv.mode === "production";
     const plugins = [
         new MiniCssExtractPlugin({
@@ -37,8 +38,7 @@ module.exports = (env, argv) => {
                 {from: "assets/", to: "./dist/assets/"},
                 {from: "sample-data/sample.bib", to: "./dist/sample-data/"},
                 {from: "sample-data/sample.json", to: "./dist/sample-data/"},
-                {from: "zoteroJS/", to: "./dist/zoteroJS/"},
-                {from: "./dist/", to: pluginDir, force: true}
+                {from: "zoteroJS/", to: "./dist/zoteroJS/"}
             ],
         }));
         plugins.push(new ZipPlugin({
@@ -53,7 +53,15 @@ module.exports = (env, argv) => {
         
         plugins.push(new CopyPlugin({
             patterns: [
-                {from: "src/i18n/", to: "./i18n/"}
+                {from: "src/i18n/", to: "./i18n/"},
+                {from: "preview.png", to: "./"},
+                {from: "icon.png", to: "./"},
+                {from: "citeIcon.ico", to: "./"},
+                {from: "README*.md", to: "./"},
+                {from: "plugin.json", to: "./"},
+                {from: "assets/", to: "./assets/"},
+                {from: "sample-data/", to: "./sample-data/"},
+                {from: "zoteroJS/", to: "./zoteroJS/"}
             ]
         }));
     }
@@ -63,7 +71,8 @@ module.exports = (env, argv) => {
         devtool: isPro ? false : "eval",
         output: {
             filename: "[name].js",
-            path: path.resolve(__dirname),
+            // path: path.resolve(__dirname),
+            path: targetDir,
             libraryTarget: "commonjs2",
             library: {
                 type: "commonjs2",
@@ -81,6 +90,7 @@ module.exports = (env, argv) => {
         },
         resolve: {
             extensions: [".ts", ".scss", ".js", ".json", ".mjs", ".svelte"],
+            conditionNames: ["svelte"]
         },
         module: {
             rules: [
