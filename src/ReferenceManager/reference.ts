@@ -12,7 +12,6 @@ import {
 import { type ILogger, createLogger } from "../utils/simple-logger";
 import { loadLocalRef, cleanEmptyKey } from "../utils/util";
 
-
 // 根据输入更新文献库和引用文档，并维护本文档中的引用次序
 export class Reference {
   plugin: SiYuanPluginCitation;
@@ -25,8 +24,8 @@ export class Reference {
   }
 
   public async processReferenceContents(keys: string[], fileId?: string, returnDetail=false, errorReminder=true): Promise<any[]> {
-    let literatureEnum = [];
-    if (fileId) literatureEnum = await this.getLiteratureEnum(fileId);
+    // let literatureEnum = [];
+    // if (fileId) literatureEnum = await this.getLiteratureEnum(fileId);
     const existNotes = this.plugin.literaturePool.keys;
     const insertContent = keys.map(async key => {
       const idx = existNotes.indexOf(key);
@@ -492,7 +491,8 @@ export class Reference {
         break;
       }
       case "highlight": {
-        quoteContent = `<span data-type="text" style="background-color: ${detail.annotationColor}">${detail.annotationText.replace(/\n+/g, "\n")}</span>`;
+        if (detail.annotationText) quoteContent = `<span data-type="text" style="background-color: ${detail.annotationColor}">${detail.annotationText.replace(/\n+/g, "\n")}</span>`;
+        else quoteContent = `<span data-type="text" style="background-color: ${detail.annotationColor}">" "</span>`;
         break;
       }
       case "underline": {
