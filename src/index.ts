@@ -87,6 +87,9 @@ export default class SiYuanPluginCitation extends Plugin {
         
         if (isDev) this.logger.info("读取本地数据");
         await this.loadData(STORAGE_NAME);
+
+        if (isDev) this.logger.info("获取到储存数据=>", this.data[STORAGE_NAME]);
+
         await changeUpdate(this);
         this.kernelApi = new KernelApi();
 
