@@ -12,7 +12,7 @@ import {
 } from "../utils/constants";
 import { createLogger, type ILogger } from "../utils/simple-logger";
 import { type DatabaseType } from "../database/database";
-import { EventTrigger } from "../eventManager/eventTrigger";
+import { EventTrigger } from "../events/eventTrigger";
 import { SettingTab } from "./settingTab/settingTab";
 
 interface ICommandSetting {

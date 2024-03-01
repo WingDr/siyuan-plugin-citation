@@ -36,6 +36,7 @@ export class Database {
     // 如果已经存在就删除原先的
     if (this.dataModal) delete this.dataModal;
 
+    if (isDev) this.logger.info("建立数据库类型=>", {type});
     switch (type) {
       case "BibTex and CSL-JSON": {
         this.dataModal = new FilesModal(this.plugin);

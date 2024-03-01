@@ -263,13 +263,15 @@
   onMount(async () => {
     const fs = window.require("fs");
     const path = window.require("path");
+    console.log(fs)
+    console.log(path)
     const file = JSON.parse(
       await fs.readFileSync(
         path.join(dataDir, "./plugins/siyuan-plugin-citation/plugin.json")
       )
     );
     pluginVersion = file.version;
-
+    console.log(file)
     await initializeData();
   });
 

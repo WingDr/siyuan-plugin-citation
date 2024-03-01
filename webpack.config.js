@@ -89,8 +89,7 @@ module.exports = (env, argv) => {
             ],
         },
         resolve: {
-            extensions: [".ts", ".scss", ".js", ".json", ".mjs", ".svelte"],
-            conditionNames: ["svelte"]
+            extensions: [".ts", ".scss", ".js", ".json", ".mjs", ".svelte"]
         },
         module: {
             rules: [

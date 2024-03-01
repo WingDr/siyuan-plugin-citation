@@ -6,7 +6,7 @@ import {
 
 import KernelApi from "./api/kernel-api";
 import { Database, type DatabaseType } from "./database/database";
-import { Reference } from "./referenceManager/reference";
+import { Reference } from "./references/reference";
 import { InteractionManager } from "./frontEnd/interaction";
 import { ExportManager } from "./export/exportManager";
 import {
@@ -29,8 +29,8 @@ import {
 import "./index.scss";
 import { createNoticer, type INoticer } from "./utils/noticer";
 import { changeUpdate } from "./utils/updates";
-import { LiteraturePool } from "./referenceManager/pool";
-import type { EventTrigger } from "./eventManager/eventTrigger";
+import { LiteraturePool } from "./references/pool";
+import type { EventTrigger } from "./events/eventTrigger";
 import { SettingTab } from "./frontEnd/settingTab/settingTab";
 import { NetworkMananger } from "./api/networkManager";
 
@@ -87,6 +87,9 @@ export default class SiYuanPluginCitation extends Plugin {
         
         if (isDev) this.logger.info("读取本地数据");
         await this.loadData(STORAGE_NAME);
+
+        if (isDev) this.logger.info("获取到储存数据=>", this.data[STORAGE_NAME]);
+
         await changeUpdate(this);
         this.kernelApi = new KernelApi();
 
