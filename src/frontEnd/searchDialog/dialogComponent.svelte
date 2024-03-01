@@ -9,7 +9,8 @@
     export let onSelection: (keys: string[]) => void;
     export let search: (pattern: string) => any;
 
-    let highlightedRes: {key: string, title: string, year: string, authorString: string}[] = [];
+    let highlightedRes: {key: string, item: any, title: string, year: string, authorString: string}[] = [];
+    let selectedList: {key: string, author: string, year: string}[] = [];
 
     const dispatcher = createEventDispatcher();
 
@@ -38,6 +39,7 @@
             const highlight = matchHighlight(res.matches[0]);
             return {
                 key: res.item.key,
+                item: res.item,
                 ...highlight
             }
         });
@@ -60,8 +62,13 @@
             changeSelection(true);
         } else if (!ev.isComposing && ev.key == "Enter") {
             const key = highlightedRes[selector].key;
-            onSelection([key]);
-            dispatcher("confirm");
+            // onSelection([key]);
+            selectedList = [...selectedList, {
+                key,
+                author: highlightedRes[selector].item.author[0].family,
+                year: highlightedRes[selector].item.year
+            }];
+            // dispatcher("confirm");
         } else if (ev.key == "Escape") {
             dispatcher("confirm")
         }
@@ -78,9 +85,14 @@
         dispatcher("select", {selector});
     }
 
+    function deleteTag(ev: MouseEvent) {
+        const target = ev.target as HTMLElement;
+
+    }
+
 </script>
 
-<style>
+<style lang="scss">
     .input-container {
         margin: 4px 8px;
         margin-top: 8px;
@@ -94,6 +106,42 @@
     .search-item {
         display: flex;
         flex-direction: column;
+    }
+
+    .tag-container {
+        display: flex;
+        flex-direction: row;
+        height: 30px;
+        padding: 0 10px;
+        overflow-x: scroll;
+
+        &__tag {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            height: 26px;
+            border-radius: 13px;
+            background-color: pink;
+            padding: 0, 5px;
+            margin: 0, 5px;
+
+            &__author {
+                max-width: 60px;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow: hidden;
+            }
+
+            &__year {
+                width: 30px;
+                padding: 0 5px;
+            }
+
+            &__close {
+                border: 0;
+            }
+        }
     }
 </style>
 
@@ -110,6 +158,15 @@
     bind:value={pattern}
     on:keydown={keyboardReaction}
     on:input={inputReaction}>
+</div>
+<div class="tag-container" id="tag-container">
+    {#each selectedList as sItem, sIndex}
+        <div class="tag-container__tag">
+            <div class="tag-container__tag__author" data-tag-id={sItem.key}>{sItem.author}</div>
+            <div class="tag-container__tag__year" data-tag-id={sItem.key}>{sItem.year}</div>
+            <button class="tag-container__tag__close" on:click={deleteTag} data-index={sIndex}>x</button>
+        </div>
+    {/each}
 </div>
 <div class="search__layout result-container" id="result-container">
     <ul class="fn__flex-1 search__list b3-list b3-list--background">
