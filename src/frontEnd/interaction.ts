@@ -86,6 +86,19 @@ export class InteractionManager {
         }
       },
       {
+        filter: ["test"],
+        html: `<div class = "b3-list-item__first">
+          <svg class="b3-list-item__graphic">
+            <use xlink:href="#iconRef"></use>
+          </svg>
+          <span class="b3-list-item__text">测试</span>
+        </div>`,
+        id: "test",
+        callback: async (protyle: Protyle) => {
+          return this.plugin.reference.getAllNeighborReference(protyle);
+        }
+      },
+      {
         filter: [this.plugin.i18n.addNotes, "插入文献笔记", "addnotesofliterature", "charuwenxianbiji"],
         html: `<div class = "b3-list-item__first">
           <svg class="b3-list-item__graphic">

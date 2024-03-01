@@ -1,4 +1,4 @@
-import { confirm } from "siyuan";
+import { Protyle, confirm } from "siyuan";
 import SiYuanPluginCitation from "../index";
 import { type SiyuanData } from "../api/base-api";
 import {
@@ -11,16 +11,75 @@ import {
 } from "../utils/templates";
 import { type ILogger, createLogger } from "../utils/simple-logger";
 import { loadLocalRef, cleanEmptyKey } from "../utils/util";
+import { Cite } from "./cite";
+import { LiteratureNote } from "./literatureNote";
 
 // 根据输入更新文献库和引用文档，并维护本文档中的引用次序
 export class Reference {
   plugin: SiYuanPluginCitation;
   private logger: ILogger;
+  private Cite: Cite;
+  private LiteratureNote: LiteratureNote;
 
   constructor(plugin: SiYuanPluginCitation) {
     this.plugin = plugin;
     this.checkRefDirExist();
     this.logger = createLogger("reference");
+    this.Cite = new Cite(plugin);
+    this.LiteratureNote = new LiteratureNote(plugin);
+  }
+
+  public getAllNeighborReference(protyle: Protyle): string[] {
+    if (isDev) this.logger.info("获取到protyle=>", protyle);
+    if (isDev) this.logger.info("获取到选区=>", protyle.protyle.toolbar.range);
+    const pRange = protyle.protyle.toolbar.range;
+    const selectedNode = pRange.startContainer;
+    if (isDev) this.logger.info("定位到起始点=>", selectedNode);
+    let isInRef = false;
+    let currentElement = selectedNode as HTMLElement;
+    if (selectedNode.parentElement && this._checkReferenceElement(selectedNode.parentElement)) {
+      //说明输入在引用内
+      if (isDev) this.logger.info("起始点在引用内");
+      currentElement = selectedNode.parentElement;
+      isInRef = true;
+    }
+    const startElements = this._getNeighborReference(currentElement, true);
+    if (isDev) this.logger.info("获取到头引用=>", startElements);
+    const endElements = this._getNeighborReference(currentElement, false);
+    if (isDev) this.logger.info("获取到尾引用=>", endElements);
+    protyle.protyle.toolbar.range.setStartBefore(startElements[0]);
+    protyle.protyle.toolbar.range.setEndAfter(endElements[endElements.length - 1]);
+    const existRefSpanList = isInRef ? [...startElements.slice(0, -1), ...endElements] : [...startElements.slice(0, -1), ...endElements.slice(1)];
+    if (isDev) this.logger.info("所有引用=>", existRefSpanList);
+    const existRefList = existRefSpanList.map((e:HTMLSpanElement) => {
+      return this.plugin.literaturePool.get(e.getAttribute("data-id"));
+    });
+    if (isDev) this.logger.info("所有引用, key=>", existRefList);
+    return existRefList;
+  }
+
+  private _getNeighborReference(currentElement: HTMLSpanElement, forward: boolean): HTMLSpanElement[] {
+    // 递归查找相邻的引用列表
+    if (forward) {
+      if (currentElement.previousElementSibling && this._checkReferenceElement(currentElement.previousElementSibling as HTMLElement)) {
+        return [...this._getNeighborReference(currentElement.previousElementSibling as HTMLSpanElement, true), currentElement];
+      } else return [currentElement];
+    } else {
+      if (currentElement.nextElementSibling && this._checkReferenceElement(currentElement.nextElementSibling as HTMLElement)) {
+        return [currentElement, ...this._getNeighborReference(currentElement.nextElementSibling as HTMLSpanElement, false)];
+      } else return [currentElement];
+    }
+    
+  }
+
+  private _checkReferenceElement(element: HTMLElement): boolean {
+    if (
+      element.getAttribute("data-type") == "block-ref" &&
+      this.plugin.literaturePool.get(element.getAttribute("data-id"))) {
+        //说明输入在引用内
+        return true;
+    }
+    else return false;
   }
 
   public async processReferenceContents(keys: string[], fileId?: string, returnDetail=false, errorReminder=true): Promise<any[]> {
