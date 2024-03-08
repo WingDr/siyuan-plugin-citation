@@ -110,6 +110,10 @@ export class Database {
 
   // Group: 间接通用接口
 
+  public setSelected(keys: string[]) {
+    this.dataModal.selectedList = keys;
+  }
+
   public async getContentByKey(key: string) {
     const content = await this.dataModal.getContentFromKey(key);
     return content;

@@ -82,6 +82,7 @@ export class InteractionManager {
         </div>`,
         id: "add-citation",
         callback: async (protyle: Protyle) => {
+          this.plugin.database.setSelected(this.plugin.reference.getAllNeighborReference(protyle));
           return this.plugin.database.insertCiteLink(protyle);
         }
       },

@@ -34,6 +34,7 @@ export abstract class DataModal {
   public logger: ILogger;
   public plugin: SiYuanPluginCitation;
   public protyle: Protyle;
+  public selectedList: string[];
   public onSelection: (keys: string[]) => void;
   public abstract buildModal();
   public abstract getContentFromKey(key: string);
@@ -405,7 +406,19 @@ export class ZoteroDBModal extends DataModal {
         this.fuse = new Fuse(searchItems, this.searchOptions);
         if (isDev) this.logger.info("打开搜索界面");
         this.searchDialog = new SearchDialog(this.plugin);
-        this.searchDialog.showSearching(this.search.bind(this), onSelection);
+        const selectedList = this.selectedList.map(key => {
+          const item = searchItems.filter(item => item.key == key)[0];
+          return {
+            key,
+            author: item.author[0] ? item.author[0].family : item.title,
+            year: "" + item.year
+          };
+        });
+        this.searchDialog.showSearching(
+          this.search.bind(this), 
+          onSelection,
+          selectedList
+        );
       } else if (dbSearchDialogType === "Zotero") {
         const results = await this._citeWithZoteroDialog();
         if (isDev) this.logger.info("在Zotero中选择文献, results=>", results);

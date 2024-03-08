@@ -32,7 +32,11 @@ export class SearchDialog {
     this.logger = createLogger("search dialog");
   }
 
-  public showSearching(search: (pattern: string) => any, onSelection: (keys: string[]) => void) {
+  public showSearching(
+    search: (pattern: string) => any, 
+    onSelection: (keys: string[]) => void, 
+    selectedList: {key: string, author: string, year: string}[] = []
+  ) {
     if (isDev) this.logger.info("打开搜索界面");
 
     const id = `dialog-search-${Date.now()}`;
@@ -47,7 +51,8 @@ export class SearchDialog {
       target: this.searchDialog.element.querySelector(`#${id}`),
       props: {
         onSelection,
-        search
+        search,
+        selectedList
       }
     });
 

@@ -10,7 +10,7 @@
     export let search: (pattern: string) => any;
 
     let highlightedRes: {key: string, item: any, title: string, year: string, authorString: string}[] = [];
-    let selectedList: {key: string, author: string, year: string}[] = [];
+    export let selectedList: {key: string, author: string, year: string}[] = [];
 
     const dispatcher = createEventDispatcher();
 
