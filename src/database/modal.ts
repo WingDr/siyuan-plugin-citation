@@ -271,8 +271,8 @@ export class ZoteroModal extends DataModal {
           params: [[citekey], contentTranslator, libraryID]
         })
       });
-      if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, JSON.parse(res.data.result[2]));
-      const zoteroEntry = new EntryZoteroAdapter(JSON.parse(res.data.result[2]).items[0] as EntryDataZotero);
+      if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, JSON.parse(res.data.result));
+      const zoteroEntry = new EntryZoteroAdapter(JSON.parse(res.data.result).items[0] as EntryDataZotero);
       const entry = getTemplateVariablesForZoteroEntry(zoteroEntry);
       if (entry.files) entry.files = entry.files.join("\n");
       if (isDev) this.logger.info("文献内容 =>", entry);
