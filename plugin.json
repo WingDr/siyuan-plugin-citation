@@ -2,7 +2,7 @@
   "name": "siyuan-plugin-citation",
   "author": "WingDr",
   "url": "https://github.com/WingDr/siyuan-plugin-citation",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "minAppVersion": "2.10.0",
   "backends": ["windows", "linux", "darwin"],
   "frontends": ["desktop"],
