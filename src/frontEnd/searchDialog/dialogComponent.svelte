@@ -35,6 +35,7 @@
         resList = []
         resList = search(pattern) as SearchRes[];
         selector = 0;
+        const selectedKeys = selectedList.map(item => item.key);
         highlightedRes = resList.map(res => {
             const highlight = matchHighlight(res.matches[0]);
             return {
@@ -42,6 +43,8 @@
                 item: res.item,
                 ...highlight
             }
+        }).filter(item => {
+            return selectedKeys.indexOf(item.key) == -1;
         });
         dispatcher("refresh");
     }
@@ -61,14 +64,19 @@
             ev.preventDefault();
             changeSelection(true);
         } else if (!ev.isComposing && ev.key == "Enter") {
-            const key = highlightedRes[selector].key;
-            // onSelection([key]);
-            selectedList = [...selectedList, {
-                key,
-                author: highlightedRes[selector].item.author[0].family,
-                year: highlightedRes[selector].item.year
-            }];
-            // dispatcher("confirm");
+            if (pattern) {
+                const key = highlightedRes[selector].key;
+                selectedList = [...selectedList, {
+                    key,
+                    author: highlightedRes[selector].item.author[0] ? highlightedRes[selector].item.author[0].family : highlightedRes[selector].item.title,
+                    year: highlightedRes[selector].item.year
+                }];
+                pattern = "";
+                highlightedRes = [];
+            } else {
+                onSelection(selectedList.map(item => item.key));
+                dispatcher("confirm");
+            }
         } else if (ev.key == "Escape") {
             dispatcher("confirm")
         }
@@ -87,7 +95,8 @@
 
     function deleteTag(ev: MouseEvent) {
         const target = ev.target as HTMLElement;
-
+        const index = eval(target.getAttribute("data-index"));
+        selectedList = selectedList.filter(item => item.key != selectedList[index].key);
     }
 
 </script>
