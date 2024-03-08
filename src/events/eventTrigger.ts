@@ -49,7 +49,7 @@ export class EventTrigger {
 
   private wsMainTrigger(event: CustomEvent<any>) {
     if (this.onProcessing) return;
-    if (isDev) this.logger.info("触发器运行中");
+    // if (isDev) this.logger.info("触发器运行中");
     if ( Object.keys(this.eventQueue).indexOf(event.detail.cmd) != -1 ) {
       if (isDev) this.logger.info("事件触发，event =>", {type: "ws-main", cmd: event.detail.cmd});
       this.execEvent(event.detail.cmd, event);
