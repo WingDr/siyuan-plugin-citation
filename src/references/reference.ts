@@ -20,6 +20,8 @@ export class Reference {
   private logger: ILogger;
   private Cite: Cite;
   private LiteratureNote: LiteratureNote;
+  private refStartNode: HTMLElement;
+  private refEndNode: HTMLElement;
 
   constructor(plugin: SiYuanPluginCitation) {
     this.plugin = plugin;
@@ -47,8 +49,8 @@ export class Reference {
     if (isDev) this.logger.info("获取到头引用=>", startElements);
     const endElements = this._getNeighborReference(currentElement, false);
     if (isDev) this.logger.info("获取到尾引用=>", endElements);
-    protyle.protyle.toolbar.range.setStartBefore(startElements[0]);
-    protyle.protyle.toolbar.range.setEndAfter(endElements[endElements.length - 1]);
+    this.refStartNode = startElements[0];
+    this.refEndNode = endElements[endElements.length - 1];
     const existRefSpanList = isInRef ? [...startElements.slice(0, -1), ...endElements] : [...startElements.slice(0, -1), ...endElements.slice(1)];
     if (isDev) this.logger.info("所有引用=>", existRefSpanList);
     const existRefList = existRefSpanList.map((e:HTMLSpanElement) => {
@@ -262,6 +264,8 @@ export class Reference {
     if (isDev) this.logger.info("Protyle块ID =>", blockId);
     if (isDev) this.logger.info("Protyle文档ID =>", rootId);
     if (isDev) this.logger.info("插入的内容为, content=>", content);
+    protyle.protyle.toolbar.range.setStartBefore(this.refStartNode);
+    protyle.protyle.toolbar.range.setEndAfter(this.refEndNode);
     await protyle.insert(content, false, true);
     // TODO 等待前后端联动API更新再更新文档标号
     // if (isDev) this.getCursorOffsetInBlock(blockId);
