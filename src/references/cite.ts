@@ -8,7 +8,6 @@ import {
     refRegDynamic, 
     refRegStatic } from "../utils/constants";
 import { generateFromTemplate } from "../utils/templates";
-import type { Protyle } from "siyuan";
 
 export class Cite {
   plugin: SiYuanPluginCitation;

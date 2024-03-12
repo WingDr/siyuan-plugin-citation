@@ -64,6 +64,7 @@
             ev.preventDefault();
             changeSelection(true);
         } else if (!ev.isComposing && ev.key == "Enter") {
+            ev.preventDefault();
             if (pattern) {
                 const key = highlightedRes[selector].key;
                 selectedList = [...selectedList, {
@@ -73,8 +74,10 @@
                 }];
                 pattern = "";
                 highlightedRes = [];
-            } else {
+            } else if (selectedList.length) {
                 onSelection(selectedList.map(item => item.key));
+                dispatcher("confirm");
+            } else {
                 dispatcher("confirm");
             }
         } else if (ev.key == "Escape") {
