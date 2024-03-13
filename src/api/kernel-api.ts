@@ -212,6 +212,16 @@ class KernelApi extends BaseApi {
     return await this.siyuanRequest("/api/query/sql", params);
   }
 
+  public async getLiteratureUserData(literatureId: string) {
+    const params = {
+      "stmt": `select a.block_id from attributes a where 
+        name = "custom-literature-block-type" and 
+        value = "user data" and 
+        root_id = "${literatureId}"`
+    };
+    return await this.siyuanRequest("/api/query/sql", params);
+  }
+
   public async getBlockContent(blockId: string) {
     const params = {
       "id": blockId

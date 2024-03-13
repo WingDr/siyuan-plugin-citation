@@ -85,14 +85,14 @@ export class LiteratureNote {
       if (Object.keys(itemAttrs).length) this.plugin.database.updateDataSourceItem(key, itemAttrs);
       else if (isDev) this.logger.info("没有数据源数据需要更新");
     }
-    
+
     private async _processExistedLiteratureNote(literatureId: string, key: string, entry: any, noConfirmUserData=this.plugin.data[STORAGE_NAME].deleteUserDataWithoutConfirm) {
       // 文件存在就更新文件内容
       let deleteList = [];
       // 首先将文献的基本内容塞到用户文档的自定义属性中
       this.plugin.kernelApi.setBlockEntry(literatureId, JSON.stringify(cleanEmptyKey(Object.assign({}, entry))));
       // 查找用户自定义片段
-      let res = await this.plugin.kernelApi.getChidBlocks(literatureId);
+      const res = await this.plugin.kernelApi.getChidBlocks(literatureId);
       const dataIds = (res.data as any[]).map(data => {
         return data.id as string;
       });
@@ -100,40 +100,18 @@ export class LiteratureNote {
       let userDataId = "";
       let userDataLink = "";
       if (dataIds.length) {
-        // 查找第一个块的内容中是否包含用户自定义片段
-        res = await this.plugin.kernelApi.getBlock(dataIds[0]);
-        const dyMatch = (res.data[0].markdown as string).match(refRegDynamic);
-        const stMatch = (res.data[0].markdown as string).match(refRegStatic);
-        if (dyMatch && dyMatch.length && dyMatch[0] && dataIds.indexOf(dyMatch[0].split(" ")[0].slice(2)) != -1) {
-          // 如果能查找到链接，并且链接存在于文本中，则说明存在用户数据区域
-          const idx = dataIds.indexOf(dyMatch[0].split(" ")[0].slice(2));
-          userDataId = dataIds[idx];
-          userDataLink = dyMatch[0];
-          if (isDev) this.logger.info("匹配到用户片段动态锚文本链接 =>", {dyMatch: dyMatch, id: userDataId});
-          // 删除所有需要更新的片段
-          deleteList = dataIds.slice(0, idx);
-        } else if (stMatch && stMatch.length && stMatch[0] && dataIds.indexOf(stMatch[0].split(" ")[0].slice(2)) != -1) {
-          // 如果能查找到链接，并且链接存在于文本中，则说明存在用户数据区域
-          const idx = dataIds.indexOf(stMatch[0].split(" ")[0].slice(2));
-          userDataId = dataIds[idx];
-          userDataLink = stMatch[0];
-          if (isDev) this.logger.info("匹配到用户片段静态锚文本链接 =>", {stMatch: stMatch, id: userDataId});
-          // 删除所有需要更新的片段
-          deleteList = dataIds.slice(0, idx);
-        } else {
-          if (isDev) this.logger.info("未匹配到用户片段链接 =>", {
-            markdown: res.data[0].markdown,
-            stMatch,
-            dyMatch,
-            totalIds: dataIds
-          });
-          // 执行后续操作之前先更新文献池
-          this.plugin.literaturePool.set({id: literatureId, key: key});
+        const userDataInfo = await this._detectUserData(literatureId, dataIds, key);
+        deleteList = userDataInfo.deleteList;
+        userDataId = userDataInfo.userDataId;
+        userDataLink = userDataInfo.userDataLink;
+        const hasUserData = userDataInfo.hasUserData;
+        if (!hasUserData) {
           if (!noConfirmUserData) return confirm("⚠️", this.plugin.i18n.confirms.updateWithoutUserData.replaceAll("${title}", entry.title), async () => {
             // 不存在用户数据区域，整个更新
             deleteList = dataIds;
             userDataId = await this._updateEmptyNote(literatureId);
-            if (!userDataLink.length) userDataLink = `((${userDataId} '${userDataTitle}'))`;
+            // if (!userDataLink.length) userDataLink = `((${userDataId} '${userDataTitle}'))\n\n`;
+            userDataLink = `[${userDataTitle}](siyuan://blocks/${userDataId})\n\n`;
             this._insertComplexContents(literatureId, userDataId, userDataLink, entry, deleteList);
             this.updateDataSourceItem(key, entry);
             return;
@@ -151,9 +129,72 @@ export class LiteratureNote {
       // 执行后续操作之前先更新文献池
       this.plugin.literaturePool.set({id: literatureId, key: key});
       // 插入前置片段
-      if (!userDataLink.length) userDataLink = `((${userDataId} '${userDataTitle}'))`;
+      // if (!userDataLink.length) userDataLink = `((${userDataId} '${userDataTitle}'))\n\n`;
+      userDataLink = `[${userDataTitle}](siyuan://blocks/${userDataId})\n\n`;
       this._insertComplexContents(literatureId, userDataId, userDataLink, entry, deleteList);
       this.updateDataSourceItem(key, entry);
+    }
+
+    private async _detectUserData( literatureId: string, dataIds: string[], key: string ): Promise<{
+      deleteList: string[], userDataId: string, userDataLink: string, hasUserData: boolean
+    }> {
+      let userDataId = "";
+      let userDataLink = "";
+      // 首先判断是否有新式的用户数据情况
+      let res = await this.plugin.kernelApi.getLiteratureUserData(literatureId);
+      if ((res.data as string[]).length) return {
+        deleteList: dataIds.slice(0, dataIds.indexOf(res.data[0].block_id)),
+        userDataId: res.data[0].block_id as string,
+        userDataLink: "",
+        hasUserData: true
+      };
+      // 否则根据旧版规则查找第一个块的内容中是否包含用户自定义片段
+      res = await this.plugin.kernelApi.getBlock(dataIds[0]);
+      const dyMatch = (res.data[0].markdown as string).match(refRegDynamic);
+      const stMatch = (res.data[0].markdown as string).match(refRegStatic);
+      if (dyMatch && dyMatch.length && dyMatch[0] && dataIds.indexOf(dyMatch[0].split(" ")[0].slice(2)) != -1) {
+        // 如果能查找到链接，并且链接存在于文本中，则说明存在用户数据区域
+        const idx = dataIds.indexOf(dyMatch[0].split(" ")[0].slice(2));
+        userDataId = dataIds[idx];
+        userDataLink = dyMatch[0];
+        if (isDev) this.logger.info("匹配到用户片段动态锚文本链接 =>", {dyMatch: dyMatch, id: userDataId});
+        // 更新为新形式的user data判断
+        await this.plugin.kernelApi.setBlockAttr(userDataId, {"custom-literature-block-type": "user data"});
+        // 删除所有需要更新的片段 
+        return {
+          deleteList: dataIds.slice(0, idx),
+          userDataId,
+          userDataLink,
+          hasUserData: true
+        };
+      } else if (stMatch && stMatch.length && stMatch[0] && dataIds.indexOf(stMatch[0].split(" ")[0].slice(2)) != -1) {
+        // 如果能查找到链接，并且链接存在于文本中，则说明存在用户数据区域
+        const idx = dataIds.indexOf(stMatch[0].split(" ")[0].slice(2));
+        userDataId = dataIds[idx];
+        userDataLink = stMatch[0];
+        if (isDev) this.logger.info("匹配到用户片段静态锚文本链接 =>", {stMatch: stMatch, id: userDataId});
+        // 更新为新形式的user data判断
+        await this.plugin.kernelApi.setBlockAttr(userDataId, {"custom-literature-block-type": "user data"});
+        // 删除所有需要更新的片段
+        return {
+          deleteList: dataIds.slice(0, idx),
+          userDataId,
+          userDataLink,
+          hasUserData: true
+        };
+      } else {
+        if (isDev) this.logger.info("未匹配到用户片段链接 =>", {
+          markdown: res.data[0].markdown, stMatch, dyMatch, totalIds: dataIds
+        });
+        // 执行后续操作之前先更新文献池
+        this.plugin.literaturePool.set({id: literatureId, key: key});
+        return {
+          deleteList: dataIds,
+          userDataId: "",
+          userDataLink: "",
+          hasUserData: false
+        };
+      }
     }
     
     private async _createLiteratureNote(noteTitle: string): Promise<{rootId: string, userDataId: string}> {
@@ -196,7 +237,7 @@ export class LiteratureNote {
       const literatureNote = generateFromTemplate(noteTemplate, entry);
       if (deleteList.length) await this.plugin.networkManager.sendNetworkMission([deleteList], this._deleteBlocks.bind(this));
       if (isDev) this.logger.info("向literature note发起插入请求, content=>", {literatureNote});
-      this.plugin.kernelApi.prependBlock(literatureId, userDataLink + "\n\n" + literatureNote);
+      this.plugin.kernelApi.prependBlock(literatureId, userDataLink + literatureNote);
       note.forEach(n => {
         this.plugin.eventTrigger.addSQLIndexEvent({
           triggerFn: this._insertNotes.bind(this),
@@ -356,7 +397,7 @@ export class LiteratureNote {
     
     private async _updateEmptyNote(rootId: string): Promise<string> {
       const userDataTitle = this.plugin.data[STORAGE_NAME].userDataTitle as string;
-      await this.plugin.kernelApi.updateBlockContent(rootId, "markdown", `# ${userDataTitle}`);
+      await this.plugin.kernelApi.updateBlockContent(rootId, "markdown", `# ${userDataTitle}\n{: custom-literature-block-type="user data"}`);
       const res = await this.plugin.kernelApi.getChidBlocks(rootId);
       const userDataId = res.data[0].id as string;
       if (isDev) this.logger.info("获取用户区域标题，ID =>", userDataId);
