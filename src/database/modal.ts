@@ -24,11 +24,8 @@ import {
 } from "../frontEnd/searchDialog/searchDialog";
 import { htmlNotesProcess } from "../utils/notes";
 import { createLogger, type ILogger } from "../utils/simple-logger";
-import { isDev, REF_DIR_PATH, dataDir, STORAGE_NAME } from "../utils/constants";
+import { isDev, REF_DIR_PATH, STORAGE_NAME } from "../utils/constants";
 import { fileSearch, generateFileLinks } from "../utils/util";
-
-const path = window.require("path");
-const fs = window.require("fs");
 
 export abstract class DataModal {
   public logger: ILogger;
@@ -147,10 +144,11 @@ export class FilesModal extends DataModal {
   private async loadLibrary(): Promise<Library> {
     const logger = createLogger("load library");
     const noticer = this.plugin.noticer;
-    const files = await fileSearch(REF_DIR_PATH, this.plugin.noticer);
-    const fileContents = files.map(filePath => {
-        return fs.readFileSync(filePath, "utf-8");
-    });
+    const files = await fileSearch(this.plugin, REF_DIR_PATH, this.plugin.noticer);
+    if (isDev) logger.info("本地文献文件检索, fileList=>", {files});
+    const fileContents = await Promise.all(files.map( async filePath => {
+      return await this.plugin.kernelApi.getFile(filePath, "text");
+    }));
     if (isDev) logger.info("本地文献文件检索，数量=>", fileContents.length);
     const promises = files.map(filePath => {
         const sName = filePath.split(".");
@@ -359,7 +357,7 @@ export class ZoteroDBModal extends DataModal {
     this.plugin = plugin;
     this.type = zoteroType;
     this.logger = createLogger(`zotero DB modal: ${zoteroType}`);
-    this.absZoteroJSPath = path.resolve(dataDir, "./plugins/siyuan-plugin-citation/zoteroJS");
+    this.absZoteroJSPath = "/data/plugins/siyuan-plugin-citation/zoteroJS/";
     this.searchOptions = {
       // isCaseSensitive: false,
       includeScore: true,
@@ -557,7 +555,7 @@ export class ZoteroDBModal extends DataModal {
 
   private async _callZoteroJS(filename: string, prefix: string) {
     const password = this.plugin.data[STORAGE_NAME].dbPassword;
-    const jsContent = fs.readFileSync(path.join(this.absZoteroJSPath, filename+".ts"), "utf-8");
+    const jsContent = await this.plugin.kernelApi.getFile(this.absZoteroJSPath + filename + ".ts", "text");
     if (isDev) this.logger.info("向debug-bridge发送数据，fetchData=>", {
       command: filename,
       data: prefix + "\n" + jsContent

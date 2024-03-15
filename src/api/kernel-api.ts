@@ -69,12 +69,13 @@ class KernelApi extends BaseApi {
    * 写入文件
    *
    * @param path - 文件路径，例如：/data/20210808180117-6v0mkxr/20200923234011-ieuun1p.sy
+   * @param isDir - 是否是文件夹，如果为true则只创建文件夹，忽略文件
    * @param file - 上传的文件
    */
-  public putFile(path: string, file: any): Promise<SiyuanData> {
+  public putFile(path: string, isDir: boolean, file: any): Promise<SiyuanData> {
     const formData = new FormData();
     formData.append("path", path);
-    formData.append("isDir", "false");
+    formData.append("isDir", String(isDir));
     formData.append("modTime", Math.floor(Date.now() / 1000).toString());
     formData.append("file", file);
 
@@ -124,8 +125,19 @@ class KernelApi extends BaseApi {
         return await response.text();
       }
       if (type === "json") {
-        return (await response.json()).data;
+        return await response.json();
       }
+    } else if (response.status === 202) {
+      const data = await response.json();
+      switch (data.code) {
+        case -1 : { console.error("参数解析错误", {msg: data.msg}); break; }
+        case 403 : { console.error("无访问权限 (文件不在工作空间下)", {msg: data.msg}); break; }
+        case 404 : { console.error("未找到 (文件不存在)", {msg: data.msg}); break; }
+        case 405 : { console.error("方法不被允许 (这是一个目录)", {msg: data.msg}); break; }
+        case 500 : { console.error("服务器错误 (文件查询失败 / 文件读取失败)", {msg: data.msg}); break; }
+      }
+    }else {
+      console.error(response);
     }
     return null;
   }
