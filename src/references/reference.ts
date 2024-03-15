@@ -514,6 +514,7 @@ export class Reference {
     // 用于欺骗思源的随机（伪）字符串，是7位的小写字母和数字（itemKey是8位）
     const randomStr = (detail.key as string).toLowerCase().slice(1);
     const name = `zotero-annotations-${detail.annotationType}-${detail.parentKey}-${detail.key}-${time}-${randomStr}`;
+    // TODO 将文件复制替换成官方API
     const assetPath = `assets/${name}.png`;
     const assetsAbsPath = path.join(dataDir, "./" + assetPath);
     if (!(await fs.existsSync(assetsAbsPath))) {
