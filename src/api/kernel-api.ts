@@ -110,7 +110,7 @@ class KernelApi extends BaseApi {
    * @param path - 文件路径，例如：/data/20210808180117-6v0mkxr/20200923234011-ieuun1p.sy
    * @param type - 类型
    */
-  public async getFile(path: string, type: "text" | "json") {
+  public async getFile(path: string, type: "text" | "json" | "any") {
     const response = await fetch(`${siyuanApiUrl}/api/file/getFile`, {
       method: "POST",
       headers: {
@@ -123,9 +123,11 @@ class KernelApi extends BaseApi {
     if (response.status === 200) {
       if (type === "text") {
         return await response.text();
-      }
-      if (type === "json") {
+      } else if (type === "json") {
         return await response.json();
+      }
+      else if (type === "any") {
+        return await response;
       }
     } else if (response.status === 202) {
       const data = await response.json();
@@ -140,6 +142,34 @@ class KernelApi extends BaseApi {
       console.error(response);
     }
     return null;
+  }
+
+  /**
+   * 移动工作空间外的文件
+   *
+   * @param srcs - 要移动的源文件
+   * @param destDir - 工作空间中的目标路径
+   */
+  public async globalCopyFiles(srcs: string[], destDir: string): Promise<SiyuanData> {
+    const params = {
+      srcs,
+      destDir
+    };
+    return await this.siyuanRequest("/api/file/globalCopyFiles", params);
+  }
+
+  /**
+   * 移动工作空间外的文件
+   *
+   * @param path - 要移动的源文件
+   * @param newPath - 工作空间中的目标路径
+   */
+  public async renameFile(path: string, newPath: string): Promise<SiyuanData> {
+    const params = {
+      path,
+      newPath
+    };
+    return await this.siyuanRequest("/api/file/renameFile", params);
   }
 
   /**

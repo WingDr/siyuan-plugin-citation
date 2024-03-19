@@ -380,18 +380,26 @@ export class LiteratureNote {
     }
     
     private async _moveImgToAssets(imgPath: string, detail: any) {
-      const fs = window.require("fs");
-      const path = window.require("path");
       const time = detail.dateAdded.replace(/[-:\s]/g, "");
       // 用于欺骗思源的随机（伪）字符串，是7位的小写字母和数字（itemKey是8位）
       const randomStr = (detail.key as string).toLowerCase().slice(1);
       const name = `zotero-annotations-${detail.annotationType}-${detail.parentKey}-${detail.key}-${time}-${randomStr}`;
       const assetPath = `assets/${name}.png`;
-      const assetsAbsPath = path.join(dataDir, "./" + assetPath);
-      if (!(await fs.existsSync(assetsAbsPath))) {
+      const assetAbsPath = "/data/" + assetPath;
+      if (!(await this.plugin.kernelApi.getFile(assetAbsPath, "any"))) {
           // 如果文件不存在（同时会检验添加时间、父条目key和annotation自己的key，基本可以确定不存在了）
-          await fs.copyFileSync(imgPath, assetsAbsPath);
+          await this.plugin.kernelApi.globalCopyFiles([imgPath], "/data/assets");
+          await this.plugin.kernelApi.renameFile(`/data/assets/${detail.key}.png`, assetAbsPath);
+          if (isDev) this.logger.info("移动批注图片到工作空间, info=>", {imgPath, assetAbsPath});
       } 
+      // const fs = window.require("fs");
+      // const path = window.require("path");
+      // const assetPath = `assets/${name}.png`;
+      // const assetsAbsPath = path.join(dataDir, "./" + assetPath);
+      // if (!(await fs.existsSync(assetsAbsPath))) {
+      //     // 如果文件不存在（同时会检验添加时间、父条目key和annotation自己的key，基本可以确定不存在了）
+      //     await fs.copyFileSync(imgPath, assetsAbsPath);
+      // } 
       return `![img](${assetPath})`;
     }
     
