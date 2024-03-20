@@ -563,7 +563,10 @@ export class ZoteroDBModal extends DataModal {
     const Result = await this.plugin.networkManager.sendRequest({
       method: "post",
       url: `http://127.0.0.1:${this._getPort(this.type)}/debug-bridge/execute?password=${password}`,
-      headers: JSHeaders,
+      headers: {
+        ...JSHeaders,
+        Authorization: `Bearer ${password}`
+      },
       data: prefix + "\n" + jsContent
     }).catch(e => {
       if (isDev) this.logger.error("访问Zotero发生错误, error=>", e);
