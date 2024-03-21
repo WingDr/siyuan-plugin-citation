@@ -4,20 +4,10 @@
 
 > 已经实现了基本功能的引用插件，从这里开始将思源变得更加学术
 
-**0.2.3版本更新**
-1. **添加了自动将Zotero链接替换为引用功能的开关**
-2. **添加了开发者功能，方便其它插件调用**
-
-**0.2.0版本更新**
-
-1. **将文献内容文档的key转移到自定义属性literature-key，文档的命名以后可以自由设定**
-2. **引用链接支持使用动态锚文本，引用的同时会根据引用链接模板更新文献内容文档的命名（动态锚文本的显示内容）。**
-3. **支持从Zotero的pdf阅读器中直接拖入选中内容/批注时自动引用**
-4. **{{annotations}}支持框选的批注（但是无法显示框选部分的图片，等我先弄明白它的原理）。**
-5. **添加了“刷新文献内容”和“刷新所有文献内容”的功能，并且同时可以刷新Zotero中的思源反链和标签。**
-6. **提升了引用文献的速度，将大部分更新文献内容的功能转为后台**
-
-**由于文献命名规则发生变动，建议所有用户在更新之后执行一遍“刷新所有文献内容文档标题”命令，该命令会同时刷新所有文献库中文档的命名**
+**0.3.6更新：**
+1. **开放了docker和远程网页版的使用，通过在浏览器上安装[CORS Unblock 插件](https://webextension.org/listing/access-control.html)可以使用浏览器前端与zotero通信。**
+2. **转变用户数据的引用模式为思源链接，不会再占用反链，并且用户数据标识由判断开头的引用变为用户数据标题的自定义属性。**
+3. **感兴趣的用户可以自行编译尝试[dev](https://github.com/WingDr/siyuan-plugin-citation/tree/dev)分支下的代码，目前的新功能主要推送到这里，但是前端还不是很完善。**
 
 **在0.1.1坂本中，本插件已经支持通过[debug-brige](https://github.com/retorquere/zotero-better-bibtex/releases/download/debug-bridge/debug-bridge-6.7.79.emile.limonia.xpi)插件访问Zotero的功能，相对于现在版本使用better-bibtex的方法，这种方式的访问速度更快，效率更高，并且可以实现很多额外的功能（详见[大佬的quicker动作](https://getquicker.net/User/Actions/395924-ttChen)，在思源或者zotero上的功能之后都有可能实装在该插件中），使用该功能的用户需要提前做好准备，具体的准备方法参考[Run Javascript in Zotero](https://www.yuque.com/chentaotao-cf9fr/gthfy4/clqahv57w5ugmdev)**
 
