@@ -10,7 +10,7 @@ import SiYuanPluginCitation from "../index";
 import { type ILogger, createLogger } from "../utils/simple-logger";
 import { generateFromTemplate } from "../utils/templates";
 import { cleanEmptyKey } from "../utils/util";
-import { confirm } from "siyuan";
+import { confirm, getFrontend } from "siyuan";
 
 export class LiteratureNote {
     plugin: SiYuanPluginCitation;
@@ -358,7 +358,9 @@ export class LiteratureNote {
       let quoteContent = `${type} on page ${detail.annotationPageLabel}`;
       switch (type) {
         case "image": {
-          quoteContent = await this._moveImgToAssets(detail.imagePath, detail);
+          if (["browser-desktop", "browser-mobile", "mobile"].includes(getFrontend())) {
+            quoteContent = await this._moveImgToAssets(detail.imagePath, detail);
+          }
           break;
         }
         case "highlight": {
@@ -371,7 +373,9 @@ export class LiteratureNote {
           break;
         }
         case "ink": {
-          quoteContent = await this._moveImgToAssets(detail.imagePath, detail);
+          if (["browser-desktop", "browser-mobile", "mobile"].includes(getFrontend())) {
+            quoteContent = await this._moveImgToAssets(detail.imagePath, detail);
+          }
           break;
         }
       }
