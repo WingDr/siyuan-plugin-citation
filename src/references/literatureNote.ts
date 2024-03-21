@@ -1,7 +1,6 @@
 import { 
     DISALLOWED_FILENAME_CHARACTERS_RE, 
     STORAGE_NAME, 
-    dataDir, 
     isDev, 
     refRegDynamic, 
     refRegStatic 
