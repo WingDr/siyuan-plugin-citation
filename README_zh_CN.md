@@ -384,6 +384,6 @@
 > 比起赞助，其实更喜欢在github上的issue，你提的每一个问题和需求都会成为我的动力
 
 <div style="display:flex;justify-content:space-around">
-  <img src="./assets/weixin.jpg" width="40%" height="40%">
-  <img src="./assets/alipay.jpg" width="40%" height="40%">
+  <img src="./assets/sponsor_weixin.jpg" width="40%" height="40%">
+  <img src="./assets/sponsor_alipay.jpg" width="40%" height="40%">
 </div>

@@ -387,6 +387,6 @@ Thanks to [Geo123abc](https://github.com/Geo123abc) and [ttChen](https://getquic
 > I actually prefer GitHub issues over sponsorship. Every question and request you raise there becomes my motivation.
 
 <div style="display:flex;justify-content:space-around">
-  <img src="./assets/weixin.jpg" width="40%" height="40%">
-  <img src="./assets/alipay.jpg" width="40%" height="40%">
+  <img src="./assets/sponsor_weixin.jpg" width="40%" height="40%">
+  <img src="./assets/sponsor_alipay.jpg" width="40%" height="40%">
 </div>
