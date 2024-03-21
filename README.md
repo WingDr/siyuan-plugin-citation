@@ -4,20 +4,11 @@
 
 > A citation plugin that implements basic functionality, hoping to make your SiYuan more academically oriented.
 
-**Version 0.2.3 Update**
-1. **Added a switch for automatic replacement of Zotero links with citation links.**
-2. **Introduced developer features to facilitate interaction with other plugins.**
+**Update 0.3.6:**
 
-**Version 0.2.0 Update**
-
-1. **Moved the key of literature note documents to a custom attribute 'literature-key', allowing flexible naming of document titles.**
-2. **Citation links now support dynamic anchor text. When inserted, these links will update the names of literature note documents based on the citation link template (displayed content of dynamic anchor text).**
-3. **Supports direct dragging and dropping of selected content/annotations from Zotero's PDF reader for automatic referencing.**
-4. **{{annotations}} now supports annotation selections (however, images within the selected region are not displayed yet, I'm working to understand this behavior).**
-5. **Added the "Refresh Literature Note" and "Refresh All Literature Notes" functions, which also refresh Zotero's SiYuan backlinks and tags simultaneously.**
-6. **Enhanced the speed of referencing literature by moving most of the content updating functions to the background.**
-
-**Due to changes in the literature naming rules, it is recommended that all users execute the "Refresh All Literature Note Titles" command after updating. This command will refresh the names of all literature note documents in the library.**
+1. **Opened up the usage of Docker and remote web version. By installing the** **[CORS Unblock plugin](https://webextension.org/listing/access-control.html)** **on your browser, you can communicate with Zotero through the browser frontend.**
+2. **Changed the reference mode of user data to use Zotero links, which will no longer occupy reverse links. Also, the user data identifier has been changed from citation starting with &quot;judgment&quot; to a custom attribute using the user data title.**
+3. **Interested users can compile and try the code under the [dev](https://github.com/WingDr/siyuan-plugin-citation/tree/dev) branch by themselves. The new features are mainly pushed here, but the frontend is not yet fully developed.**
 
 **Starting from version 0.1.1, this plugin now supports accessing Zotero using the [debug-bridge](https://github.com/retorquere/zotero-better-bibtex/releases/download/debug-bridge/debug-bridge-6.7.79.emile.limonia.xpi) plugin. Compared to the current method of using better-bibtex, this approach provides faster access and higher efficiency. Additionally, it enables many extra functionalities (for more details, see the [ttChen's Quicker Actions](https://getquicker.net/User/Actions/395924-ttChen), which might be integrated into this plugin for both Siyuan and Zotero functionalities). Users who wish to utilize this feature should prepare in advance by following the specific steps outlined in [Run Javascript in Zotero](https://www.yuque.com/chentaotao-cf9fr/gthfy4/clqahv57w5ugmdev).**
 

@@ -210,11 +210,13 @@ export class FilesModal extends DataModal {
 type ZoteroType = "Zotero" | "Juris-M";
 const defaultHeaders = {
   "Content-Type": "application/json",
-  "Accept": "application/json"
+  "Accept": "application/json",
+  "Zotero-Allowed-Request": "true"
 };
 const JSHeaders = {
   "Content-Type": "application/javascript",
-  "Accept": "application/json"
+  "Accept": "application/json",
+  "Zotero-Allowed-Request": "true"
 };
 const contentTranslator = "36a3b0b5-bad0-4a04-b79b-441c7cef77db";
 
