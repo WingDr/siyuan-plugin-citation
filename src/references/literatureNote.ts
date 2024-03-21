@@ -45,7 +45,7 @@ export class LiteratureNote {
         this.plugin.kernelApi.setBlockEntry(noteData.rootId, JSON.stringify(cleanEmptyKey(Object.assign({}, entry))));
         // 新建文件之后也要更新对应字典
         this.plugin.literaturePool.set({id: noteData.rootId, key: key});
-        this._insertComplexContents(noteData.rootId, noteData.userDataId, `(( ${noteData.userDataId} '${userDataTitle}'))`, entry, []);
+        this._insertComplexContents(noteData.rootId, noteData.userDataId, `[${userDataTitle}](siyuan://blocks/${noteData.userDataId})\n\n`, entry, []);
         this.updateDataSourceItem(key, entry);
         return;
       }
@@ -250,21 +250,6 @@ export class LiteratureNote {
           type: "once"
         });
       });
-      // annotations.forEach(anno => {
-      //   anno.content.forEach(content => {
-      //     this.plugin.eventTrigger.addSQLIndexEvent({
-      //       triggerFn: this._insertAnnotations.bind(this),
-      //       params: {
-      //         fatherIndex: anno.index,
-      //         content,
-      //         literatureId,
-      //         userDataId,
-      //         callbackTimes: 0
-      //       },
-      //       type: "once"
-      //     });
-      //   });
-      // });
     }
     
     private async _insertNotes(params: {index: number, content: string, literatureId: string, userDataId: string, callbackTimes: number}) {
@@ -307,49 +292,6 @@ export class LiteratureNote {
       });
       return await Promise.all(pList);
     }
-    
-    // private async _insertAnnotations(params: {fatherIndex: number, content: any, literatureId: string, userDataId: string, callbackTimes: number}) {
-    //   const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
-    //   const fatherIndex = params.fatherIndex;
-    //   const content = params.content;
-    //   const literatureId = params.literatureId;
-    //   const userDataId = params.userDataId;
-    //   const callbackTimes = params.callbackTimes;
-    //   let res = await this.plugin.kernelApi.getChidBlocks(literatureId);
-    //   const dataIds = (res.data as any[]).map(data => {
-    //     return data.id as string;
-    //   });
-    //   res = await this.plugin.kernelApi.getBlocksWithContent(notebookId, literatureId, `{ {annotation-${fatherIndex}-${content.index}} }`);
-    //   const data = res.data as any[];
-    //   if (!data.length) {
-    //     if (callbackTimes >= 1) {
-    //       if (isDev) this.logger.info("更新次数到极限，本次暂停更新, detail=>", { fatherIndex, content, literatureId, userDataId, callbackTimes});
-    //       return;
-    //     }
-    //     // 还没更新出来就重新塞回队列
-    //     if (isDev) this.logger.info("文档尚未更新到数据库，等下一次数据库更新，detail=>", { fatherIndex, content, literatureId, userDataId });
-    //     return this.plugin.eventTrigger.addSQLIndexEvent({
-    //       triggerFn: this._insertAnnotations.bind(this),
-    //       params: {
-    //         fatherIndex,
-    //         content,
-    //         literatureId,
-    //         userDataId,
-    //         callbackTimes: callbackTimes + 0.05
-    //       },
-    //       type: "once"
-    //     });
-    //   }
-    //   const pList = data.map(async d => {
-    //     // 只有在userDataID之前的才会更新
-    //     if (dataIds.indexOf(d.id) != -1 && dataIds.indexOf(d.id) < dataIds.indexOf(userDataId)) {
-    //       const annoContent = await this._generateSingleAnnotation(content);
-    //       await this.plugin.kernelApi.updateBlockContent(d.id, "markdown", annoContent);
-    //       await this.plugin.kernelApi.setBlockAttr(d.id, {"custom-annotation-color": content.detail.annotationColor});
-    //     }
-    //   });
-    //   return await Promise.all(pList);
-    // }
     
     private async _generateSingleAnnotation(content: any) {
       const detail = content.detail;
@@ -395,14 +337,6 @@ export class LiteratureNote {
           await this.plugin.kernelApi.renameFile(`/data/assets/${detail.key}.png`, assetAbsPath);
           if (isDev) this.logger.info("移动批注图片到工作空间, info=>", {imgPath, assetAbsPath});
       } 
-      // const fs = window.require("fs");
-      // const path = window.require("path");
-      // const assetPath = `assets/${name}.png`;
-      // const assetsAbsPath = path.join(dataDir, "./" + assetPath);
-      // if (!(await fs.existsSync(assetsAbsPath))) {
-      //     // 如果文件不存在（同时会检验添加时间、父条目key和annotation自己的key，基本可以确定不存在了）
-      //     await fs.copyFileSync(imgPath, assetsAbsPath);
-      // } 
       return `![img](${assetPath})`;
     }
     
