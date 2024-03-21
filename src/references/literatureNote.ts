@@ -1,7 +1,6 @@
 import { 
     DISALLOWED_FILENAME_CHARACTERS_RE, 
     STORAGE_NAME, 
-    dataDir, 
     isDev, 
     refRegDynamic, 
     refRegStatic 
@@ -358,7 +357,7 @@ export class LiteratureNote {
       let quoteContent = `${type} on page ${detail.annotationPageLabel}`;
       switch (type) {
         case "image": {
-          if (["browser-desktop", "browser-mobile", "mobile"].includes(getFrontend())) {
+          if (!["browser-desktop", "browser-mobile", "mobile"].includes(getFrontend())) {
             quoteContent = await this._moveImgToAssets(detail.imagePath, detail);
           }
           break;
@@ -373,7 +372,7 @@ export class LiteratureNote {
           break;
         }
         case "ink": {
-          if (["browser-desktop", "browser-mobile", "mobile"].includes(getFrontend())) {
+          if (!["browser-desktop", "browser-mobile", "mobile"].includes(getFrontend())) {
             quoteContent = await this._moveImgToAssets(detail.imagePath, detail);
           }
           break;
