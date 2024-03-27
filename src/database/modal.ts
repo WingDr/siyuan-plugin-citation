@@ -572,7 +572,10 @@ export class ZoteroDBModal extends DataModal {
       data: prefix + "\n" + jsContent
     }).catch(e => {
       if (isDev) this.logger.error("访问Zotero发生错误, error=>", e);
-      if (e.response?.data === "invalid password") this.plugin.noticer.error(this.plugin.i18n.errors.wrongDBPassword);
+      if (e.response?.status == 401) this.plugin.noticer.error(this.plugin.i18n.errors.wrongDBPassword); // 密码错误
+      else if (e.response?.status == 403) this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string), {type: this.type}); // 访问请求被禁止，建议更新到最新版本citation插件
+      else if (e.response?.status == 404) this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string), {type: this.type}); //找不到Zotero或者debug-bridge
+      else if (e.response?.status == 0) this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string), {type: this.type}); //无法与Zotero通信，没安装Unblock浏览器插件
       return {
         data: JSON.stringify({
           ready: false
