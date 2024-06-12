@@ -56,9 +56,21 @@ export class Reference {
       currentElement = selectedNode.parentElement;
       isInRef = true;
     }
-    const startElements = this._getNeighborReference(currentElement, true);
+    let startElements = null;
+    if (pRange.startOffset > 0) {
+      // 说明输入在纯文字中，令起始点为自己
+      startElements = [currentElement];
+    } else {
+      startElements = this._getNeighborReference(currentElement, true);
+    }
     if (isDev) this.logger.info("获取到头引用=>", startElements);
-    const endElements = this._getNeighborReference(currentElement, false);
+    let endElements = null;
+    if (pRange.endOffset < currentElement.textContent.length) {
+      // 说明输入在纯文字中，令结束点为自己
+      endElements = [currentElement];
+    } else {
+      endElements = this._getNeighborReference(currentElement, false);
+    }
     if (isDev) this.logger.info("获取到尾引用=>", endElements);
     this.refStartNode = startElements[0];
     this.refEndNode = endElements[endElements.length - 1];
