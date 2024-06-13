@@ -57,7 +57,7 @@ export class Reference {
       isInRef = true;
     }
     let startElements = null;
-    if (pRange.startOffset > 0) {
+    if (!isInRef && pRange.startOffset > 0) {
       // 说明输入在纯文字中，令起始点为自己
       startElements = [currentElement];
     } else {
@@ -65,11 +65,15 @@ export class Reference {
     }
     if (isDev) this.logger.info("获取到头引用=>", startElements);
     let endElements = null;
-    if (pRange.endOffset < currentElement.textContent.length) {
+    if (isInRef) {
+      endElements = this._getNeighborReference(currentElement, false);
+    }else if (pRange.endOffset + (currentElement as any).wholeText.indexOf(currentElement.textContent) < (currentElement as any).wholeText.length
+      || !(currentElement.nextElementSibling && this._checkReferenceElement(currentElement.nextElementSibling as HTMLElement))) {
       // 说明输入在纯文字中，令结束点为自己
       endElements = [currentElement];
     } else {
-      endElements = this._getNeighborReference(currentElement, false);
+      // 由于文本的末尾nextSibling永远会出现空字符占位，所以需要独立判断然后跳过
+      endElements = [currentElement, ...this._getNeighborReference(currentElement.nextElementSibling as HTMLSpanElement, false)];
     }
     if (isDev) this.logger.info("获取到尾引用=>", endElements);
     this.refStartNode = startElements[0];
@@ -277,12 +281,12 @@ export class Reference {
   private _getNeighborReference(currentElement: HTMLSpanElement, forward: boolean): HTMLSpanElement[] {
     // 递归查找相邻的引用列表
     if (forward) {
-      if (currentElement.previousElementSibling && this._checkReferenceElement(currentElement.previousElementSibling as HTMLElement)) {
-        return [...this._getNeighborReference(currentElement.previousElementSibling as HTMLSpanElement, true), currentElement];
+      if (currentElement.previousSibling && this._checkReferenceElement(currentElement.previousSibling as HTMLElement)) {
+        return [...this._getNeighborReference(currentElement.previousSibling as HTMLSpanElement, true), currentElement];
       } else return [currentElement];
     } else {
-      if (currentElement.nextElementSibling && this._checkReferenceElement(currentElement.nextElementSibling as HTMLElement)) {
-        return [currentElement, ...this._getNeighborReference(currentElement.nextElementSibling as HTMLSpanElement, false)];
+      if (currentElement.nextSibling && this._checkReferenceElement(currentElement.nextSibling as HTMLElement)) {
+        return [currentElement, ...this._getNeighborReference(currentElement.nextSibling as HTMLSpanElement, false)];
       } else return [currentElement];
     }
     
@@ -290,6 +294,7 @@ export class Reference {
 
   private _checkReferenceElement(element: HTMLElement): boolean {
     if (
+      element.getAttribute &&
       element.getAttribute("data-type") == "block-ref" &&
       this.plugin.literaturePool.get(element.getAttribute("data-id"))) {
         //说明输入在引用内
