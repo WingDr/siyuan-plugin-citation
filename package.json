@@ -43,6 +43,6 @@
     "axios": "^1.4.0",
     "moment": "^2.29.4",
     "template_js": "^2.4.0",
-    "zotero-types": "^1.0.16"
+    "zotero-types": "^2.0.3"
   }
 }
