@@ -6,9 +6,9 @@ s.libraryID = Zotero.Libraries.userLibraryID;
 s.addCondition('noChildren', 'true');
 s.addCondition('recursive', 'true');
 s.addCondition('joinMode', 'any');
-s.addCondition("itemType", "isNot", "note");
-s.addCondition("itemType", "isNot", "attachment");
-s.addCondition("itemType", "isNot", "annotation");
+s.addCondition("itemType", "isNot", "note", true);
+s.addCondition("itemType", "isNot", "attachment", true);
+s.addCondition("itemType", "isNot", "annotation", true);
 var ids = await s.search();
 
 for (let id of ids) {
