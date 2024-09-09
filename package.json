@@ -21,7 +21,7 @@
     "mini-css-extract-plugin": "2.3.0",
     "sass": "^1.62.1",
     "sass-loader": "^12.6.0",
-    "siyuan": "^0.9.5",
+    "siyuan": "^1.0.2",
     "tslib": "2.4.0",
     "typescript": "^5.1.6",
     "webpack": "^5.76.0",
@@ -39,10 +39,10 @@
     "open": "^9.1.0",
     "fs": "^0.0.1-security",
     "path": "^0.12.7",
-    "fuse.js": "^6.6.2",
-    "axios": "^1.4.0",
-    "moment": "^2.29.4",
-    "template_js": "^2.4.0",
-    "zotero-types": "^2.0.3"
+    "fuse.js": "^7.0.0",
+    "axios": "^1.7.7",
+    "moment": "^2.30.1",
+    "template_js": "^3.1.4",
+    "zotero-types": "^2.1.1"
   }
 }
