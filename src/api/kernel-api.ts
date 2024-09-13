@@ -130,7 +130,7 @@ class KernelApi extends BaseApi {
         return await response;
       }
     } else if (response.status === 202) {
-      const data = await response.json();
+      const data = await response.json() as any;
       switch (data.code) {
         case -1 : { console.error("参数解析错误", {msg: data.msg}); break; }
         case 403 : { console.error("无访问权限 (文件不在工作空间下)", {msg: data.msg}); break; }

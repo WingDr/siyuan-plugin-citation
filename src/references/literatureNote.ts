@@ -25,6 +25,7 @@ export class LiteratureNote {
       const refPath = this.plugin.data[STORAGE_NAME].referencePath as string;
       const titleTemplate = this.plugin.data[STORAGE_NAME].titleTemplate as string;
       const userDataTitle = this.plugin.data[STORAGE_NAME].userDataTitle as string;
+      const useItemKey = this.plugin.data[STORAGE_NAME].useItemKey as boolean;
       const res = this.plugin.kernelApi.searchFileWithKey(notebookId, refPath + "/", key);
       const data = (await res).data as any[];
       if (data.length) {
@@ -32,7 +33,12 @@ export class LiteratureNote {
         if (isDev) this.logger.info("已存在文献文档，id=>", {literatureId});
         // 保险起见更新一下字典
         this.plugin.literaturePool.set({id: literatureId, key});
-        this._processExistedLiteratureNote(literatureId, key, entry, noConfirmUserData);
+        await this._processExistedLiteratureNote(literatureId, key, entry, noConfirmUserData);
+        // 最后更新一下key的形式
+        const new_key = "1_" + (useItemKey ? entry.itemKey : entry.citekey);
+        await this.plugin.kernelApi.setBlockKey(literatureId, new_key);
+        this.plugin.literaturePool.set({id: literatureId, key:new_key});
+        this.plugin.kernelApi.setBlockEntry(literatureId, JSON.stringify(cleanEmptyKey(Object.assign({}, entry))));
         return;
       } else {
         //文件不存在就新建文件
