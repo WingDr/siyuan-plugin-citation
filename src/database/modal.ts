@@ -148,7 +148,7 @@ export class FilesModal extends DataModal {
     const files = await fileSearch(this.plugin, REF_DIR_PATH, this.plugin.noticer);
     if (isDev) logger.info("本地文献文件检索, fileList=>", {files});
     const fileContents = await Promise.all(files.map( async filePath => {
-      return await this.plugin.kernelApi.getFile(filePath, "text");
+      return await this.plugin.kernelApi.getFile(filePath, "text") as string;
     }));
     if (isDev) logger.info("本地文献文件检索，数量=>", fileContents.length);
     const promises = files.map(filePath => {
