@@ -404,7 +404,7 @@ export class ZoteroDBModal extends DataModal {
           return new EntryZoteroAdapter(item, this.useItemKey);
         });
         this.fuse = new Fuse(searchItems, this.searchOptions);
-        if (isDev) this.logger.info("打开搜索界面");
+        if (isDev) this.logger.info("打开搜索界面, searchItems=>", searchItems);
         this.searchDialog = new SearchDialog(this.plugin);
         const selectedList = this.selectedList.map(key => {
           const item = searchItems.filter(item => item.key == key)[0];
