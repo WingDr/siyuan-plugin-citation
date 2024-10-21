@@ -595,6 +595,7 @@ export class ZoteroDBModal extends DataModal {
         })
       };
     });
+    if (isDev) this.logger.info("从debug-bridge接收到结果，resJson=>", Result);
     const resData = JSON.parse(Result.data);
     if (isDev) this.logger.info("从debug-bridge接收到数据，resJson=>", resData);
     return resData;
