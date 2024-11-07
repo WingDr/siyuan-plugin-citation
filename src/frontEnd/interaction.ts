@@ -274,14 +274,14 @@ export class InteractionManager {
 
   public eventBusReaction() {
     this.plugin.eventTrigger.addEventBusEvent("click-editortitleicon", this.customTitleIconMenu.bind(this));
+    this.plugin.eventTrigger.addEventBusEvent("paste", this.hookPaste.bind(this));
+    this.plugin.eventTrigger.addEventBusEvent("open-siyuan-url-plugin", this.openURLPlugin.bind(this));
     // this.plugin.eventTrigger.addEventBusEvent("open-menu-breadcrumbmore", this.customBreadcrumbMore.bind(this));
     // this.plugin.eventTrigger.addEvent("transactions", {
     //   type: "repeated",
     //   params: {},
     //   triggerFn: this.hookTransactions.bind(this)
     // });
-    this.plugin.eventTrigger.addEventBusEvent("paste", this.hookPaste.bind(this));
-    this.plugin.eventTrigger.addEventBusEvent("open-siyuan-url-plugin", this.openURLPlugin.bind(this));
   }
 
   private async hookPaste(event: CustomEvent) {
@@ -358,51 +358,6 @@ export class InteractionManager {
     });
   }
 
-  private async hookTransactions(params: {event: CustomEvent<any>}) {
-    const detail = params.event.detail.data[0].doOperations[0];
-    const autoReplace = this.plugin.data[STORAGE_NAME].autoReplace;
-    // 拖过来的时候只会产生uodate事件
-    if (autoReplace && detail.action == "update") {
-      let id = detail.id;
-      const data = detail.data as string;
-      const selection = window.getSelection();
-      let insertedNode = document.querySelector(`div[data-node-id="${id}"]`);
-      // 不管是拖进来还是复制的，光标应该都在原位
-      if (selection.anchorNode.parentElement && (this.getNode(selection.anchorNode.parentElement)?.getAttribute("data-node-id") != id)) {
-        if (isDev) this.logger.info("触发位置不为光标位置, detail=>", {selection, detail});
-        return;
-      }
-      const zoteroURLReg = /data-href=\"zotero:\/\/select\/library\/items\/(.*?)\"/;
-      const zoteroURLMatch = data.match(zoteroURLReg);
-      // 在data里面找到zotero链接才是zotero传过来的
-      if (insertedNode && zoteroURLMatch && zoteroURLMatch.length) {
-        const itemKey = zoteroURLMatch[1];
-        const key = "1_" + itemKey;
-        const linkNode = insertedNode.querySelector(`span[data-href="zotero://select/library/items/${itemKey}"]`);
-        // 事件会执行两次，但是其实只需要替换一次
-        if (linkNode && linkNode.parentNode) {
-          if (isDev) this.logger.info("确认到从Zotero拖拽事件, itemKey=>", {itemKey});
-          const content = await this.plugin.reference.processReferenceContents([key], null, true, false);
-          if (!content[0]) return;
-          if (isDev) this.logger.info("获取到插入内容, content=>", {content:content[0]});
-          // const noteContent = (await this.plugin.kernelApi.getBlock(id)).data[0].markdown as string;
-          // const insertContent = noteContent.replace(/\([(.*?)]\(zotero:\/\/select\/library\/items\/(.*?)\)\)/, content[0]);
-          // await this.plugin.kernelApi.updateBlockContent(id, "markdown", insertContent);
-          const useDynamicRefLink = this.plugin.data[STORAGE_NAME].useDynamicRefLink;
-          const insertHTML = `<span data-type="block-ref" data-subtype="${useDynamicRefLink ? "d" : "s"}" data-id="${content[0].citeId}">${content[0].content}</span>`;
-          const newRefNode = (new DOMParser()).parseFromString(insertHTML, "text/html").querySelector(`span[data-id="${content[0].citeId}"]`);
-          linkNode.parentNode.replaceChild(newRefNode, linkNode);
-          insertedNode = this.getNode(newRefNode as HTMLElement);
-          if (isDev) this.logger.info("获取到链接和包含链接的最小节点, node=>", {newRefNode, insertedNode});
-          id = insertedNode.getAttribute("data-node-id");
-          const updateHTML = insertedNode.children.item(0);
-          await this.plugin.kernelApi.updateBlockContent(id, "dom", updateHTML.innerHTML);
-          if (isDev) this.logger.info("从Zotero拖拽/粘贴事件处理完成");
-        }
-      }
-    }
-  }
-
   private async openURLPlugin(e: CustomEvent) {
     if (isDev) this.logger.info("从外部打开思源链接：", e);
     if (["Zotero (debug-bridge)", "Juris-M (debug-bridge)"].indexOf(this.plugin.database.type) == -1) {
@@ -469,6 +424,12 @@ export class InteractionManager {
     // });
   }
 
+  private isLiteratureNote(documentId: string): boolean {
+    return this.plugin.literaturePool.get(documentId) ? true : false;
+  }
+
+  // 下面都是暂时用不到的
+
   private customBreadcrumbMore(event: CustomEvent<any>) {
     if (isDev) this.logger.info("触发eventBus：open-menu-breadcrumbmore，=>", event);
     const place = "BreadcrumbMore" as MenuPlace;
@@ -492,10 +453,6 @@ export class InteractionManager {
     // });
   }
 
-  private isLiteratureNote(documentId: string): boolean {
-    return this.plugin.literaturePool.get(documentId) ? true : false;
-  }
-
   private getNode(node:HTMLElement) {
     let nowNode = node;
     if (!nowNode) return null;
@@ -504,5 +461,50 @@ export class InteractionManager {
       if (!nowNode) return null;
     }
     return nowNode;
+  }
+
+  private async hookTransactions(params: {event: CustomEvent<any>}) {
+    const detail = params.event.detail.data[0].doOperations[0];
+    const autoReplace = this.plugin.data[STORAGE_NAME].autoReplace;
+    // 拖过来的时候只会产生uodate事件
+    if (autoReplace && detail.action == "update") {
+      let id = detail.id;
+      const data = detail.data as string;
+      const selection = window.getSelection();
+      let insertedNode = document.querySelector(`div[data-node-id="${id}"]`);
+      // 不管是拖进来还是复制的，光标应该都在原位
+      if (selection.anchorNode.parentElement && (this.getNode(selection.anchorNode.parentElement)?.getAttribute("data-node-id") != id)) {
+        if (isDev) this.logger.info("触发位置不为光标位置, detail=>", {selection, detail});
+        return;
+      }
+      const zoteroURLReg = /data-href=\"zotero:\/\/select\/library\/items\/(.*?)\"/;
+      const zoteroURLMatch = data.match(zoteroURLReg);
+      // 在data里面找到zotero链接才是zotero传过来的
+      if (insertedNode && zoteroURLMatch && zoteroURLMatch.length) {
+        const itemKey = zoteroURLMatch[1];
+        const key = "1_" + itemKey;
+        const linkNode = insertedNode.querySelector(`span[data-href="zotero://select/library/items/${itemKey}"]`);
+        // 事件会执行两次，但是其实只需要替换一次
+        if (linkNode && linkNode.parentNode) {
+          if (isDev) this.logger.info("确认到从Zotero拖拽事件, itemKey=>", {itemKey});
+          const content = await this.plugin.reference.processReferenceContents([key], null, true, false);
+          if (!content[0]) return;
+          if (isDev) this.logger.info("获取到插入内容, content=>", {content:content[0]});
+          // const noteContent = (await this.plugin.kernelApi.getBlock(id)).data[0].markdown as string;
+          // const insertContent = noteContent.replace(/\([(.*?)]\(zotero:\/\/select\/library\/items\/(.*?)\)\)/, content[0]);
+          // await this.plugin.kernelApi.updateBlockContent(id, "markdown", insertContent);
+          const useDynamicRefLink = this.plugin.data[STORAGE_NAME].useDynamicRefLink;
+          const insertHTML = `<span data-type="block-ref" data-subtype="${useDynamicRefLink ? "d" : "s"}" data-id="${content[0].citeId}">${content[0].content}</span>`;
+          const newRefNode = (new DOMParser()).parseFromString(insertHTML, "text/html").querySelector(`span[data-id="${content[0].citeId}"]`);
+          linkNode.parentNode.replaceChild(newRefNode, linkNode);
+          insertedNode = this.getNode(newRefNode as HTMLElement);
+          if (isDev) this.logger.info("获取到链接和包含链接的最小节点, node=>", {newRefNode, insertedNode});
+          id = insertedNode.getAttribute("data-node-id");
+          const updateHTML = insertedNode.children.item(0);
+          await this.plugin.kernelApi.updateBlockContent(id, "dom", updateHTML.innerHTML);
+          if (isDev) this.logger.info("从Zotero拖拽/粘贴事件处理完成");
+        }
+      }
+    }
   }
 }
