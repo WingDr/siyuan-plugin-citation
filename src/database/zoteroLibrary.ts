@@ -226,6 +226,14 @@ export class EntryZoteroAdapter extends Entry {
     }
   }
 
+  get creators() {
+    return this.data.creators;
+  }
+
+  get firstCreator() {
+    return this.data.creators ? this.data.creators[0] : null;
+  }
+
   get annotations(): any[] {
     const annotations = this.data.annotations ?? [];
     return annotations.map((anno, index) => {
@@ -375,12 +383,14 @@ export function getTemplateVariablesForZoteroEntry(entry: EntryZoteroAdapter): R
     annotationList: entry.annotationList,
     containerTitle: entry.containerTitle,
     containerTitleShort: entry.containerTitleShort,
+    creators: entry.creators,
     DOI: entry.DOI,
     eprint: entry.eprint,
     eprinttype: entry.eprinttype,
     eventPlace: entry.eventPlace,
     files: entry.files,
     fileList: entry.fileList,
+    firstCreator: entry.firstCreator,
     getNow: moment(),
     note: entry.note,
     page: entry.page,

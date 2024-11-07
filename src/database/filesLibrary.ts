@@ -63,12 +63,14 @@ export class Library {
       annotationList: entry.annotationList,
       containerTitle: entry.containerTitle,
       containerTitleShort: entry.containerTitleShort,
+      creators: entry.creators,
       DOI: entry.DOI,
       eprint: entry.eprint,
       eprinttype: entry.eprinttype,
       eventPlace: entry.eventPlace,
       files: entry.files,
       fileList: entry.fileList,
+      firstCreator: entry.firstCreator,
       getNow: moment(),
       note: entry.note,
       page: entry.page,
@@ -165,6 +167,8 @@ export abstract class Entry {
 
   public abstract abstract?: string;
   public abstract author?: Author[];
+  public abstract creators?;
+  public abstract firstCreator?;
 
   /**
    * A comma-separated list of authors, each of the format `<firstname> <lastname>`.
@@ -317,6 +321,14 @@ export class EntryCSLAdapter extends Entry {
   }
   get author() {
     return this.data.author;
+  }
+
+  get creators() {
+    return this.data.author;
+  }
+
+  get firstCreator() {
+    return this.data.author ? this.data.author[0] : null;
   }
 
   get authorString(): string | null {
@@ -601,6 +613,14 @@ export class EntryBibLaTeXAdapter extends Entry {
       given: a.firstName,
       family: a.lastName,
     }));
+  }
+
+  get creators() {
+    return this.data.creators;
+  }
+
+  get firstCreator() {
+    return this.data.creators[0];
   }
 
   get tags(): string {
