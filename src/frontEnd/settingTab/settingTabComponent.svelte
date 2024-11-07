@@ -42,11 +42,12 @@
    *    2. 笔记本选择
    *    3. 文献库路径
    *    4. 数据库类型
-   *    5. 使用itemKey作为索引
-   *    6. 自动替换指向zotero的链接为引用链接
-   *    7. 关闭用户数据安全提示
-   *    8. 重新载入数据库
-   *    9. 删除数据
+   *    5. 添加到的数据库id（用逗号隔开）
+   *    6. 使用itemKey作为索引
+   *    7. 自动替换指向zotero的链接为引用链接
+   *    8. 关闭用户数据安全提示
+   *    9. 重新载入数据库
+   *    10. 删除数据
    * 2. 思源内容模板
    *    1. 引用链接
    *        1. 自定义引用
@@ -262,7 +263,7 @@
 
   onMount(async () => {
     const file = await plugin.kernelApi.getFile("/data/plugins/siyuan-plugin-citation/plugin.json", "json");
-    pluginVersion = file.version;
+    pluginVersion = (file as any).version;
     await initializeData();
   });
 
@@ -558,6 +559,25 @@
             }}
           />
         </Item>
+        <!-- 刷新全部文档标题 -->
+        <Item
+          block={false}
+          title={plugin.i18n.settingTab.templates.siyuan.refreshLiteratureNoteBtnTitle}
+          text={plugin.i18n.settingTab.templates.siyuan.refreshLiteratureNoteBtnDesciption}
+        >
+          <Input
+            slot="input"
+            block={false}
+            normal={true}
+            type={ItemType.button}
+            settingKey="Button"
+            settingValue={plugin.i18n.settingTab.templates.siyuan.refreshLiteratureNoteBtnText}
+            on:clicked={() => {
+              if (isDev) logger.info("Button clicked");
+              dispatcher("refresh literature note title", { titleTemplate });
+            }}
+          />
+        </Item>
         <!-- 自定义用户数据标题 -->
         <Item
           block={false}
@@ -578,25 +598,6 @@
                 `Input changed: ${event.detail.key} = ${event.detail.value}`
               );
               userDataTitle = event.detail.value; 
-            }}
-          />
-        </Item>
-        <!-- 刷新全部文档标题 -->
-        <Item
-          block={false}
-          title={plugin.i18n.settingTab.templates.siyuan.refreshLiteratureNoteBtnTitle}
-          text={plugin.i18n.settingTab.templates.siyuan.refreshLiteratureNoteBtnDesciption}
-        >
-          <Input
-            slot="input"
-            block={false}
-            normal={true}
-            type={ItemType.button}
-            settingKey="Button"
-            settingValue={plugin.i18n.settingTab.templates.siyuan.refreshLiteratureNoteBtnText}
-            on:clicked={() => {
-              if (isDev) logger.info("Button clicked");
-              dispatcher("refresh literature note title", { titleTemplate });
             }}
           />
         </Item>

@@ -80,7 +80,7 @@ export class BaseApi {
     }
 
     const response = await fetch(reqUrl, fetchOps);
-    const resJson = (await response.json()) as SiyuanData;
+    const resJson = (await response.json() as any) as SiyuanData;
     if (isDev) {
       this.logger.info("思源请求数据返回，resJson=>", resJson);
     }

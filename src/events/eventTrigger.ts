@@ -51,7 +51,8 @@ export class EventTrigger {
     if (this.onProcessing) return;
     // if (isDev) this.logger.info("触发器运行中");
     if ( Object.keys(this.eventQueue).indexOf(event.detail.cmd) != -1 ) {
-      if (isDev) this.logger.info("事件触发，event =>", {type: "ws-main", cmd: event.detail.cmd});
+      // 在这里输出不方便debug
+      // if (isDev) this.logger.info("事件触发，event =>", {type: "ws-main", cmd: event.detail.cmd});
       this.execEvent(event.detail.cmd, event);
     }
   }
@@ -68,7 +69,8 @@ export class EventTrigger {
     this.onProcessing = true;
     if (this.eventQueue[name].type == "repeated") {
       const triggerEvent = this.eventQueue[name];
-      if (isDev) this.logger.info("事件执行，event=>", {...triggerEvent, name});
+      // 对于重复执行的任务，就不需要触发输出了，不然太麻烦
+      // if (isDev) this.logger.info("事件执行，event=>", {...triggerEvent, name});
       const pList = this.eventQueue[name].triggerFns.map(async (triggerFn) => {
         await triggerFn({...triggerEvent.params, event});
       });

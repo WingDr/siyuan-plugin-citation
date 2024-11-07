@@ -7,8 +7,7 @@ import {
 import SiYuanPluginCitation from "../index";
 import {
   STORAGE_NAME,
-  isDev,
-  pluginIconSVG
+  isDev
 } from "../utils/constants";
 import { createLogger, type ILogger } from "../utils/simple-logger";
 import { type DatabaseType } from "../database/database";
