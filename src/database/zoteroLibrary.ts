@@ -133,14 +133,16 @@ export class EntryZoteroAdapter extends Entry {
   thesis?: string;
   URL?: string;
   useItemKey: boolean;
+  shortAuthorLimit: number;
   declare _year?: string;
   declare _note?: any[];
   declare _tags?: any[];
 
-  constructor(private data: EntryDataZotero, useItemKey = false) {
+  constructor(private data: EntryDataZotero, useItemKey = false, shortAuthorLimit = 2) {
     super();
 
     this.useItemKey = useItemKey;
+    this.shortAuthorLimit = shortAuthorLimit;
 
     Object.entries(ZOTERO_PROPERTY_MAPPING).forEach(
       (map: [string, string]) => {
@@ -270,7 +272,7 @@ export class EntryZoteroAdapter extends Entry {
   }
 
   get shortAuthor(): string {
-    const limit = 2;
+    const limit = this.shortAuthorLimit;
     let shortAuthor = "";
     const author = this.data.creators?.filter(c => c.creatorType === "author");
     if (!author || author.length == 0) {

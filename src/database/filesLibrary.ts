@@ -299,8 +299,10 @@ export interface EntryDataCSL {
 }
 
 export class EntryCSLAdapter extends Entry {
-  constructor(private data: EntryDataCSL) {
+  shortAuthorLimit:number;
+  constructor(private data: EntryDataCSL, shortAuthorLimit = 2) {
     super();
+    this.shortAuthorLimit = shortAuthorLimit;
   }
 
   eprint: string = null;
@@ -338,7 +340,7 @@ export class EntryCSLAdapter extends Entry {
   }
 
   get shortAuthor(): string {
-    const limit = 2;
+    const limit = this.shortAuthorLimit;
     let shortAuthor = "";
     const author = this.data.author;
     if (author.length == 0) {
@@ -482,12 +484,13 @@ export class EntryBibLaTeXAdapter extends Entry {
   title?: string;
   titleShort?: string;
   URL?: string;
+  shortAuthorLimit: number;
   declare _year?: string;
   declare _note?: string[];
 
-  constructor(private data: EntryDataBibLaTeX) {
+  constructor(private data: EntryDataBibLaTeX, shortAuthorLimit = 2) {
     super();
-
+    this.shortAuthorLimit = shortAuthorLimit;
     Object.entries(BIBLATEX_PROPERTY_MAPPING).forEach(
       (map: [string, string]) => {
         const [src, tgt] = map;
@@ -561,7 +564,7 @@ export class EntryBibLaTeXAdapter extends Entry {
   }
 
   get shortAuthor(): string {
-    const limit = 2;
+    const limit = this.shortAuthorLimit;
     let shortAuthor = "";
     const author = this.data.creators.author;
     if (!author || author.length == 0) {
