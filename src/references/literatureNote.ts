@@ -311,8 +311,8 @@ export class LiteratureNote {
           break;
         }
         case "highlight": {
-          if (detail.annotationText) quoteContent = `<span data-type="text" style="background-color: ${detail.annotationColor}">${detail.annotationText.replace(/\n+/g, "\n")}</span>`;
-          else quoteContent = `<span data-type="text" style="background-color: ${detail.annotationColor}">" "</span>`;
+          if (detail.annotationText) quoteContent = `<span data-type="text" style="outline-color: ${detail.annotationColor};outline-style:solid;outline-width:0.1em">${detail.annotationText.replace(/\n+/g, "\n")}</span>`;
+          else quoteContent = `<span data-type="text" style="outline-color: ${detail.annotationColor};outline-style:solid;outline-width:0.1em">" "</span>`;
           break;
         }
         case "underline": {
