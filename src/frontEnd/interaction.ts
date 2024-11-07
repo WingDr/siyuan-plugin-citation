@@ -275,12 +275,87 @@ export class InteractionManager {
   public eventBusReaction() {
     this.plugin.eventTrigger.addEventBusEvent("click-editortitleicon", this.customTitleIconMenu.bind(this));
     // this.plugin.eventTrigger.addEventBusEvent("open-menu-breadcrumbmore", this.customBreadcrumbMore.bind(this));
-    this.plugin.eventTrigger.addEvent("transactions", {
-      type: "repeated",
-      params: {},
-      triggerFn: this.hookTransactions.bind(this)
-    });
+    // this.plugin.eventTrigger.addEvent("transactions", {
+    //   type: "repeated",
+    //   params: {},
+    //   triggerFn: this.hookTransactions.bind(this)
+    // });
+    this.plugin.eventTrigger.addEventBusEvent("paste", this.hookPaste.bind(this));
     this.plugin.eventTrigger.addEventBusEvent("open-siyuan-url-plugin", this.openURLPlugin.bind(this));
+  }
+
+  private async hookPaste(event: CustomEvent) {
+    if (isDev) this.logger.info("触发粘贴事件：ev=>", event);
+    if (["Zotero (debug-bridge)", "Juris-M (debug-bridge)"].indexOf(this.plugin.database.type) == -1) {
+      // 不支持除使用debug-bridge以外的方法（因为要从itemkey开始查询）
+      if (isDev) this.logger.info("数据库格式不支持，type=>",{type: this.plugin.database.type});
+      return null;
+    }
+    // 在粘贴过来的东西中，需要处理引用和图片
+    const autoReplace = this.plugin.data[STORAGE_NAME].autoReplace as boolean;
+    // 该设置项暂时由autoreplace承担
+    const autoMoveImage = this.plugin.data[STORAGE_NAME].autoReplace as boolean;
+    const detail = event.detail;
+    let resHTML = detail.textHTML as string;
+
+    const zoteroURLReg = /<span class=\"citation\">\(<a href=\"zotero:\/\/select\/library\/items\/(.*?)\">.*?<\/a>\)<\/span>/;
+    if (!zoteroURLReg.test(resHTML)) {
+      // 不包含这种链接就不处理，包括处理图片也需要这个的
+      return;
+    }
+    let citeDetail = null;
+    if (autoReplace) {
+      event.preventDefault();
+      const zoteroURLMatch = resHTML.match(zoteroURLReg);
+      const itemKey = zoteroURLMatch[1];
+      const key = "1_" + itemKey;
+      if (isDev) this.logger.info("确认到从Zotero拖拽事件, itemKey=>", {itemKey});
+      const content = await this.plugin.reference.processReferenceContents([key], null, true, false);
+      if (!content[0]) return;
+      citeDetail = content[0];
+      if (isDev) this.logger.info("获取到插入内容, content=>", {citeDetail});
+      const useDynamicRefLink = this.plugin.data[STORAGE_NAME].useDynamicRefLink;
+      const insertHTML = `<span data-type="block-ref" data-subtype="${useDynamicRefLink ? "d" : "s"}" data-id="${content[0].citeId}">${content[0].content}</span>`;
+      resHTML = resHTML.replace(zoteroURLReg, insertHTML);
+    }
+    const zoteroImageReg = /<img .*?>/;
+    const zoteroAnnotationReg = /<a href="zotero:\/\/open-pdf\/library\/items\/(.*?)\?.*?annotation=(.*?)\".*<\/a>/;
+    if (autoMoveImage && zoteroImageReg.test(resHTML) && zoteroAnnotationReg.test(resHTML)) {
+      event.preventDefault();
+      // 自动移动并且有图片部分和annotation的标识
+      const zoteroAnnotationMatch = resHTML.match(zoteroAnnotationReg);
+      if (!citeDetail) {
+        // 如果之前没插入就插入一遍
+        const zoteroURLMatch = resHTML.match(zoteroURLReg);
+        const itemKey = zoteroURLMatch[1];
+        const key = "1_" + itemKey;
+        const content = await this.plugin.reference.processReferenceContents([key], null, true, false);
+        if (!content[0]) return;
+        citeDetail = content[0];
+        if (isDev) this.logger.info("获取到插入内容, content=>", {citeDetail});
+      }
+      let resLink = "";
+      const annoKey = zoteroAnnotationMatch[2];
+      citeDetail.entry.annotationList.forEach(anno => {
+        if (resLink.length) return;
+        anno.details.forEach(detail => {
+          if (resLink.length) return;
+          if (detail.key == annoKey) {
+            const time = detail.dateAdded.replace(/[-:\s]/g, "");
+            // 用于欺骗思源的随机（伪）字符串，是7位的小写字母和数字（itemKey是8位）
+            const randomStr = (detail.key as string).toLowerCase().slice(1);
+            const name = `zotero-annotations-${detail.annotationType}-${detail.parentKey}-${detail.key}-${time}-${randomStr}`;
+            const assetPath = `assets/${name}.png`;
+            resLink = `<img src="${assetPath}" data-src="${assetPath}" alt="img">`;
+          }
+        });
+      });
+      resHTML = resHTML.replace(zoteroImageReg, resLink);
+    }
+    if (isDev) this.logger.info("替换插入内容，text=>", {resHTML});
+    event.detail.resolve({
+      textHTML: resHTML
+    });
   }
 
   private async hookTransactions(params: {event: CustomEvent<any>}) {

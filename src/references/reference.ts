@@ -268,9 +268,12 @@ export class Reference {
         const useDynamicRefLink = this.plugin.data[STORAGE_NAME].useDynamicRefLink;
         if (customCiteText) content = await this.Cite.generateCiteLink(key, idx, true);
         if (customCiteText && useDynamicRefLink) content = name;
+        const citeRef = await this.Cite.generateCiteRef(citeId, link, name);
         return {
           citeId,
-          content
+          content,
+          citeRef,
+          entry
         };
       }
       return await this.Cite.generateCiteRef(citeId, link, name);
