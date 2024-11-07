@@ -32,6 +32,7 @@ export class Database {
     if (type === this.type) {
       return null;
     }
+    this.type = type;
 
     // 如果已经存在就删除原先的
     if (this.dataModal) delete this.dataModal;

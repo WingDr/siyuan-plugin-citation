@@ -2,7 +2,8 @@ import {
   Setting,
   Protyle,
   Menu,
-  type IMenuItemOption
+  type IMenuItemOption,
+  openTab
 } from "siyuan";
 import SiYuanPluginCitation from "../index";
 import {
@@ -279,6 +280,7 @@ export class InteractionManager {
       params: {},
       triggerFn: this.hookTransactions.bind(this)
     });
+    this.plugin.eventTrigger.addEventBusEvent("open-siyuan-url-plugin", this.openURLPlugin.bind(this));
   }
 
   private async hookTransactions(params: {event: CustomEvent<any>}) {
@@ -322,6 +324,47 @@ export class InteractionManager {
           await this.plugin.kernelApi.updateBlockContent(id, "dom", updateHTML.innerHTML);
           if (isDev) this.logger.info("从Zotero拖拽/粘贴事件处理完成");
         }
+      }
+    }
+  }
+
+  private async openURLPlugin(e: CustomEvent) {
+    if (isDev) this.logger.info("从外部打开思源链接：", e);
+    if (["Zotero (debug-bridge)", "Juris-M (debug-bridge)"].indexOf(this.plugin.database.type) == -1) {
+      // 不支持除使用debug-bridge以外的方法（因为要从itemkey开始查询）
+      if (isDev) this.logger.info("数据库格式不支持，type=>",{type: this.plugin.database.type});
+      return null;
+    }
+    const urlObj = new URL(e.detail.url);
+    const pathname = urlObj.pathname;
+    const subpaths = pathname.split("/");
+    const func = subpaths[subpaths.length-1];
+    if (func == "open-ref") {
+      const params = new URLSearchParams(urlObj.search);
+      const itemKey = params.get("key");
+      if (isDev) this.logger.info("获取到链接参数：", {itemKey});
+      if (this.plugin.literaturePool.get("1_" + itemKey)) {
+        // 说明这个文档还没有被进行转换
+        const docID = this.plugin.literaturePool.get("1_" + itemKey);
+        if (isDev) this.logger.info("打开文档：", {docID});
+        openTab({
+          app: this.plugin.app,
+          doc: {id: docID}
+        });
+      } else {
+        // 找不到的话再往citekey里面找一找，再找不到就算了
+        const item = await this.plugin.database.getContentByKey("1_" + itemKey);
+        const citekey = item.citekey;
+        const docID = this.plugin.literaturePool.get(citekey);
+        if (!docID) {
+          if (isDev) this.logger.info("找不到文献内容文档");
+          return;
+        }
+        if (isDev) this.logger.info("打开文档：", {docID});
+        openTab({
+          app: this.plugin.app,
+          doc: {id: docID}
+        });
       }
     }
   }
