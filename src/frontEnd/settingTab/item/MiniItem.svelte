@@ -20,11 +20,13 @@
 <script>
     export let minWidth = "24em";
     export let marginRight = "2em";
+    export let isCard = true;
 </script>
 
 <label
     style="min-width: {minWidth}; margin-right: {marginRight};"
     class="fn__flex"
+    class:card-style={isCard}
 >
     <slot name="icon" />
 
@@ -43,5 +45,11 @@
     label {
         width: unset;
         margin: 0.5em 0;
+    }
+
+    .card-style {
+        outline: 1px solid var(--b3-border-color-trans);
+        border-radius: 4px;
+        min-height: 2em;
     }
 </style>

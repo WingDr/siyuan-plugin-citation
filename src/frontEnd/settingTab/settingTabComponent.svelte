@@ -177,12 +177,6 @@
   ]
 
   $: isDebugBridge = _checkDebugBridge(database);
-  $: _linkTempList = linkTemplatesGroup.map((link, idx) => {
-    return {
-      key: idx,
-      ...link
-    }
-  })
 
   const dispatcher = createEventDispatcher();
 
@@ -373,12 +367,17 @@
     });
   }
 
-  async function clickCardSetting(event) {
-    const target = event.detail.event.target as HTMLElement;
-    const name = target.parentElement.querySelector("span[data-type='title']");
-    const tmp = name.getAttribute("id").split("_");
+  function clickCardSetting(event: any) {
+    const target = event.target as HTMLElement;
+    let button_id = target.parentElement.parentElement.parentElement.getAttribute("id");
+    if (!button_id) button_id = target.parentElement.parentElement.getAttribute("id");
+    if (!button_id) button_id = target.parentElement.getAttribute("id");
+    const tmp = button_id.split("_");
     const id  = eval(tmp[tmp.length-1]);
-    if (show_link_detail && settingIndex == id) show_link_detail = false;
+    if (show_link_detail && settingIndex == id) {
+      show_link_detail = false;
+      return;
+    }
     settingIndex = id;
     const detail = linkTemplatesGroup[id];
     // 对具体的编辑框幅值
@@ -392,6 +391,30 @@
     multiCiteSuffix = detail.multiCiteSuffix ?? defaultSettingData.multiCiteSuffix;
     nameTemplate = detail.nameTemplate ?? defaultSettingData.nameTemplate;
     show_link_detail = true;
+  }
+
+  function addLinkTemp() {
+    linkTemplatesGroup = [...linkTemplatesGroup, {
+      name: "new",
+      customCiteText,
+      useDynamicRefLink,
+      shortAuthorLimit,
+      linkTemplate,
+      multiCiteConnector,
+      multiCitePrefix,
+      multiCiteSuffix,
+      nameTemplate
+    }];
+  }
+
+  function deleteLinkTemp(event:any) {
+    const target = event.target as HTMLElement;
+    let button_id = target.parentElement.parentElement.parentElement.getAttribute("id");
+    if (!button_id) button_id = target.parentElement.parentElement.getAttribute("id");
+    if (!button_id) button_id = target.parentElement.getAttribute("id");
+    const tmp = button_id.split("_");
+    const id  = eval(tmp[tmp.length-1]);
+    linkTemplatesGroup = [...linkTemplatesGroup.slice(0, id), ...linkTemplatesGroup.slice(id+1)]
   }
 </script>
 
@@ -615,25 +638,51 @@
       <div data-type={template_tabs[0].name} class:fn__none={template_tabs[0].key !== focus}>
         <!-- 多个配置的卡片 -->
         <Group title={"卡片"}>
-          {#each _linkTempList as linkItem (linkItem.name) }
-            <MiniItem>
-              <Svg
-                  slot="icon"
-                  icon="#iconEdit"
-                  className="svg"
-              />
-              <span data-type="title" id={"linkItem_" + linkItem.key} slot="title">{@html linkItem.name}</span>
-              <Input
-                  slot="input"
-                  type={ItemType.button}
-                  settingKey="Button"
-                  settingValue={"设置"}
-                  on:clicked={clickCardSetting}
-              />
+          {#each linkTemplatesGroup as linkItem, index }
+            <MiniItem minWidth="200px">
+              <span data-type="title" id={"linkItem_" + index} slot="title">{@html linkItem.name}</span>
+              <div slot="input" style="display: flex;flex-direction:row" id={"linkItem_" + index}>
+                <button
+                  class="b3-tooltips b3-tooltips__nw block__icon block__icon--show"
+                  data-type="setting"
+                  aria-label={"设置"}
+                  on:click={clickCardSetting}
+                >
+                  <Svg
+                    icon="#iconSettings"
+                    className="svg"
+                  />
+                </button>
+                <span class="fn__space" />
+                <button
+                  class="b3-tooltips b3-tooltips__nw block__icon block__icon--show"
+                  data-type="delete"
+                  aria-label={"删除"}
+                  on:click={deleteLinkTemp}
+                >
+                  <Svg
+                    icon="#iconTrashcan"
+                    className="svg"
+                  />
+                </button>
+              </div>
             </MiniItem>
           {/each}
-          
+          <Input
+            block={false}
+            normal={true}
+            type={ItemType.button}
+            settingKey="Button"
+            settingValue={"添加"}
+            on:clicked={() => {
+              if (isDev) logger.info("Button clicked");
+              addLinkTemp();
+            }}
+          />
         </Group>
+
+        <div style="margin: 5px 0;background:var(--b3-border-color);height:1px"></div>
+        
         {#if show_link_detail}
           <!-- 引用类型名称 -->
           <Item
@@ -739,6 +788,7 @@
                   linkTemplatesGroup = linkTemplatesGroup;
                 }}
               />
+              <span class="fn__hr"></span>
               <Input
                 block={false}
                 normal={true}
@@ -756,6 +806,7 @@
                   linkTemplatesGroup = linkTemplatesGroup;
                 }}
               /> 
+              <span class="fn__hr"></span>
               <Input
                 block={false}
                 normal={true}
