@@ -57,12 +57,16 @@
     }
 
     function keyboardReaction(ev: KeyboardEvent) {
+        console.log(ev)
         if (ev.key == "ArrowUp") {
             ev.preventDefault();
             changeSelection(false);
         } else if (ev.key == "ArrowDown") {
             ev.preventDefault();
             changeSelection(true);
+        } else if (ev.key == "d" && ev.altKey) {
+            ev.preventDefault();
+            if (selectedList.length) selectedList = selectedList.slice(0, selectedList.length-1);
         } else if (!ev.isComposing && ev.key == "Enter") {
             ev.preventDefault();
             if (pattern) {
@@ -123,20 +127,20 @@
     .tag-container {
         display: flex;
         flex-direction: row;
-        height: 30px;
-        padding: 0 10px;
-        overflow-x: scroll;
+        align-items: center;
+        margin: 0 10px;
+        // overflow-x: scroll;
+        flex-flow: wrap;
+        padding: 2px 0px;
 
         &__tag {
             display: flex;
             flex-direction: row;
             align-items: center;
-            justify-content: center;
-            height: 26px;
             border-radius: 13px;
             background-color: pink;
-            padding: 0, 5px;
-            margin: 0, 5px;
+            padding-left: 10px;
+            margin: 2px;
 
             &__author {
                 max-width: 60px;
@@ -152,6 +156,7 @@
 
             &__close {
                 border: 0;
+                background-color: transparent;
             }
         }
     }
@@ -176,7 +181,7 @@
         <div class="tag-container__tag">
             <div class="tag-container__tag__author" data-tag-id={sItem.key}>{sItem.author}</div>
             <div class="tag-container__tag__year" data-tag-id={sItem.key}>{sItem.year}</div>
-            <button class="tag-container__tag__close" on:click={deleteTag} data-index={sIndex}>x</button>
+            <button class="tag-container__tag__close" on:click={deleteTag} data-index={sIndex}>&#215;</button>
         </div>
     {/each}
 </div>
