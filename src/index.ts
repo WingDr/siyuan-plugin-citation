@@ -12,14 +12,7 @@ import { ExportManager } from "./export/exportManager";
 import {
     isDev,
     STORAGE_NAME,
-    defaultLinkTemplate,
-    defaultNoteTemplate,
-    defaultReferencePath,
-    defaultUserDataTile,
-    databaseType,
-    defaultTitleTemplate,
-    defaultDBPassword,
-    dbSearchDialogTypes
+    defaultSettingData
 } from "./utils/constants";
 import {
     createLogger,
@@ -61,25 +54,7 @@ export default class SiYuanPluginCitation extends Plugin {
 
         if (isDev) this.logger.info("插件载入");
 
-        this.data[STORAGE_NAME] = {
-            referenceNotebook: "",
-            referencePath: defaultReferencePath,
-            database: databaseType[0],
-            titleTemplate: defaultTitleTemplate,
-            userDataTitle: defaultUserDataTile,
-            noteTemplate: defaultNoteTemplate,
-            linkTemplate: defaultLinkTemplate,
-            nameTemplate: "",
-            customCiteText: false,
-            useItemKey: false,
-            autoReplace: false,
-            useDynamicRefLink: false,
-            deleteUserDataWithoutConfirm: false,
-            zoteroLinkTitleTemplate: "",
-            zoteroTagTemplate: "",
-            dbPassword: defaultDBPassword,
-            dbSearchDialogType: dbSearchDialogTypes[0]
-          };
+        this.data[STORAGE_NAME] = defaultSettingData;
 
         const frontEnd = getFrontend();
         this.isMobile = frontEnd === "mobile" || frontEnd === "browser-mobile";

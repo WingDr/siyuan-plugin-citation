@@ -53,3 +53,23 @@ export const defaultNoteTemplate = `
 export const defaultLinkTemplate = "({{shortAuthor}} {{year}})";
 export const defaultDBPassword = "CTT";
 export const defaultUserDataTile = "User Data";
+
+export const defaultSettingData = {
+    referenceNotebook: "",
+    referencePath: defaultReferencePath,
+    database: databaseType[0],
+    titleTemplate: defaultTitleTemplate,
+    userDataTitle: defaultUserDataTile,
+    noteTemplate: defaultNoteTemplate,
+    linkTemplate: defaultLinkTemplate,
+    nameTemplate: "",
+    customCiteText: false,
+    useItemKey: false,
+    autoReplace: false,
+    deleteUserDataWithoutConfirm: false,
+    useDynamicRefLink: false,
+    zoteroLinkTitleTemplate: "",
+    zoteroTagTemplate: "",
+    dbPassword: defaultDBPassword,
+    dbSearchDialogType: dbSearchDialogTypes[0]
+};

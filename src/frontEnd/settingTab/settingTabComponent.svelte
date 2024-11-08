@@ -7,15 +7,9 @@
     STORAGE_NAME,
     hiddenNotebook,
     databaseType,
-    defaultTitleTemplate,
-    defaultNoteTemplate,
-    defaultLinkTemplate,
-    defaultReferencePath,
-    defaultUserDataTile,
     isDev,
-    dataDir,
-    defaultDBPassword,
-    dbSearchDialogTypes
+    dbSearchDialogTypes,
+    defaultSettingData
   } from "../../utils/constants";
   import { type ILogger } from "../../utils/simple-logger";
   import { type DatabaseType } from "../../database/database";
@@ -99,9 +93,6 @@
   // debug-bridge变量
   let dbPassword: string;
   let dbSearchDialogType: string;
-
-  // 设定数据的默认值
-  let defaultSettingData;
 
   let panel_focus_key = 1;
   const panels: IPanel[] = [
@@ -198,28 +189,8 @@
       }
     })
 
-    // 设置默认数据
-    defaultSettingData = {
-      referenceNotebook: notebooks[0].id,
-      referencePath: defaultReferencePath,
-      database: databaseType[0],
-      titleTemplate: defaultTitleTemplate,
-      userDataTitle: defaultUserDataTile,
-      noteTemplate: defaultNoteTemplate,
-      linkTemplate: defaultLinkTemplate,
-      nameTemplate: "",
-      customCiteText: false,
-      useItemKey: false,
-      autoReplace: false,
-      deleteUserDataWithoutConfirm: false,
-      useDynamicRefLink: false,
-      zoteroLinkTitleTemplate: "",
-      zoteroTagTemplate: "",
-      dbPassword: defaultDBPassword,
-      dbSearchDialogType: dbSearchDialogTypes[0]
-    }
     // 默认笔记本为第一个打开的笔记本
-    referenceNotebook = plugin.data[STORAGE_NAME]?.referenceNotebook ?? defaultSettingData.referenceNotebook;
+    referenceNotebook = plugin.data[STORAGE_NAME]?.referenceNotebook ?? notebooks[0].id;
     // 默认文献库路径为"/References/"
     referencePath = plugin.data[STORAGE_NAME]?.referencePath ?? defaultSettingData.referencePath;
     // 使用itemKey默认关闭
