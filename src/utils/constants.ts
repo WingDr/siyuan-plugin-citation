@@ -71,5 +71,9 @@ export const defaultSettingData = {
     zoteroLinkTitleTemplate: "",
     zoteroTagTemplate: "",
     dbPassword: defaultDBPassword,
-    dbSearchDialogType: dbSearchDialogTypes[0]
+    dbSearchDialogType: dbSearchDialogTypes[0],
+    shortAuthorLimit: 2,
+    multiCitePrefix: "",
+    multiCiteConnector: "",
+    multiCiteSuffix: ""
 };

@@ -46,26 +46,41 @@
     },
     "templates": {
       "title": "模板设置",
-      "siyuan": {
-        "title": "思源内容模板",
-        "titleTemplateInputTitle": "文献内容文档标题模板",
-        "titleTemplateInputDescription": "设置文献内容文档的生成标题（用户修改后<b>不会</b>刷新，可以通过“刷新所有文献内容文档标题”重新生成标题）",
-        "titleUserDataInput": "自定义用户数据标题",
-        "titleUserDataInputDescription": "默认是 User Data，可以自定义",
-        "refreshLiteratureNoteBtnTitle": "刷新所有文献内容文档标题",
-        "refreshLiteratureNoteBtnDesciption": "刷新文献库中所有文档的标题，同时也会更新文档的命名（切换索引变量或者更新版本之后）",
-        "refreshLiteratureNoteBtnText": "刷新",
-        "noteTempTexareaTitle": "文献内容模板",
-        "noteTempTexareaDescription": "设置在文献库中储存的文献文档的内容模板",
+      "citeLink": {
+        "title": "引用链接",
         "CustomCiteTextSwitchTitle": "自定义引用",
         "CustomCiteTextSwitchDescription": "完全自定义引用的格式，引用链接模板生成的内容不再为锚文本，而是将直接插入文档<br>⚠️<b>注意：开关开启后请确保你的模板中包含\"...(( {{citeFileID}} \"...\"))...\"或者\"...(( {{citeFileID}} '...'))...\"否则生成的链接将无法引用</b><br>查找引用链接的正则表达式为/\\(\\((.*?)\\\"(.*?)\\\"\\)\\)/g和/\\(\\((.*?)\\'(.*?)\\'\\)\\)/g，请据此把握好您的模板格式",
         "linkTempInputTitle": "引用模板",
         "linkTempInputDescription": "设置添加在文档中的引用链接的模板",
         "useDynamicRefLinkSwitchTitle": "引用链接使用动态锚文本",
         "useDynamicRefLinkSwitchDescription": "使用动态锚文本的引用链接，不会前置锚文本，插入的同时会根据引用链接模板刷新文献内容文档命名。（不建议开启，动态锚文本较为不稳定）",
+        "citeNameTitle": "引用类型名称",
+        "citeNameDescription": "添加引用的类型，在不同的模板之间进行区分",
         "nameTempInputTitle": "文献内容文档命名模板",
-        "nameTempInputDescription": "设置插入/刷新引用时更新文献内容文档命名的模板，仅在同时开启“自定义引用”和“引用链接中使用动态锚文本”的时候有效"
+        "nameTempInputDescription": "设置插入/刷新引用时更新文献内容文档命名的模板，仅在同时开启“自定义引用”和“引用链接中使用动态锚文本”的时候有效",
+        "shortAuthorLimitTitle": "shortAuthor变量限制",
+        "shortAuthorLimitDescription": "限制在shortAuthor变量中最多展示的作者数（多的用et al.表示）",
+        "multiCiteTitle": "多文献引用设置",
+        "multiCiteDescription": "同时引用多个文献时，整体的前缀-连接符-后缀"
       },
+      "literatureNote": {
+        "title": "文献内容",
+        "titleTemplateInputTitle": "文献内容文档标题模板",
+        "titleTemplateInputDescription": "设置文献内容文档的生成标题（用户修改后<b>不会</b>刷新，可以通过“刷新所有文献内容文档标题”重新生成标题）",
+        "refreshLiteratureNoteBtnTitle": "刷新所有文献内容文档标题",
+        "refreshLiteratureNoteBtnDesciption": "刷新文献库中所有文档的标题，同时也会更新文档的命名（切换索引变量或者更新版本之后）",
+        "refreshLiteratureNoteBtnText": "刷新",
+        "noteTempTexareaTitle": "文献内容模板",
+        "noteTempTexareaDescription": "设置在文献库中储存的文献文档的内容模板"
+      },
+      "userData": {
+        "title": "用户数据",
+        "titleUserDataInput": "自定义用户数据标题",
+        "titleUserDataInputDescription": "默认是 User Data，可以自定义"
+      }
+    },
+    "debug_bridge": {
+      "title": "debug-bridge插件",
       "zotero": {
         "title": "Zotero内容模板",
         "notAbleTitle": "无法向Zotero中插入内容",
@@ -74,14 +89,14 @@
         "zoteroLinkTitleTemplateDescription": "设置当插入文献的同时插入到Zotero对应条目下的思源反链的标题模板，置空则不会添加反链，变量\"{{siyuanLink}}\"代表链接本身",
         "zoteroTagTemplateTitle": "插入Zotero标签模板",
         "zoteroTagTemplateDescription": "设置当插入文献的同时添加到对应条目的标签的模板，置空则默认不添加标签，插入多个标签用逗号隔开"
+      },
+      "plugin": {
+        "title": "插件设置",
+        "dbPasswordInputTitle": "debug-bridge插件密码",
+        "dbPasswordInputDescription": "根据<a href=\"https://www.yuque.com/chentaotao-cf9fr/gthfy4/clqahv57w5ugmdev\"><b>教程</b></a>对debug-bridge插件进行设置时设定的密码，教程中默认为\"CTT\"，本插件也默认为此密码",
+        "searchDialogSelectorTitle": "插入文献时使用的搜索面板",
+        "searchDialogSelectorDescription": "选择插入文献时使用的搜索面板：\"SiYuan\" 为基于思源样式类型的搜索面板，搜索速度更快并且更稳定；\"Zotero\"为Zotero自带的搜索面板，可以在Zotero软件中设置是否使用经典视图"
       }
-    },
-    "debug_bridge": {
-      "title": "debug-bridge插件",
-      "dbPasswordInputTitle": "debug-bridge插件密码",
-      "dbPasswordInputDescription": "根据<a href=\"https://www.yuque.com/chentaotao-cf9fr/gthfy4/clqahv57w5ugmdev\"><b>教程</b></a>对debug-bridge插件进行设置时设定的密码，教程中默认为\"CTT\"，本插件也默认为此密码",
-      "searchDialogSelectorTitle": "插入文献时使用的搜索面板",
-      "searchDialogSelectorDescription": "选择插入文献时使用的搜索面板：\"SiYuan\" 为基于思源样式类型的搜索面板，搜索速度更快并且更稳定；\"Zotero\"为Zotero自带的搜索面板，可以在Zotero软件中设置是否使用经典视图"
     }
   },
   "menuItems": {

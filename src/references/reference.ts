@@ -249,7 +249,7 @@ export class Reference {
     // let literatureEnum = [];
     // if (fileId) literatureEnum = await this._getLiteratureEnum(fileId);
     const existNotes = this.plugin.literaturePool.keys;
-    const insertContent = keys.map(async key => {
+    const insertContent = keys.map(async (key, i) => {
       const idx = existNotes.indexOf(key);
       const entry = await this.plugin.database.getContentByKey(key);
       if (isDev) this.logger.info("从database中获得文献内容 =>", entry);
@@ -260,7 +260,7 @@ export class Reference {
       }
       await this.LiteratureNote.updateLiteratureNote(key, entry);
       const citeId = this.plugin.literaturePool.get(key);
-      const link = await this.Cite.generateCiteLink(key, idx, false);
+      const link = this._processMultiCitation(await this.Cite.generateCiteLink(key, idx, false), i, insertContent.length);
       const name = await this.Cite.generateLiteratureName(key);
       if (returnDetail) {
         let content = link;
@@ -304,6 +304,16 @@ export class Reference {
         return true;
     }
     else return false;
+  }
+
+  private _processMultiCitation(link: string, idx:number, full_length:number): string {
+    const prefix = this.plugin.data[STORAGE_NAME].multiCitePrefix;
+    const connector = this.plugin.data[STORAGE_NAME].multiCiteConnector;
+    const suffix = this.plugin.data[STORAGE_NAME].multiCiteSuffix;
+    if (full_length == 1) return prefix + link + suffix;
+    else if (idx == 0) return prefix + link + connector;
+    else if (idx == full_length-1) return link + suffix;
+    else return link + connector; 
   }
 
   // Group: 获取当前文档内容
