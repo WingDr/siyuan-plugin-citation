@@ -30,13 +30,13 @@
 >
     <slot name="icon" />
 
-    <span class="fn__space" />
+    <span class="fn__space" ></span>
 
     <div class="fn__flex-1">
         <slot name="title" />
     </div>
 
-    <span class="fn__space" />
+    <span class="fn__space" ></span>
 
     <slot name="input" />
 </label>

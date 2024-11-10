@@ -140,7 +140,7 @@
         rows={rows > 0 ? rows : undefined}
         bind:value={settingValue}
         on:change={changed}
-    />
+    ></textarea>
 {/if}
 
 <style>

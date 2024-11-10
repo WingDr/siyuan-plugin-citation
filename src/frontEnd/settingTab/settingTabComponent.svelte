@@ -653,7 +653,7 @@
                     className="svg"
                   />
                 </button>
-                <span class="fn__space" />
+                <span class="fn__space" ></span>
                 <button
                   class="b3-tooltips b3-tooltips__nw block__icon block__icon--show"
                   data-type="delete"
@@ -687,7 +687,7 @@
           <!-- 引用类型名称 -->
           <Item
             block={true}
-            title={plugin.i18n.settingTab.templates.citeLink.citeNameTitle}
+            title={(plugin.i18n as any).settingTab.templates.citeLink.citeNameTitle}
             text={plugin.i18n.settingTab.templates.citeLink.citeNameDescription}
           >
             <Input
@@ -769,7 +769,7 @@
                 </div>
                 
             </div>
-            <div class="fn__space" />
+            <div class="fn__space" ></div>
             <div style="display:flex;flex-direction:column;">
               <Input
                 block={false}

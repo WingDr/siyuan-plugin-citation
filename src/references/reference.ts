@@ -1,4 +1,4 @@
-import { Protyle } from "siyuan";
+import { Protyle, type IProtyle } from "siyuan";
 import SiYuanPluginCitation from "../index";
 import { type SiyuanData } from "../api/base-api";
 import {
@@ -22,6 +22,7 @@ export class Reference {
   private LiteratureNote: LiteratureNote;
   private refStartNode: HTMLElement;
   private refEndNode: HTMLElement;
+  private refSpanList: HTMLElement[];
 
   constructor(plugin: SiYuanPluginCitation) {
     this.plugin = plugin;
@@ -42,10 +43,10 @@ export class Reference {
 
   // Main Functions
 
-  public getAllNeighborReference(protyle: Protyle): string[] {
+  public getAllNeighborReference(protyle: IProtyle): string[] {
     if (isDev) this.logger.info("获取到protyle=>", protyle);
-    if (isDev) this.logger.info("获取到选区=>", protyle.protyle.toolbar.range);
-    const pRange = protyle.protyle.toolbar.range;
+    if (isDev) this.logger.info("获取到选区=>", protyle.toolbar.range);
+    const pRange = protyle.toolbar.range;
     const selectedNode = pRange.startContainer;
     if (isDev) this.logger.info("定位到起始点=>", selectedNode);
     let isInRef = false;
@@ -79,6 +80,7 @@ export class Reference {
     this.refStartNode = startElements[0];
     this.refEndNode = endElements[endElements.length - 1];
     const existRefSpanList = isInRef ? [...startElements.slice(0, -1), ...endElements] : [...startElements.slice(0, -1), ...endElements.slice(1)];
+    this.refSpanList = existRefSpanList;
     if (isDev) this.logger.info("所有引用=>", existRefSpanList);
     const existRefList = existRefSpanList.map((e:HTMLSpanElement) => {
       return this.plugin.literaturePool.get(e.getAttribute("data-id"));
@@ -87,6 +89,22 @@ export class Reference {
     return existRefList;
   }
 
+  public async updateNeighborLinks(element:HTMLElement, protyle: IProtyle, target_type: string) {
+    const block = this._getCurrentBlock(element);
+    const blockID = block.getAttribute("data-node-id");
+    if (isDev) this.logger.info("获取到当前元素所在块：", {block, blockID});
+    if (isDev) this.logger.info("更新结果：", {block, blockID});
+    if (!blockID) return;
+    const keys = this.getAllNeighborReference(protyle);
+    const content = await this.processReferenceContents(keys, protyle.block.rootID, target_type);
+    const replacedHTML = this.refSpanList.map(e => e.outerHTML).join("");
+    if (isDev) this.logger.info("更新前的HTML：", {block:block.innerHTML, span:replacedHTML});
+    const res = block.outerHTML.toString().replace(replacedHTML, content.join(""));
+    if (isDev) this.logger.info("更新后的HTML：", {block:res});
+    this.plugin.kernelApi.updateBlockContent(blockID, "dom", res);
+  }
+
+  // 需要针对相邻引用进行修改
   public async updateLiteratureLink(fileId: string): Promise<SiyuanData[]> {
     const useDynamicRefLink = this.plugin.data[STORAGE_NAME].useDynamicRefLink as boolean;
     // 获得所有含有文献引用的块，用于内容更新
@@ -112,7 +130,7 @@ export class Reference {
         const anchor = match[1].slice(key.length + 1);
         const idx = literatureEnum.indexOf(key);
         if (idx != -1) {
-          const link = await this.Cite.generateCiteLink(this.plugin.literaturePool.get(key), idx, this.plugin.data[STORAGE_NAME].customCiteText);
+          const link = await this.Cite.generateCiteLink(this.plugin.literaturePool.get(key), idx, this.plugin.data[STORAGE_NAME], this.plugin.data[STORAGE_NAME].customCiteText);
           if (isDev) this.logger.info("更新文献引用 =>", link);
           if (!link) continue;
           if (useDynamicRefLink) {
@@ -126,7 +144,6 @@ export class Reference {
             }
             replaceList[key] = citeLinkStatic.replace("${id}", key).replace("${link}", link);
           }
-          
         }
       }
       const newContent = block.content.replace(reg, (match, p1) => {
@@ -245,9 +262,19 @@ export class Reference {
 
   // Extra Functions
 
-  public async processReferenceContents(keys: string[], fileId?: string, returnDetail=false, errorReminder=true): Promise<any[]> {
+  public async processReferenceContents(keys: string[], fileId?: string, type_name="", returnDetail=false, errorReminder=true): Promise<any[]> {
     // let literatureEnum = [];
     // if (fileId) literatureEnum = await this._getLiteratureEnum(fileId);
+    let typeSetting = {};
+    const nameList = this.plugin.data[STORAGE_NAME].linkTemplatesGroup.map(tmp => {
+      return tmp.name;
+    }) as string[];
+    if (!type_name.length || nameList.indexOf(type_name) == -1) {
+      // 没有名称或者找不到的时候使用默认设置
+      typeSetting = this.plugin.data[STORAGE_NAME];
+    } else {
+      typeSetting = this.plugin.data[STORAGE_NAME].linkTemplatesGroup[nameList.indexOf(type_name)];
+    }
     const existNotes = this.plugin.literaturePool.keys;
     const insertContent = keys.map(async (key, i) => {
       const idx = existNotes.indexOf(key);
@@ -260,15 +287,15 @@ export class Reference {
       }
       await this.LiteratureNote.updateLiteratureNote(key, entry);
       const citeId = this.plugin.literaturePool.get(key);
-      const link = this._processMultiCitation(await this.Cite.generateCiteLink(key, idx, false), i, insertContent.length);
+      const link = this._processMultiCitation(await this.Cite.generateCiteLink(key, idx, typeSetting, false), i, insertContent.length, typeSetting);
       const name = await this.Cite.generateLiteratureName(key);
       if (returnDetail) {
         let content = link;
         const customCiteText = this.plugin.data[STORAGE_NAME].customCiteText;
         const useDynamicRefLink = this.plugin.data[STORAGE_NAME].useDynamicRefLink;
-        if (customCiteText) content = await this.Cite.generateCiteLink(key, idx, true);
+        if (customCiteText) content = await this.Cite.generateCiteLink(key, idx, typeSetting, true);
         if (customCiteText && useDynamicRefLink) content = name;
-        const citeRef = await this.Cite.generateCiteRef(citeId, link, name);
+        const citeRef = await this.Cite.generateCiteRef(citeId, link, name, typeSetting);
         return {
           citeId,
           content,
@@ -276,7 +303,7 @@ export class Reference {
           entry
         };
       }
-      return await this.Cite.generateCiteRef(citeId, link, name);
+      return await this.Cite.generateCiteRef(citeId, link, name, typeSetting);
     });
     return await Promise.all(insertContent);
   }
@@ -306,10 +333,10 @@ export class Reference {
     else return false;
   }
 
-  private _processMultiCitation(link: string, idx:number, full_length:number): string {
-    const prefix = this.plugin.data[STORAGE_NAME].multiCitePrefix;
-    const connector = this.plugin.data[STORAGE_NAME].multiCiteConnector;
-    const suffix = this.plugin.data[STORAGE_NAME].multiCiteSuffix;
+  private _processMultiCitation(link: string, idx:number, full_length:number, typeSetting: any): string {
+    const prefix = typeSetting.multiCitePrefix;
+    const connector = typeSetting.multiCiteConnector;
+    const suffix = typeSetting.multiCiteSuffix;
     if (full_length == 1) return prefix + link + suffix;
     else if (idx == 0) return prefix + link + connector;
     else if (idx == full_length-1) return link + suffix;
@@ -317,6 +344,16 @@ export class Reference {
   }
 
   // Group: 获取当前文档内容
+
+  private _getCurrentBlock(source: HTMLElement):HTMLElement {
+    let target = source;
+    let i = 1;
+    while (!target.getAttribute("data-node-id") && i < 10) {
+      i = i+1;
+      target = target.parentElement;
+    }
+    return target;
+  }
 
   private async _getLiteratureEnum(fileId: string): Promise<string[]> {
     // 获得该文件的全部kramdown内容，用于引用排序
