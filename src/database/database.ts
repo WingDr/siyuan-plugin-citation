@@ -1,4 +1,4 @@
-import { Protyle } from "siyuan";
+import { Protyle, Menu } from "siyuan";
 import SiYuanPluginCitation from "../index";
 import{
   loadLocalRef
@@ -146,8 +146,23 @@ export class Database {
     const fileId = (this.protyle as any).protyle.block.rootID;
     await this.plugin.reference.checkRefDirExist();
     if (this.plugin.isRefPathExist) {
-      const content = await this.plugin.reference.processReferenceContents(keys, fileId);
-      this.plugin.reference.insertContent(this.protyle, content.join(""));
+      const menu = new Menu("cite-type-selection");
+      const linkTempGroup = this.plugin.data[STORAGE_NAME].linkTemplatesGroup;
+      linkTempGroup.map(tmp => {
+        menu.addItem({
+          label: tmp.name,
+          click: async () => {
+            const content = await this.plugin.reference.processReferenceContents(keys, fileId, tmp.name);
+            this.plugin.reference.insertContent(this.protyle, content.join(""));
+          }
+        })
+      })
+      if (isDev) this.logger.info("展示引用类型选择菜单", menu);
+      const rect = this.protyle.protyle.toolbar.range.getBoundingClientRect();
+      menu.open({
+        x: rect.left,
+        y: rect.top
+      });
     }
   }
 

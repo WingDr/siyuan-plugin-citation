@@ -36,9 +36,6 @@
   },
   "dependencies": {
     "@retorquere/bibtex-parser": "^6.4.14",
-    "open": "^9.1.0",
-    "fs": "^0.0.1-security",
-    "path": "^0.12.7",
     "fuse.js": "^7.0.0",
     "axios": "^1.7.7",
     "moment": "^2.30.1",

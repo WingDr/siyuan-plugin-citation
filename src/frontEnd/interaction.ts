@@ -87,19 +87,19 @@ export class InteractionManager {
           return this.plugin.database.insertCiteLink(protyle);
         }
       },
-      {
-        filter: ["test"],
-        html: `<div class = "b3-list-item__first">
-          <svg class="b3-list-item__graphic">
-            <use xlink:href="#iconRef"></use>
-          </svg>
-          <span class="b3-list-item__text">测试</span>
-        </div>`,
-        id: "test",
-        callback: async (protyle: Protyle) => {
-          return this.plugin.reference.getAllNeighborReference(protyle.protyle);
-        }
-      },
+      // {
+      //   filter: ["test"],
+      //   html: `<div class = "b3-list-item__first">
+      //     <svg class="b3-list-item__graphic">
+      //       <use xlink:href="#iconRef"></use>
+      //     </svg>
+      //     <span class="b3-list-item__text">测试</span>
+      //   </div>`,
+      //   id: "test",
+      //   callback: async (protyle: Protyle) => {
+      //     return this.plugin.reference.getAllNeighborReference(protyle.protyle);
+      //   }
+      // },
       {
         filter: [this.plugin.i18n.addNotes, "插入文献笔记", "addnotesofliterature", "charuwenxianbiji"],
         html: `<div class = "b3-list-item__first">
@@ -204,6 +204,7 @@ export class InteractionManager {
       {
         place: ["BlockRef"],
         iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconRefresh"></use></svg>',
+        // TODO: 改成i18n
         label: "转换为",
         generateSubMenu: this.generateChangeCiteMenu.bind(this)
       },

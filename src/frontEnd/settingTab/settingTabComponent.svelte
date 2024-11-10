@@ -637,6 +637,7 @@
       <!-- 标签页 1 内容 -->
       <div data-type={template_tabs[0].name} class:fn__none={template_tabs[0].key !== focus}>
         <!-- 多个配置的卡片 -->
+         <!-- TODO：改成i18n -->
         <Group title={"卡片"}>
           {#each linkTemplatesGroup as linkItem, index }
             <MiniItem minWidth="200px">
@@ -687,7 +688,7 @@
           <!-- 引用类型名称 -->
           <Item
             block={true}
-            title={(plugin.i18n as any).settingTab.templates.citeLink.citeNameTitle}
+            title={plugin.i18n.settingTab.templates.citeLink.citeNameTitle}
             text={plugin.i18n.settingTab.templates.citeLink.citeNameDescription}
           >
             <Input

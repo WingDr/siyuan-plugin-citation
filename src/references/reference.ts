@@ -104,7 +104,7 @@ export class Reference {
     this.plugin.kernelApi.updateBlockContent(blockID, "dom", res);
   }
 
-  // 需要针对相邻引用进行修改
+  // TODO：需要针对相邻引用进行修改
   public async updateLiteratureLink(fileId: string): Promise<SiyuanData[]> {
     const useDynamicRefLink = this.plugin.data[STORAGE_NAME].useDynamicRefLink as boolean;
     // 获得所有含有文献引用的块，用于内容更新
