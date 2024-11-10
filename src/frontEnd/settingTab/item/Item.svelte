@@ -38,13 +38,13 @@
         </div>
 
         {#if block}
-            <div class="fn__hr" />
+            <div class="fn__hr" ></div>
             <slot name="input" />
         {/if}
     </div>
 
     {#if !block}
-        <span class="fn__space" />
+        <span class="fn__space" ></span>
         <slot name="input" />
     {/if}
 </label>

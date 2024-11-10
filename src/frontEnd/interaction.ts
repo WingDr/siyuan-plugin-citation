@@ -4,7 +4,7 @@ import {
   Menu,
   openTab
 } from "siyuan";
-import { type IMenu, type IMenuItem, subMenu } from "siyuan/types";
+import { type IMenu, subMenu } from "siyuan/types";
 import SiYuanPluginCitation from "../index";
 import {
   STORAGE_NAME,
@@ -49,7 +49,8 @@ interface IMenuItemSetting {
   accelerator?: string,
   action?: string,
   id?: string,
-  submenu?: IMenuItem[]
+  submenu?: IMenu[],
+  generateSubMenu?: (option: any) => IMenu[],
   disabled?: boolean
   icon?: string
   iconHTML?: string
@@ -82,7 +83,7 @@ export class InteractionManager {
         </div>`,
         id: "add-citation",
         callback: async (protyle: Protyle) => {
-          this.plugin.database.setSelected(this.plugin.reference.getAllNeighborReference(protyle));
+          this.plugin.database.setSelected(this.plugin.reference.getAllNeighborReference(protyle.protyle));
           return this.plugin.database.insertCiteLink(protyle);
         }
       },
@@ -96,7 +97,7 @@ export class InteractionManager {
         </div>`,
         id: "test",
         callback: async (protyle: Protyle) => {
-          return this.plugin.reference.getAllNeighborReference(protyle);
+          return this.plugin.reference.getAllNeighborReference(protyle.protyle);
         }
       },
       {
@@ -195,17 +196,16 @@ export class InteractionManager {
         clickCallback: (id) => {this.plugin.reference.refreshSingleLiteratureNote(id);}
       },
       // {
-      //   place: ["BreadcrumbMore"],
+      //   place: ["BreadcrumbMore", "TitleIcon"],
       //   iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconUpload"></use></svg>',
       //   label: "导出",
       //   clickCallback: (id) => {this.plugin.exportManager.export([id], "markdown");}
       // },
       {
         place: ["BlockRef"],
-        check: this.isLiteratureNote.bind(this),
         iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconRefresh"></use></svg>',
-        label: (this.plugin.i18n.menuItems as any).refreshSingleLiteratureNote,
-        clickCallback: (id) => {this.plugin.reference.refreshSingleLiteratureNote(id);}
+        label: "转换为",
+        generateSubMenu: this.generateChangeCiteMenu.bind(this)
       },
     ];
   }
@@ -318,7 +318,7 @@ export class InteractionManager {
       const itemKey = zoteroURLMatch[1];
       const key = "1_" + itemKey;
       if (isDev) this.logger.info("确认到从Zotero拖拽事件, itemKey=>", {itemKey});
-      const content = await this.plugin.reference.processReferenceContents([key], null, true, false);
+      const content = await this.plugin.reference.processReferenceContents([key], null, "", true, false);
       if (!content[0]) return;
       citeDetail = content[0];
       if (isDev) this.logger.info("获取到插入内容, content=>", {citeDetail});
@@ -337,7 +337,7 @@ export class InteractionManager {
         const zoteroURLMatch = resHTML.match(zoteroURLReg);
         const itemKey = zoteroURLMatch[1];
         const key = "1_" + itemKey;
-        const content = await this.plugin.reference.processReferenceContents([key], null, true, false);
+        const content = await this.plugin.reference.processReferenceContents([key], null, "", true, false);
         if (!content[0]) return;
         citeDetail = content[0];
         if (isDev) this.logger.info("获取到插入内容, content=>", {citeDetail});
@@ -419,7 +419,8 @@ export class InteractionManager {
           (event.detail.menu as Menu).addItem({
             iconHTML: item.iconHTML,
             label: this.plugin.i18n.prefix + item.label,
-            click: () => {item.clickCallback(id);}
+            click: () => {item.clickCallback(id);},
+            submenu: item.submenu ?? (item.generateSubMenu ? item.generateSubMenu(event.detail) : null)
           });
         }
       }
@@ -444,12 +445,24 @@ export class InteractionManager {
           (event.detail.menu as subMenu).addItem({
             iconHTML: item.iconHTML,
             label: this.plugin.i18n.prefix + item.label,
-            click: () => {item.clickCallback(id);}
+            click: () => {item.clickCallback(event.detail);},
+            submenu: item.submenu ?? (item.generateSubMenu ? item.generateSubMenu(event.detail) : null)
           } as IMenu);
         }
       }
     });
-    console.log(event.detail.menu);
+  }
+
+  private generateChangeCiteMenu(detail: any): IMenu[] {
+    return this.plugin.data[STORAGE_NAME].linkTemplatesGroup.map(set => {
+      return {
+        label: set.name,
+        id: set.name,
+        click: () => {
+          this.plugin.reference.updateNeighborLinks(detail.element, detail.protyle, set.name);
+        }
+      } as IMenu;
+    });
   }
 
   private isLiteratureNote(documentId: string): boolean {
@@ -515,7 +528,7 @@ export class InteractionManager {
         // 事件会执行两次，但是其实只需要替换一次
         if (linkNode && linkNode.parentNode) {
           if (isDev) this.logger.info("确认到从Zotero拖拽事件, itemKey=>", {itemKey});
-          const content = await this.plugin.reference.processReferenceContents([key], null, true, false);
+          const content = await this.plugin.reference.processReferenceContents([key], null, "", true, false);
           if (!content[0]) return;
           if (isDev) this.logger.info("获取到插入内容, content=>", {content:content[0]});
           // const noteContent = (await this.plugin.kernelApi.getBlock(id)).data[0].markdown as string;
