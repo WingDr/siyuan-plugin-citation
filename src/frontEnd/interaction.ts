@@ -204,8 +204,7 @@ export class InteractionManager {
       {
         place: ["BlockRef"],
         iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconRefresh"></use></svg>',
-        // TODO: 改成i18n
-        label: "转换为",
+        label: (this.plugin.i18n.menuItems as any).turnTo,
         generateSubMenu: this.generateChangeCiteMenu.bind(this)
       },
     ];
@@ -458,6 +457,7 @@ export class InteractionManager {
     return this.plugin.data[STORAGE_NAME].linkTemplatesGroup.map(set => {
       return {
         label: set.name,
+        icon: "iconRefresh",
         id: set.name,
         click: () => {
           this.plugin.reference.updateNeighborLinks(detail.element, detail.protyle, set.name);

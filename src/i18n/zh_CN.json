@@ -48,7 +48,9 @@
       "title": "模板设置",
       "citeLink": {
         "title": "引用链接",
-        "groupCardTitle": "引用类型列表",
+        "citeTypeCardTitle": "引用类型列表",
+        "citeTypeCardSet": "设置",
+        "citeTypeCardDelete": "删除",
         "CustomCiteTextSwitchTitle": "自定义引用",
         "CustomCiteTextSwitchDescription": "完全自定义引用的格式，引用链接模板生成的内容不再为锚文本，而是将直接插入文档<br>⚠️<b>注意：开关开启后请确保你的模板中包含\"...(( {{citeFileID}} \"...\"))...\"或者\"...(( {{citeFileID}} '...'))...\"否则生成的链接将无法引用</b><br>查找引用链接的正则表达式为/\\(\\((.*?)\\\"(.*?)\\\"\\)\\)/g和/\\(\\((.*?)\\'(.*?)\\'\\)\\)/g，请据此把握好您的模板格式",
         "linkTempInputTitle": "引用模板",
@@ -102,7 +104,8 @@
   },
   "menuItems": {
     "refreshCitation": "刷新引用",
-    "refreshSingleLiteratureNote": "刷新文献内容"
+    "refreshSingleLiteratureNote": "刷新文献内容",
+    "turnTo": "转换为"
   },
   "errors": {
     "notebookUnselected": "未选择笔记本！",

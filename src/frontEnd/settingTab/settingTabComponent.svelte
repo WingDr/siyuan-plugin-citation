@@ -637,8 +637,7 @@
       <!-- 标签页 1 内容 -->
       <div data-type={template_tabs[0].name} class:fn__none={template_tabs[0].key !== focus}>
         <!-- 多个配置的卡片 -->
-         <!-- TODO：改成i18n -->
-        <Group title={"卡片"}>
+        <Group title={plugin.i18n.settingTab.templates.citeLink.citeTypeCardTitle}>
           {#each linkTemplatesGroup as linkItem, index }
             <MiniItem minWidth="200px">
               <span data-type="title" id={"linkItem_" + index} slot="title">{@html linkItem.name}</span>
@@ -646,7 +645,7 @@
                 <button
                   class="b3-tooltips b3-tooltips__nw block__icon block__icon--show"
                   data-type="setting"
-                  aria-label={"设置"}
+                  aria-label={plugin.i18n.settingTab.templates.citeLink.citeTypeCardSet}
                   on:click={clickCardSetting}
                 >
                   <Svg
@@ -658,7 +657,7 @@
                 <button
                   class="b3-tooltips b3-tooltips__nw block__icon block__icon--show"
                   data-type="delete"
-                  aria-label={"删除"}
+                  aria-label={plugin.i18n.settingTab.templates.citeLink.citeTypeCardDelete}
                   on:click={deleteLinkTemp}
                 >
                   <Svg
