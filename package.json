@@ -12,27 +12,27 @@
   "author": "WingDr",
   "license": "MIT",
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "5.29.0",
-    "@typescript-eslint/parser": "5.29.0",
+    "@typescript-eslint/eslint-plugin": "8.13.0",
+    "@typescript-eslint/parser": "8.13.0",
     "copy-webpack-plugin": "^11.0.0",
     "css-loader": "^6.7.1",
     "esbuild-loader": "^3.0.1",
-    "eslint": "^8.42.0",
+    "eslint": "^9.14.0",
     "mini-css-extract-plugin": "2.3.0",
     "sass": "^1.62.1",
     "sass-loader": "^12.6.0",
     "siyuan": "^1.0.5",
     "tslib": "2.4.0",
-    "typescript": "^5.1.6",
+    "typescript": "^5.6.3",
     "webpack": "^5.76.0",
     "webpack-cli": "^5.0.2",
     "zip-webpack-plugin": "^4.0.1",
     "@types/node": "^20.3.1",
     "ts-node": "^10.9.1",
-    "svelte": "^4.2.12",
-    "@tsconfig/svelte": "^5.0.0",
-    "svelte-loader": "^3.1.9",
-    "svelte-preprocess": "^5.0.4"
+    "svelte": "^5.1.13",
+    "@tsconfig/svelte": "^5.0.4",
+    "svelte-loader": "^3.2.4",
+    "svelte-preprocess": "^6.0.3"
   },
   "dependencies": {
     "@retorquere/bibtex-parser": "^6.4.14",
@@ -40,6 +40,6 @@
     "axios": "^1.7.7",
     "moment": "^2.30.1",
     "template_js": "^3.1.4",
-    "zotero-types": "^2.1.1"
+    "zotero-types": "^3.0.1"
   }
 }
