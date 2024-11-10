@@ -159,7 +159,7 @@ export class Reference {
       if (isDev) this.logger.info("从database中获得文献内容 =>", entry);
       if (!entry) {
         if (isDev) this.logger.error("找不到文献数据");
-        this.plugin.noticer.error(this.plugin.i18n.errors.getLiteratureFailed);
+        this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);
         return null;
       }
       const noteTitle = generateFromTemplate(titleTemplate, entry);
@@ -183,7 +183,7 @@ export class Reference {
     });
     return await Promise.all(pList).then(async () => {
       if (isDev) this.logger.info("所有文件标题已更新");
-      this.plugin.noticer.info(this.plugin.i18n.notices.refreshTitleSuccess, {size: this.plugin.literaturePool.size});
+      this.plugin.noticer.info((this.plugin.i18n.notices as any).refreshTitleSuccess, {size: this.plugin.literaturePool.size});
       await loadLocalRef(this.plugin);
       return this.plugin.literaturePool.content;
     }).catch(e => {
@@ -200,7 +200,7 @@ export class Reference {
       await this.refreshSingleLiteratureNote(id, false, noConfirmUserData);
     }
     if (isDev) this.logger.info("所有文献内容刷新完毕");
-    this.plugin.noticer.info(this.plugin.i18n.notices.refreshLiteratureNoteContentsSuccess, {size: this.plugin.literaturePool.size});
+    this.plugin.noticer.info((this.plugin.i18n.notices as any).refreshLiteratureNoteContentsSuccess, {size: this.plugin.literaturePool.size});
   }
 
   public async refreshSingleLiteratureNote(literatureId: string, needRefresh=true, noConfirmUserData=this.plugin.data[STORAGE_NAME].deleteUserDataWithoutConfirm) {
@@ -211,12 +211,12 @@ export class Reference {
     if (isDev) this.logger.info("从database中获得文献内容 =>", entry);
     if (!entry) {
       if (isDev) this.logger.error("找不到文献数据");
-      this.plugin.noticer.error(this.plugin.i18n.errors.getLiteratureFailed);
+      this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);
       return null;
     }
     await this.LiteratureNote.updateLiteratureNote(key, entry, noConfirmUserData);
     if (isDev) this.logger.info("文献内容刷新完毕, literatureId=>", {literatureId, key, title: entry.title});
-    if (needRefresh) this.plugin.noticer.info(this.plugin.i18n.notices.refreshSingleLiteratureNoteSuccess, {key});
+    if (needRefresh) this.plugin.noticer.info((this.plugin.i18n.notices as any).refreshSingleLiteratureNoteSuccess, {key});
     return;
   }
 
@@ -240,7 +240,7 @@ export class Reference {
   public async copyContent(content: string, type: string) {
     if (isDev) this.logger.info("复制的内容为, content=>", content);
     navigator.clipboard.writeText(content);
-    this.plugin.noticer.info((this.plugin.i18n.notices.copyContentSuccess as string), {type});
+    this.plugin.noticer.info(((this.plugin.i18n.notices as any).copyContentSuccess as string), {type});
   }
 
   // Extra Functions
@@ -255,7 +255,7 @@ export class Reference {
       if (isDev) this.logger.info("从database中获得文献内容 =>", entry);
       if (!entry || !entry.key) {
         if (isDev) this.logger.error("找不到文献数据");
-        if (errorReminder) this.plugin.noticer.error(this.plugin.i18n.errors.getLiteratureFailed);
+        if (errorReminder) this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);
         return null;
       }
       await this.LiteratureNote.updateLiteratureNote(key, entry);

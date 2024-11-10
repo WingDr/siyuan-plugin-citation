@@ -111,7 +111,7 @@ export class LiteratureNote {
         userDataLink = userDataInfo.userDataLink;
         const hasUserData = userDataInfo.hasUserData;
         if (!hasUserData) {
-          if (!noConfirmUserData) return confirm("⚠️", this.plugin.i18n.confirms.updateWithoutUserData.replaceAll("${title}", entry.title), async () => {
+          if (!noConfirmUserData) return confirm("⚠️", (this.plugin.i18n.confirms as any).updateWithoutUserData.replaceAll("${title}", entry.title), async () => {
             // 不存在用户数据区域，整个更新
             deleteList = dataIds;
             userDataId = await this._updateEmptyNote(literatureId);

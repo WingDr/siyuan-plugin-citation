@@ -2,9 +2,9 @@ import {
   Setting,
   Protyle,
   Menu,
-  type IMenuItemOption,
   openTab
 } from "siyuan";
+import { type IMenu, type IMenuItem, subMenu } from "siyuan/types";
 import SiYuanPluginCitation from "../index";
 import {
   STORAGE_NAME,
@@ -37,7 +37,7 @@ interface ICommandSetting {
   dockCallback?: (element: HTMLElement) => void
 }
 
-type MenuPlace = "TitleIcon" | "BlockIcon" | "BreadcrumbMore";
+type MenuPlace = "TitleIcon" | "BlockIcon" | "BreadcrumbMore" | "BlockRef";
 
 interface IMenuItemSetting {
   place?: MenuPlace[],
@@ -49,7 +49,7 @@ interface IMenuItemSetting {
   accelerator?: string,
   action?: string,
   id?: string,
-  submenu?: IMenuItemOption[]
+  submenu?: IMenuItem[]
   disabled?: boolean
   icon?: string
   iconHTML?: string
@@ -184,14 +184,14 @@ export class InteractionManager {
       {
         place: ["BreadcrumbMore", "TitleIcon"],
         iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconRefresh"></use></svg>',
-        label: this.plugin.i18n.menuItems.refreshCitation,
+        label: (this.plugin.i18n.menuItems as any).refreshCitation,
         clickCallback: (id) => {this.plugin.reference.updateLiteratureLink.bind(this.plugin.reference)(id);}
       },
       {
         place: ["BreadcrumbMore", "TitleIcon"],
         check: this.isLiteratureNote.bind(this),
         iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconRefresh"></use></svg>',
-        label: this.plugin.i18n.menuItems.refreshSingleLiteratureNote,
+        label: (this.plugin.i18n.menuItems as any).refreshSingleLiteratureNote,
         clickCallback: (id) => {this.plugin.reference.refreshSingleLiteratureNote(id);}
       },
       // {
@@ -199,7 +199,14 @@ export class InteractionManager {
       //   iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconUpload"></use></svg>',
       //   label: "导出",
       //   clickCallback: (id) => {this.plugin.exportManager.export([id], "markdown");}
-      // }
+      // },
+      {
+        place: ["BlockRef"],
+        check: this.isLiteratureNote.bind(this),
+        iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconRefresh"></use></svg>',
+        label: (this.plugin.i18n.menuItems as any).refreshSingleLiteratureNote,
+        clickCallback: (id) => {this.plugin.reference.refreshSingleLiteratureNote(id);}
+      },
     ];
   }
 
@@ -274,6 +281,7 @@ export class InteractionManager {
 
   public eventBusReaction() {
     this.plugin.eventTrigger.addEventBusEvent("click-editortitleicon", this.customTitleIconMenu.bind(this));
+    this.plugin.eventTrigger.addEventBusEvent("open-menu-blockref", this.customBlockRefMenu.bind(this));
     this.plugin.eventTrigger.addEventBusEvent("paste", this.hookPaste.bind(this));
     this.plugin.eventTrigger.addEventBusEvent("open-siyuan-url-plugin", this.openURLPlugin.bind(this));
     // this.plugin.eventTrigger.addEventBusEvent("open-menu-breadcrumbmore", this.customBreadcrumbMore.bind(this));
@@ -422,6 +430,26 @@ export class InteractionManager {
     //   label: "文献引用",
     //   submenu
     // });
+  }
+
+  private customBlockRefMenu(event: CustomEvent) {
+    if (isDev) this.logger.info("触发eventBus：open-menu-blockref，=>", event);
+
+    const place = "BlockRef" as MenuPlace;
+    // const submenu = [] as IMenuItemOption[];
+    const id  = event.detail.protyle.block.rootID;
+    this.menuItems.forEach(item => {
+      if (!item.place || item.place.indexOf(place) != -1) {
+        if (!item.check || item.check(id)) {
+          (event.detail.menu as subMenu).addItem({
+            iconHTML: item.iconHTML,
+            label: this.plugin.i18n.prefix + item.label,
+            click: () => {item.clickCallback(id);}
+          } as IMenu);
+        }
+      }
+    });
+    console.log(event.detail.menu);
   }
 
   private isLiteratureNote(documentId: string): boolean {

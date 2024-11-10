@@ -94,7 +94,7 @@ export async function loadLocalRef(plugin: SiYuanPluginCitation): Promise<any> {
   }
   await Promise.all(promiseList);
   if (isDev) logger.info("成功载入引用，content=>", plugin.literaturePool.content);
-  plugin.noticer.info(plugin.i18n.notices.loadRefSuccess, {size: plugin.literaturePool.size});
+  plugin.noticer.info((plugin.i18n.notices as any).loadRefSuccess, {size: plugin.literaturePool.size});
 }
 
 export function generateFileLinks(files: string[]) {

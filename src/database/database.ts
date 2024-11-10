@@ -84,7 +84,7 @@ export class Database {
     if (await this.checkSettings()) {
       const keys = await this.dataModal.getSelectedItems();
       if (isDev) this.logger.info("获得到Zotero中选中的条目, keys=>", keys);
-      if (!keys.length) this.plugin.noticer.info(this.plugin.i18n.notices.noSelectedItem);
+      if (!keys.length) this.plugin.noticer.info((this.plugin.i18n.notices as any).noSelectedItem);
       else this.insertCiteLinkBySelection(keys);
     } else {
       protyle.insert("", false, true);
@@ -103,7 +103,7 @@ export class Database {
     if (await this.checkSettings()) {
       const keys = await this.dataModal.getSelectedItems();
       if (isDev) this.logger.info("获得到Zotero中选中的条目, keys=>", keys);
-      if (!keys.length) this.plugin.noticer.info(this.plugin.i18n.notices.noSelectedItem);
+      if (!keys.length) this.plugin.noticer.info((this.plugin.i18n.notices as any).noSelectedItem);
       else this.copyCiteLinkBySelection(keys);
     }
   }
@@ -131,10 +131,10 @@ export class Database {
   private async checkSettings(): Promise<boolean> {
     await this.plugin.reference.checkRefDirExist();
     if (this.plugin.data[STORAGE_NAME].referenceNotebook === "") {
-      this.plugin.noticer.error(this.plugin.i18n.errors.notebookUnselected);
+      this.plugin.noticer.error((this.plugin.i18n.errors as any).notebookUnselected);
       if (isDev) this.logger.error("未选择笔记本！");
     } else if (!this.plugin.isRefPathExist) {
-      this.plugin.noticer.error(this.plugin.i18n.errors.refPathInvalid);
+      this.plugin.noticer.error((this.plugin.i18n.errors as any).refPathInvalid);
       if (isDev) this.logger.error("文献库路径不存在！");
     } else {
       return true;

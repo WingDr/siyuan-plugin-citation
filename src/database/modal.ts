@@ -42,6 +42,7 @@ export abstract class DataModal {
     if (isDev) this.logger.info("改数据模型无法执行此方法，modal=>", this);
     return [];
   }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public async updateDataSourceItem(key: string, content: {[attr: string]: any}) {
     if (isDev) this.logger.info("改数据模型无法执行此方法，modal=>", this);
   }
@@ -91,12 +92,12 @@ export class FilesModal extends DataModal {
     };
     return this.loadLibrary().then(library => {
       if (library) {
-        this.plugin.noticer.info(this.plugin.i18n.notices.loadLibrarySuccess, {size: library.size});
+        this.plugin.noticer.info((this.plugin.i18n.notices as any).loadLibrarySuccess, {size: library.size});
         this.library = library;
         this.fuse = new Fuse(library.entryList, options);
         if (isDev) this.logger.info("Build file modal successfully");
       } else {
-        this.plugin.noticer.error(this.plugin.i18n.errors.loadLibraryFailed);
+        this.plugin.noticer.error((this.plugin.i18n.errors as any).loadLibraryFailed);
         this.library = null;
         this.fuse = null;
         if (isDev) this.logger.error("Build file modal failed");
@@ -254,7 +255,7 @@ export class ZoteroModal extends DataModal {
       if (isDev) this.logger.info("获取到citekey =>", {citekey});
       this.onSelection(citekey);
     } else {
-      this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string), {type: this.type});
+      this.plugin.noticer.error(((this.plugin.i18n.errors as any).zoteroNotRunning as string), {type: this.type});
     }
   }
 
@@ -279,7 +280,7 @@ export class ZoteroModal extends DataModal {
       if (isDev) this.logger.info("文献内容 =>", entry);
       return entry;
     } else {
-      this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string), {type: this.type});
+      this.plugin.noticer.error(((this.plugin.i18n.errors as any).zoteroNotRunning as string), {type: this.type});
       return null;
     }
   }
@@ -302,7 +303,7 @@ export class ZoteroModal extends DataModal {
         return `\n\n---\n\n###### Note No.${index+1}\n\n\n\n` + htmlNotesProcess(singleNote.replace(/\\(.?)/g, (m, p1) => p1));
       }).join("\n\n");
     } else {
-      this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string), {type: this.type});
+      this.plugin.noticer.error(((this.plugin.i18n.errors as any).zoteroNotRunning as string), {type: this.type});
       return "";
     }
   }
@@ -397,7 +398,7 @@ export class ZoteroDBModal extends DataModal {
         const items = await this.getAllItems();
         if (isDev) this.logger.info(`从${this.type}接收到数据 =>`, items);
         if (!this.useItemKey && !items[0].citationKey.length) {
-          this.plugin.noticer.error(this.plugin.i18n.errors.bbtDisabled as string);
+          this.plugin.noticer.error((this.plugin.i18n.errors as any).bbtDisabled as string);
           return null;
         }
         const searchItems = items.map(item => {
@@ -427,7 +428,7 @@ export class ZoteroDBModal extends DataModal {
         }));
       }
     } else {
-      this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string), {type: this.type});
+      this.plugin.noticer.error(((this.plugin.i18n.errors as any).zoteroNotRunning as string), {type: this.type});
     }
   }
 
@@ -464,7 +465,7 @@ export class ZoteroDBModal extends DataModal {
     if (await this.checkZoteroRunning()) {
       return await this._getSelectedItems();
     } else {
-      this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string), {type: this.type});
+      this.plugin.noticer.error(((this.plugin.i18n.errors as any).zoteroNotRunning as string), {type: this.type});
       return null;
     }
   }
@@ -492,7 +493,7 @@ export class ZoteroDBModal extends DataModal {
       }
       return itemKey;
     } else {
-      this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string), {type: this.type});
+      this.plugin.noticer.error(((this.plugin.i18n.errors as any).zoteroNotRunning as string), {type: this.type});
       return null;
     }
   }
@@ -585,10 +586,10 @@ export class ZoteroDBModal extends DataModal {
       data: prefix + "\n" + jsContent
     }).catch(e => {
       if (isDev) this.logger.error("访问Zotero发生错误, error=>", e);
-      if (e.response?.status == 401) this.plugin.noticer.error(this.plugin.i18n.errors.wrongDBPassword); // 密码错误
-      else if (e.response?.status == 403) this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string), {type: this.type}); // 访问请求被禁止，建议更新到最新版本citation插件
-      else if (e.response?.status == 404) this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string), {type: this.type}); //找不到Zotero或者debug-bridge
-      else if (e.response?.status == 0) this.plugin.noticer.error((this.plugin.i18n.errors.zoteroNotRunning as string), {type: this.type}); //无法与Zotero通信，没安装Unblock浏览器插件
+      if (e.response?.status == 401) this.plugin.noticer.error((this.plugin.i18n.errors as any).wrongDBPassword); // 密码错误
+      else if (e.response?.status == 403) this.plugin.noticer.error(((this.plugin.i18n.errors as any).zoteroNotRunning as string), {type: this.type}); // 访问请求被禁止，建议更新到最新版本citation插件
+      else if (e.response?.status == 404) this.plugin.noticer.error(((this.plugin.i18n.errors as any).zoteroNotRunning as string), {type: this.type}); //找不到Zotero或者debug-bridge
+      else if (e.response?.status == 0) this.plugin.noticer.error(((this.plugin.i18n.errors as any).zoteroNotRunning as string), {type: this.type}); //无法与Zotero通信，没安装Unblock浏览器插件
       return {
         data: JSON.stringify({
           ready: false

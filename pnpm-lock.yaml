@@ -50,28 +50,28 @@ importers:
         version: 5.29.0(eslint@8.43.0)(typescript@5.1.6)
       copy-webpack-plugin:
         specifier: ^11.0.0
-        version: 11.0.0(webpack@5.87.0(webpack-cli@5.1.4))
+        version: 11.0.0(webpack@5.87.0)
       css-loader:
         specifier: ^6.7.1
-        version: 6.8.1(webpack@5.87.0(webpack-cli@5.1.4))
+        version: 6.8.1(webpack@5.87.0)
       esbuild-loader:
         specifier: ^3.0.1
-        version: 3.0.1(webpack@5.87.0(webpack-cli@5.1.4))
+        version: 3.0.1(webpack@5.87.0)
       eslint:
         specifier: ^8.42.0
         version: 8.43.0
       mini-css-extract-plugin:
         specifier: 2.3.0
-        version: 2.3.0(webpack@5.87.0(webpack-cli@5.1.4))
+        version: 2.3.0(webpack@5.87.0)
       sass:
         specifier: ^1.62.1
         version: 1.63.5
       sass-loader:
         specifier: ^12.6.0
-        version: 12.6.0(sass@1.63.5)(webpack@5.87.0(webpack-cli@5.1.4))
+        version: 12.6.0(sass@1.63.5)(webpack@5.87.0)
       siyuan:
-        specifier: ^1.0.2
-        version: 1.0.2
+        specifier: ^1.0.5
+        version: 1.0.5
       svelte:
         specifier: ^4.2.12
         version: 4.2.12
@@ -98,7 +98,7 @@ importers:
         version: 5.1.4(webpack@5.87.0)
       zip-webpack-plugin:
         specifier: ^4.0.1
-        version: 4.0.1(webpack-sources@3.2.3)(webpack@5.87.0(webpack-cli@5.1.4))
+        version: 4.0.1(webpack-sources@3.2.3)(webpack@5.87.0)
 
 packages:
 
@@ -1755,8 +1755,8 @@ packages:
   simple-get@3.1.1:
     resolution: {integrity: sha512-CQ5LTKGfCpvE1K0n2us+kuMPbk/q0EKl82s4aheV9oXjFEz6W/Y7oQFVJuU6QG77hRT4Ghb5RURteF5vnWjupA==}
 
-  siyuan@1.0.2:
-    resolution: {integrity: sha512-78qonqi/X+VC5HBtqmkm6HZho6GVcXTBYvdWfu3uB3WkWzYeu3PqKw2514PZn2uZpydljjZ4DP5aSV9w9IlBbA==}
+  siyuan@1.0.5:
+    resolution: {integrity: sha512-cTE2WETYSehfm+FoXeAg7lGoGCPkMMCezwUloGS+P5nIEA/IGLUTJXyhML3yTkW92r7qV3oCsm0Ozr13UV94jQ==}
 
   slash@3.0.0:
     resolution: {integrity: sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==}
@@ -2487,17 +2487,17 @@ snapshots:
       '@webassemblyjs/ast': 1.11.6
       '@xtuc/long': 4.2.2
 
-  '@webpack-cli/configtest@2.1.1(webpack-cli@5.1.4(webpack@5.87.0))(webpack@5.87.0(webpack-cli@5.1.4))':
+  '@webpack-cli/configtest@2.1.1(webpack-cli@5.1.4)(webpack@5.87.0)':
     dependencies:
       webpack: 5.87.0(webpack-cli@5.1.4)
       webpack-cli: 5.1.4(webpack@5.87.0)
 
-  '@webpack-cli/info@2.0.2(webpack-cli@5.1.4(webpack@5.87.0))(webpack@5.87.0(webpack-cli@5.1.4))':
+  '@webpack-cli/info@2.0.2(webpack-cli@5.1.4)(webpack@5.87.0)':
     dependencies:
       webpack: 5.87.0(webpack-cli@5.1.4)
       webpack-cli: 5.1.4(webpack@5.87.0)
 
-  '@webpack-cli/serve@2.0.5(webpack-cli@5.1.4(webpack@5.87.0))(webpack@5.87.0(webpack-cli@5.1.4))':
+  '@webpack-cli/serve@2.0.5(webpack-cli@5.1.4)(webpack@5.87.0)':
     dependencies:
       webpack: 5.87.0(webpack-cli@5.1.4)
       webpack-cli: 5.1.4(webpack@5.87.0)
@@ -2711,7 +2711,7 @@ snapshots:
   console-control-strings@1.1.0:
     optional: true
 
-  copy-webpack-plugin@11.0.0(webpack@5.87.0(webpack-cli@5.1.4)):
+  copy-webpack-plugin@11.0.0(webpack@5.87.0):
     dependencies:
       fast-glob: 3.2.12
       glob-parent: 6.0.2
@@ -2735,7 +2735,7 @@ snapshots:
       shebang-command: 2.0.0
       which: 2.0.2
 
-  css-loader@6.8.1(webpack@5.87.0(webpack-cli@5.1.4)):
+  css-loader@6.8.1(webpack@5.87.0):
     dependencies:
       icss-utils: 5.1.0(postcss@8.4.24)
       postcss: 8.4.24
@@ -2856,7 +2856,7 @@ snapshots:
       d: 1.0.2
       ext: 1.7.0
 
-  esbuild-loader@3.0.1(webpack@5.87.0(webpack-cli@5.1.4)):
+  esbuild-loader@3.0.1(webpack@5.87.0):
     dependencies:
       esbuild: 0.17.19
       get-tsconfig: 4.6.0
@@ -3378,7 +3378,7 @@ snapshots:
 
   min-indent@1.0.1: {}
 
-  mini-css-extract-plugin@2.3.0(webpack@5.87.0(webpack-cli@5.1.4)):
+  mini-css-extract-plugin@2.3.0(webpack@5.87.0):
     dependencies:
       schema-utils: 3.3.0
       webpack: 5.87.0(webpack-cli@5.1.4)
@@ -3680,7 +3680,7 @@ snapshots:
       mkdirp: 0.5.6
       rimraf: 2.7.1
 
-  sass-loader@12.6.0(sass@1.63.5)(webpack@5.87.0(webpack-cli@5.1.4)):
+  sass-loader@12.6.0(sass@1.63.5)(webpack@5.87.0):
     dependencies:
       klona: 2.0.6
       neo-async: 2.6.2
@@ -3745,7 +3745,7 @@ snapshots:
       simple-concat: 1.0.1
     optional: true
 
-  siyuan@1.0.2: {}
+  siyuan@1.0.5: {}
 
   slash@3.0.0: {}
 
@@ -3871,7 +3871,7 @@ snapshots:
       '@templatejs/parser': 3.1.4
       '@templatejs/runtime': 3.1.4
 
-  terser-webpack-plugin@5.3.9(webpack@5.87.0(webpack-cli@5.1.4)):
+  terser-webpack-plugin@5.3.9(webpack@5.87.0):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.18
       jest-worker: 27.5.1
@@ -3968,9 +3968,9 @@ snapshots:
   webpack-cli@5.1.4(webpack@5.87.0):
     dependencies:
       '@discoveryjs/json-ext': 0.5.7
-      '@webpack-cli/configtest': 2.1.1(webpack-cli@5.1.4(webpack@5.87.0))(webpack@5.87.0(webpack-cli@5.1.4))
-      '@webpack-cli/info': 2.0.2(webpack-cli@5.1.4(webpack@5.87.0))(webpack@5.87.0(webpack-cli@5.1.4))
-      '@webpack-cli/serve': 2.0.5(webpack-cli@5.1.4(webpack@5.87.0))(webpack@5.87.0(webpack-cli@5.1.4))
+      '@webpack-cli/configtest': 2.1.1(webpack-cli@5.1.4)(webpack@5.87.0)
+      '@webpack-cli/info': 2.0.2(webpack-cli@5.1.4)(webpack@5.87.0)
+      '@webpack-cli/serve': 2.0.5(webpack-cli@5.1.4)(webpack@5.87.0)
       colorette: 2.0.20
       commander: 10.0.1
       cross-spawn: 7.0.3
@@ -4017,7 +4017,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 3.3.0
       tapable: 2.2.1
-      terser-webpack-plugin: 5.3.9(webpack@5.87.0(webpack-cli@5.1.4))
+      terser-webpack-plugin: 5.3.9(webpack@5.87.0)
       watchpack: 2.4.0
       webpack-sources: 3.2.3
     optionalDependencies:
@@ -4062,7 +4062,7 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  zip-webpack-plugin@4.0.1(webpack-sources@3.2.3)(webpack@5.87.0(webpack-cli@5.1.4)):
+  zip-webpack-plugin@4.0.1(webpack-sources@3.2.3)(webpack@5.87.0):
     dependencies:
       webpack: 5.87.0(webpack-cli@5.1.4)
       webpack-sources: 3.2.3
