@@ -51,10 +51,10 @@ export class Cite {
     });
   }
   
-  public async generateLiteratureName(key: string) {
-    const nameTemplate = this.plugin.data[STORAGE_NAME].nameTemplate;
-    const customCiteText = this.plugin.data[STORAGE_NAME].customCiteText;
-    const useDynamicRefLink = this.plugin.data[STORAGE_NAME].useDynamicRefLink;
+  public async generateLiteratureName(key: string, typeSetting: any) {
+    const nameTemplate = typeSetting.nameTemplate;
+    const customCiteText = typeSetting.customCiteText;
+    const useDynamicRefLink = typeSetting.useDynamicRefLink;
     // 如果本身不同时使用自定义链接和动态链接，就不需要生成文档的命名
     if (!(customCiteText && useDynamicRefLink)) return "";
     const entry = await this.plugin.database.getContentByKey(key);

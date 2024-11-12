@@ -3,6 +3,7 @@ export const dataDir = `${(window as any).siyuan.config.system.dataDir}`;
 export const mediaDir = "./assets";
 export const isDev = process.env.NODE_ENV === "development";
 // export const isDev = true;
+export const showRequest = false;
 export const siyuanApiUrl = "";
 export const siyuanApiToken = "";
 
@@ -11,7 +12,7 @@ export const pluginIconSVG = '<svg xmlns="http://www.w3.org/2000/svg" version="1
 export const citeLinkStatic = "<span data-type=\"block-ref\" custom-cite-type=\"${cite_type}\" data-id=\"${id}\" data-subtype=\"s\">${link}</span>";
 export const citeLinkDynamic = "<span data-type=\"block-ref\" custom-cite-type=\"${cite_type}\" data-id=\"${id}\" data-subtype=\"d\">${link}</span>";
 export const DISALLOWED_FILENAME_CHARACTERS_RE = /[*"\\/<>:|?\/]/g;
-export const refReg = /\(\((.*?)\)\)/g;
+export const refReg = /\(\((.*?)\)\)/;
 export const refRegStatic = /\(\((.*?)\"(.*?)\"\)\)/g;
 export const refRegDynamic = /\(\((.*?)\'(.*?)\'\)\)/g;
 

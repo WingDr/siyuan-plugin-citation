@@ -294,6 +294,13 @@ class KernelApi extends BaseApi {
     return await this.siyuanRequest("/api/query/sql", params);
   }
 
+  public async getCitedSpans(blockId: string) {
+    const params = {
+      "stmt": `SELECT * FROM spans WHERE block_id like '${blockId}' and type like 'textmark block-ref'`
+    };
+    return await this.siyuanRequest("/api/query/sql", params);
+  }
+
   public async prependBlock(blockId: string, md: string) {
     const params = {
       "data": md,

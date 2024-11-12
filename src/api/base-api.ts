@@ -24,7 +24,7 @@
  */
 
 import { createLogger } from "../utils/simple-logger";
-import { isDev, siyuanApiToken, siyuanApiUrl } from "../utils/constants";
+import { isDev, showRequest, siyuanApiToken, siyuanApiUrl } from "../utils/constants";
 
 /**
  * 思源 API 返回类型
@@ -74,14 +74,14 @@ export class BaseApi {
       });
     }
 
-    if (isDev) {
+    if (isDev && showRequest) {
       this.logger.info("开始向思源请求数据，reqUrl=>", reqUrl);
       this.logger.info("开始向思源请求数据，fetchOps=>", fetchOps);
     }
 
     const response = await fetch(reqUrl, fetchOps);
     const resJson = (await response.json() as any) as SiyuanData;
-    if (isDev) {
+    if (isDev && showRequest) {
       this.logger.info("思源请求数据返回，resJson=>", resJson);
     }
 

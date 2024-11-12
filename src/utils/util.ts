@@ -71,7 +71,6 @@ export async function loadLocalRef(plugin: SiYuanPluginCitation): Promise<any> {
       // 已经提取到所有了
       cont = false;
     }
-    console.log(literatureDocs);
     const pList = literatureDocs.map(async file => {
       let key = "";
       const literatureKey = file.literature_key;
