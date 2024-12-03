@@ -120,19 +120,19 @@
   const panels: IPanel[] = [
     {
       key: 1,
-      text: (plugin.i18n.settingTab as any).basic.title,
+      text: plugin.i18n.settingTab.basic.title,
       name: "citation-setting-basic",
       icon: "#iconSettings",
     },
     {
       key: 2,
-      text: (plugin.i18n.settingTab as any).templates.title,
+      text: plugin.i18n.settingTab.templates.title,
       name: "citation-setting-templates",
       icon: "#iconEdit",
     },
     {
       key: 3,
-      text: (plugin.i18n.settingTab as any).debug_bridge.title,
+      text: plugin.i18n.settingTab.debug_bridge.title,
       name: "citation-setting-debug-bridge",
       icon: "#iconPlugin",
       supportDatabase: ["Zotero (debug-bridge)", "Juris-M (debug-bridge)"],
@@ -143,19 +143,19 @@
   let template_tabs = [
     {
       key: 1,
-      text: (plugin.i18n.settingTab as any).templates.citeLink.title,
+      text: plugin.i18n.settingTab.templates.citeLink.title,
       name: "citation-setting-template-cite-link",
       icon: "",
     },
     {
       key: 2,
-      text: (plugin.i18n.settingTab as any).templates.literatureNote.title,
+      text: plugin.i18n.settingTab.templates.literatureNote.title,
       name: "citation-setting-template-literature-note",
       icon: "",
     },
     {
       key: 3,
-      text: (plugin.i18n.settingTab as any).templates.userData.title,
+      text: plugin.i18n.settingTab.templates.userData.title,
       name: "citation-setting-template-user-data",
       icon: "",
     },
@@ -164,13 +164,13 @@
   let debug_bridge_tabs = [
     {
       key: 1,
-      text: (plugin.i18n.settingTab as any).debug_bridge.plugin.title,
+      text: plugin.i18n.settingTab.debug_bridge.plugin.title,
       name: "citation-setting-debug-bridge-plugin",
       icon: "",
     },
     {
       key: 2,
-      text: (plugin.i18n.settingTab as any).debug_bridge.zotero.title,
+      text: plugin.i18n.settingTab.debug_bridge.zotero.title,
       name: "citation-setting-debug-bridge-zotero",
       icon: "",
     },
@@ -422,13 +422,13 @@
   <Panel display={panels[0].key === panel_focus}>
     <Item>
       <h4 slot="title">
-        {(plugin.i18n.settingTab as any).settingTabTitle.replace(
+        {plugin.i18n.settingTab.settingTabTitle.replace(
           "${version}",
           pluginVersion
         )}
       </h4>
       <span slot="text">
-        {@html (plugin.i18n.settingTab as any).settingTabDescription
+        {@html plugin.i18n.settingTab.settingTabDescription
           .replaceAll("${e-mail}", eMail)
           .replace("${issuesURL}", issuesURL)}
       </span>
@@ -437,8 +437,8 @@
     <!-- 选择笔记本 -->
     <Item
       block={false}
-      title={(plugin.i18n.settingTab as any).basic.notebookSelectorTitle}
-      text={(plugin.i18n.settingTab as any).basic.databaseSelectorDescription}
+      title={plugin.i18n.settingTab.basic.notebookSelectorTitle}
+      text={plugin.i18n.settingTab.basic.databaseSelectorDescription}
     >
       <Input
         slot="input"
@@ -461,8 +461,8 @@
     <!-- 设置文献库路径 -->
     <Item
       block={false}
-      title={(plugin.i18n.settingTab as any).basic.referencePathInputTitle}
-      text={(plugin.i18n.settingTab as any).basic.referencePathInputDescription}
+      title={plugin.i18n.settingTab.basic.referencePathInputTitle}
+      text={plugin.i18n.settingTab.basic.referencePathInputDescription}
     >
       <Input
         slot="input"
@@ -485,8 +485,8 @@
     <!-- 选择数据库类型 -->
     <Item
       block={false}
-      title={(plugin.i18n.settingTab as any).basic.databaseSelectorTitle}
-      text={(plugin.i18n.settingTab as any).basic.databaseSelectorDescription}
+      title={plugin.i18n.settingTab.basic.databaseSelectorTitle}
+      text={plugin.i18n.settingTab.basic.databaseSelectorDescription}
     >
       <Input
         slot="input"
@@ -512,8 +512,8 @@
       <!-- 是否使用itemKey作为文献内容索引 -->
       <Item
         block={false}
-        title={(plugin.i18n.settingTab as any).basic.UseItemKeySwitchTitle}
-        text={(plugin.i18n.settingTab as any).basic.UseItemKeySwitchDescription}
+        title={plugin.i18n.settingTab.basic.UseItemKeySwitchTitle}
+        text={plugin.i18n.settingTab.basic.UseItemKeySwitchDescription}
       >
         <Input
           slot="input"
@@ -536,8 +536,8 @@
     <!-- 是否开启zotero链接自动替换 -->
     <Item
       block={false}
-      title={(plugin.i18n.settingTab as any).basic.AutoReplaceSwitchTitle}
-      text={(plugin.i18n.settingTab as any).basic.AutoReplaceSwitchDescription}
+      title={plugin.i18n.settingTab.basic.AutoReplaceSwitchTitle}
+      text={plugin.i18n.settingTab.basic.AutoReplaceSwitchDescription}
     >
       <Input
         slot="input"
@@ -559,8 +559,8 @@
     <!-- 是否选择不提示删除用户数据 -->
     <Item
       block={false}
-      title={(plugin.i18n.settingTab as any).basic.DeleteUserDataWithoutConfirmSwitchTitle}
-      text={(plugin.i18n.settingTab as any).basic.DeleteUserDataWithoutConfirmSwitchDescription}
+      title={plugin.i18n.settingTab.basic.DeleteUserDataWithoutConfirmSwitchTitle}
+      text={plugin.i18n.settingTab.basic.DeleteUserDataWithoutConfirmSwitchDescription}
     >
       <Input
         slot="input"
@@ -582,8 +582,8 @@
     <!-- 重载数据库 -->
     <Item
       block={false}
-      title={(plugin.i18n.settingTab as any).basic.reloadBtnTitle}
-      text={(plugin.i18n.settingTab as any).basic.reloadBtnDescription}
+      title={plugin.i18n.settingTab.basic.reloadBtnTitle}
+      text={plugin.i18n.settingTab.basic.reloadBtnDescription}
     >
       <Input
         slot="input"
@@ -591,7 +591,7 @@
         normal={true}
         type={ItemType.button}
         settingKey="Button"
-        settingValue={(plugin.i18n.settingTab as any).basic.reloadBtnText}
+        settingValue={plugin.i18n.settingTab.basic.reloadBtnText}
         on:clicked={() => {
           if (isDev) logger.info("Button clicked");
           dispatcher("reload database", { database });
@@ -602,8 +602,8 @@
     <!-- 删除数据 -->
     <Item
       block={false}
-      title={(plugin.i18n.settingTab as any).basic.deleteDataBtnTitle}
-      text={(plugin.i18n.settingTab as any).basic.deleteDataBtnDescription}
+      title={plugin.i18n.settingTab.basic.deleteDataBtnTitle}
+      text={plugin.i18n.settingTab.basic.deleteDataBtnDescription}
     >
       <Input
         slot="input"
@@ -611,12 +611,12 @@
         normal={true}
         type={ItemType.button}
         settingKey="Button"
-        settingValue={(plugin.i18n.settingTab as any).basic.deleteDataBtnText}
+        settingValue={plugin.i18n.settingTab.basic.deleteDataBtnText}
         on:clicked={() => {
           if (isDev) logger.info("Button clicked");
           confirm(
             "⚠️",
-            (plugin.i18n.settingTab as any).basic.confirmRemove.replace(
+            plugin.i18n.settingTab.basic.confirmRemove.replace(
               "${name}",
               plugin.name
             ),
@@ -637,7 +637,7 @@
       <!-- 标签页 1 内容 -->
       <div data-type={template_tabs[0].name} class:fn__none={template_tabs[0].key !== focus}>
         <!-- 多个配置的卡片 -->
-        <Group title={(plugin.i18n.settingTab as any).templates.citeLink.citeTypeCardTitle}>
+        <Group title={plugin.i18n.settingTab.templates.citeLink.citeTypeCardTitle}>
           {#each linkTemplatesGroup as linkItem, index }
             <MiniItem minWidth="200px">
               <span data-type="title" id={"linkItem_" + index} slot="title">{@html linkItem.name}</span>
@@ -645,7 +645,7 @@
                 <button
                   class="b3-tooltips b3-tooltips__nw block__icon block__icon--show"
                   data-type="setting"
-                  aria-label={(plugin.i18n.settingTab as any).templates.citeLink.citeTypeCardSet}
+                  aria-label={plugin.i18n.settingTab.templates.citeLink.citeTypeCardSet}
                   on:click={clickCardSetting}
                 >
                   <Svg
@@ -657,7 +657,7 @@
                 <button
                   class="b3-tooltips b3-tooltips__nw block__icon block__icon--show"
                   data-type="delete"
-                  aria-label={(plugin.i18n.settingTab as any).templates.citeLink.citeTypeCardDelete}
+                  aria-label={plugin.i18n.settingTab.templates.citeLink.citeTypeCardDelete}
                   on:click={deleteLinkTemp}
                 >
                   <Svg
@@ -687,8 +687,8 @@
           <!-- 引用类型名称 -->
           <Item
             block={true}
-            title={(plugin.i18n.settingTab as any).templates.citeLink.citeNameTitle}
-            text={(plugin.i18n.settingTab as any).templates.citeLink.citeNameDescription}
+            title={plugin.i18n.settingTab.templates.citeLink.citeNameTitle}
+            text={plugin.i18n.settingTab.templates.citeLink.citeNameDescription}
           >
             <Input
               slot="input"
@@ -712,8 +712,8 @@
           <!-- 引用链接模板 -->
           <Item
             block={true}
-            title={(plugin.i18n.settingTab as any).templates.citeLink.linkTempInputTitle}
-            text={(plugin.i18n.settingTab as any).templates.citeLink.linkTempInputDescription}
+            title={plugin.i18n.settingTab.templates.citeLink.linkTempInputTitle}
+            text={plugin.i18n.settingTab.templates.citeLink.linkTempInputDescription}
           >
             <Input
               slot="input"
@@ -737,8 +737,8 @@
           <!-- shortAuthor长度 -->
           <Item
             block={false}
-            title={(plugin.i18n.settingTab as any).templates.citeLink.shortAuthorLimitTitle}
-            text={(plugin.i18n.settingTab as any).templates.citeLink.shortAuthorLimitDescription}
+            title={plugin.i18n.settingTab.templates.citeLink.shortAuthorLimitTitle}
+            text={plugin.i18n.settingTab.templates.citeLink.shortAuthorLimitDescription}
           >
             <Input
               slot="input"
@@ -763,9 +763,9 @@
           <!-- 多文献引用设置 -->
           <label class="fn__flex b3-label">
             <div class="fn__flex-1">
-                <slot name="title">{@html (plugin.i18n.settingTab as any).templates.citeLink.multiCiteTitle}</slot>
+                <slot name="title">{@html plugin.i18n.settingTab.templates.citeLink.multiCiteTitle}</slot>
                 <div class="b3-label__text">
-                    <slot name="text">{@html (plugin.i18n.settingTab as any).templates.citeLink.multiCiteDescription}</slot>
+                    <slot name="text">{@html plugin.i18n.settingTab.templates.citeLink.multiCiteDescription}</slot>
                 </div>
                 
             </div>
@@ -829,8 +829,8 @@
           <!-- 是否完全自定义引用 -->
           <Item
             block={false}
-            title={(plugin.i18n.settingTab as any).templates.citeLink.CustomCiteTextSwitchTitle}
-            text={(plugin.i18n.settingTab as any).templates.citeLink.CustomCiteTextSwitchDescription}
+            title={plugin.i18n.settingTab.templates.citeLink.CustomCiteTextSwitchTitle}
+            text={plugin.i18n.settingTab.templates.citeLink.CustomCiteTextSwitchDescription}
           >
             <Input
               slot="input"
@@ -853,8 +853,8 @@
           <!-- 是否使用动态锚文本-->
           <Item
             block={false}
-            title={(plugin.i18n.settingTab as any).templates.citeLink.useDynamicRefLinkSwitchTitle}
-            text={(plugin.i18n.settingTab as any).templates.citeLink.useDynamicRefLinkSwitchDescription}
+            title={plugin.i18n.settingTab.templates.citeLink.useDynamicRefLinkSwitchTitle}
+            text={plugin.i18n.settingTab.templates.citeLink.useDynamicRefLinkSwitchDescription}
           >
             <Input
               slot="input"
@@ -878,8 +878,8 @@
             <!-- 文献内容文档命名模板 -->
             <Item
               block={true}
-              title={(plugin.i18n.settingTab as any).templates.citeLink.nameTempInputTitle}
-              text={(plugin.i18n.settingTab as any).templates.citeLink.nameTempInputDescription}
+              title={plugin.i18n.settingTab.templates.citeLink.nameTempInputTitle}
+              text={plugin.i18n.settingTab.templates.citeLink.nameTempInputDescription}
             >
               <Input
                 slot="input"
@@ -909,8 +909,8 @@
         <!-- 文档标题模板 -->
         <Item
           block={true}
-          title={(plugin.i18n.settingTab as any).templates.literatureNote.titleTemplateInputTitle}
-          text={(plugin.i18n.settingTab as any).templates.literatureNote.titleTemplateInputDescription}
+          title={plugin.i18n.settingTab.templates.literatureNote.titleTemplateInputTitle}
+          text={plugin.i18n.settingTab.templates.literatureNote.titleTemplateInputDescription}
         >
           <Input
             slot="input"
@@ -932,8 +932,8 @@
         <!-- 刷新全部文档标题 -->
         <Item
           block={false}
-          title={(plugin.i18n.settingTab as any).templates.literatureNote.refreshLiteratureNoteBtnTitle}
-          text={(plugin.i18n.settingTab as any).templates.literatureNote.refreshLiteratureNoteBtnDesciption}
+          title={plugin.i18n.settingTab.templates.literatureNote.refreshLiteratureNoteBtnTitle}
+          text={plugin.i18n.settingTab.templates.literatureNote.refreshLiteratureNoteBtnDesciption}
         >
           <Input
             slot="input"
@@ -941,7 +941,7 @@
             normal={true}
             type={ItemType.button}
             settingKey="Button"
-            settingValue={(plugin.i18n.settingTab as any).templates.literatureNote.refreshLiteratureNoteBtnText}
+            settingValue={plugin.i18n.settingTab.templates.literatureNote.refreshLiteratureNoteBtnText}
             on:clicked={() => {
               if (isDev) logger.info("Button clicked");
               dispatcher("refresh literature note title", { titleTemplate });
@@ -951,8 +951,8 @@
         <!-- 文献内容模板 -->
         <Item
           block={true}
-          title={(plugin.i18n.settingTab as any).templates.literatureNote.noteTempTexareaTitle}
-          text={(plugin.i18n.settingTab as any).templates.literatureNote.noteTempTexareaDescription}
+          title={plugin.i18n.settingTab.templates.literatureNote.noteTempTexareaTitle}
+          text={plugin.i18n.settingTab.templates.literatureNote.noteTempTexareaDescription}
         >
           <Input
             slot="input"
@@ -979,8 +979,8 @@
         <!-- 自定义用户数据标题 -->
         <Item
           block={true}
-          title={(plugin.i18n.settingTab as any).templates.userData.titleUserDataInput}
-          text={(plugin.i18n.settingTab as any).templates.userData.titleUserDataInputDescription}
+          title={plugin.i18n.settingTab.templates.userData.titleUserDataInput}
+          text={plugin.i18n.settingTab.templates.userData.titleUserDataInputDescription}
         >
           <Input
             slot="input"
@@ -1010,8 +1010,8 @@
         <!-- debug-bridge密码 -->
         <Item
           block={false}
-          title={(plugin.i18n.settingTab as any).debug_bridge.plugin.dbPasswordInputTitle}
-          text={(plugin.i18n.settingTab as any).debug_bridge.plugin.dbPasswordInputDescription}
+          title={plugin.i18n.settingTab.debug_bridge.plugin.dbPasswordInputTitle}
+          text={plugin.i18n.settingTab.debug_bridge.plugin.dbPasswordInputDescription}
         >
           <Input
             slot="input"
@@ -1033,8 +1033,8 @@
         <!-- 使用的搜索面板 -->
         <Item
           block={false}
-          title={(plugin.i18n.settingTab as any).debug_bridge.plugin.searchDialogSelectorTitle}
-          text={(plugin.i18n.settingTab as any).debug_bridge.plugin.searchDialogSelectorDescription}
+          title={plugin.i18n.settingTab.debug_bridge.plugin.searchDialogSelectorTitle}
+          text={plugin.i18n.settingTab.debug_bridge.plugin.searchDialogSelectorDescription}
         >
           <Input
             slot="input"
@@ -1060,17 +1060,17 @@
         {#if !isDebugBridge}
           <Item>
             <h3 slot="title">
-              {(plugin.i18n.settingTab as any).debug_bridge.zotero.notAbleTitle}
+              {plugin.i18n.settingTab.debug_bridge.zotero.notAbleTitle}
             </h3>
             <span slot="text">
-              {@html (plugin.i18n.settingTab as any).debug_bridge.zotero.notAbleDescription}
+              {@html plugin.i18n.settingTab.debug_bridge.zotero.notAbleDescription}
             </span>
           </Item>
         {:else}
           <Item
             block={false}
-            title={(plugin.i18n.settingTab as any).debug_bridge.zotero.zoteroLinkTitleTemplateTitle}
-            text={(plugin.i18n.settingTab as any).debug_bridge.zotero.zoteroLinkTitleTemplateDescription}
+            title={plugin.i18n.settingTab.debug_bridge.zotero.zoteroLinkTitleTemplateTitle}
+            text={plugin.i18n.settingTab.debug_bridge.zotero.zoteroLinkTitleTemplateDescription}
           >
             <Input
               slot="input"
@@ -1091,8 +1091,8 @@
           </Item>
           <Item
             block={false}
-            title={(plugin.i18n.settingTab as any).debug_bridge.zotero.zoteroTagTemplateTitle}
-            text={(plugin.i18n.settingTab as any).debug_bridge.zotero.zoteroTagTemplateDescription}
+            title={plugin.i18n.settingTab.debug_bridge.zotero.zoteroTagTemplateTitle}
+            text={plugin.i18n.settingTab.debug_bridge.zotero.zoteroTagTemplateDescription}
           >
             <Input
               slot="input"
