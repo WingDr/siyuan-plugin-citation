@@ -9,7 +9,7 @@ type TRuleType = typeof ruleType[number];
 
 interface CustomEventDetail {
   type: string,
-  triggerFn: (any) => any
+  triggerFn: (params: any) => any
 }
 
 interface RefreshEventDetail extends CustomEventDetail {

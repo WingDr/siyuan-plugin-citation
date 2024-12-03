@@ -2,6 +2,7 @@ import {
     Plugin,
     getFrontend,
     getBackend,
+    Protyle,
 } from "siyuan";
 
 import KernelApi from "./api/kernel-api";
@@ -25,32 +26,29 @@ import { changeUpdate } from "./utils/updates";
 import { LiteraturePool } from "./references/pool";
 import type { EventTrigger } from "./events/eventTrigger";
 import { SettingTab } from "./frontEnd/settingTab/settingTab";
-import { NetworkMananger } from "./api/networkManager";
 
 export default class SiYuanPluginCitation extends Plugin {
 
-    public isMobile: boolean;
-    public isRefPathExist: boolean;
+    public isMobile!: boolean;
+    public isRefPathExist!: boolean;
 
-    public literaturePool: LiteraturePool;
+    public literaturePool!: LiteraturePool;
 
-    public database: Database;
-    public reference: Reference;
-    public interactionManager: InteractionManager;
-    public exportManager: ExportManager;
-    public networkManager: NetworkMananger;
-    public kernelApi: KernelApi;
-    public eventTrigger: EventTrigger;
-    public settingTab: SettingTab;
+    public database!: Database;
+    public reference!: Reference;
+    public interactionManager!: InteractionManager;
+    public exportManager!: ExportManager;
+    public kernelApi!: KernelApi;
+    public eventTrigger!: EventTrigger;
+    public settingTab!: SettingTab;
 
-    public noticer: INoticer;
-    private logger: ILogger;
+    public noticer!: INoticer;
+    private logger!: ILogger;
 
     async onload() {
         this.logger = createLogger("index");
         this.noticer = createNoticer();
         this.literaturePool = new LiteraturePool();
-        this.networkManager = new NetworkMananger(this, 64);
 
         if (isDev) this.logger.info("插件载入");
 
@@ -73,7 +71,7 @@ export default class SiYuanPluginCitation extends Plugin {
             this.settingTab = setting;
         });
         await this.interactionManager.customCommand();
-        (await this.interactionManager.customProtyleSlash()).forEach(slash => {
+        (await this.interactionManager.customProtyleSlash()).forEach((slash: { filter: string[]; html: string; id: string; callback(protyle: Protyle): void; }) => {
             this.protyleSlash.push(slash);
         });
         this.interactionManager.eventBusReaction();

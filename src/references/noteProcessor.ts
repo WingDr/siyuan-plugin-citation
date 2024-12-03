@@ -29,13 +29,13 @@ export class NoteProcessor {
         let iter = 0;
         while (resContent.match(imgReg)) {
             const match = resContent.match(imgReg);
-            const itemKey = match[1];
+            const itemKey = match![1];
             const detail = await this.plugin.database.getAttachmentByItemKey(itemKey);
             detail.annotationType = detail.itemType;
             console.log(detail);
             const link = await this.plugin.reference.moveImgToAssets(detail.path, detail, "html");
             console.log(link);
-            resContent = resContent.replace(match[0], link);
+            resContent = resContent.replace(match![0], link);
             iter = iter + 1;
             if (iter == 20) break;
         }

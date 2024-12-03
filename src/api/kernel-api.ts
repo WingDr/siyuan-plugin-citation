@@ -93,7 +93,7 @@ class KernelApi extends BaseApi {
   public async saveTextData(fileName: string, data: any) {
     return new Promise((resolve) => {
       const pathString = `/temp/convert/pandoc/${fileName}`;
-      const file = new File([new Blob([data])], pathString.split("/").pop());
+      const file = new File([new Blob([data])], pathString.split("/").pop()!);
       const formData = new FormData();
       formData.append("path", pathString);
       formData.append("file", file);
@@ -387,7 +387,7 @@ class KernelApi extends BaseApi {
     return await this.siyuanRequest("/api/query/sql", params);
   }
 
-  public async setExport(options) {
+  public async setExport(options: object) {
     return await this.siyuanRequest("/api/setting/setExport", options);
 
   }

@@ -41,7 +41,7 @@ export async function fileSearch(plugin: SiYuanPluginCitation, dirPath: string, 
     }
   });
   return await Promise.all(pList).then(finalRes => {
-    const filePaths = [];
+    const filePaths: any[] | PromiseLike<any[]> = [];
     finalRes.forEach(fileList => {
       filePaths.push(...fileList);
     });
@@ -57,7 +57,7 @@ export async function loadLocalRef(plugin: SiYuanPluginCitation): Promise<any> {
   const limit = 64;
   let offset = 0;
   let cont = true;
-  let promiseList = [];
+  let promiseList: any[] = [];
   while (cont) {
     /**
      * 通过读取文献库中的文献构建文献池，用于快速索引和对应key与文档id
@@ -121,12 +121,12 @@ export async function sleep(time: number) {
   });
 }
 
-export function cleanEmptyKey(obj: object) {
-  const cleanedObj = Object.keys(obj).reduce((prv, key) => {
+export function cleanEmptyKey(obj: any) {
+  const cleanedObj = Object.keys(obj).reduce((prv: any, key) => {
     if (obj[key] == null || obj[key] == undefined || obj[key] == "") return prv;
     else if (typeof obj[key] == "object") {
       if (Object.prototype.toString.call(obj[key]) === "[object Array]") {
-        if (obj[key].length > 0) prv[key] = obj[key].map(o => {
+        if (obj[key].length > 0) prv[key] = obj[key].map((o: any) => {
           if (typeof o == "object") return cleanEmptyKey(o);
           else return o;
         });

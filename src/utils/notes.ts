@@ -53,7 +53,7 @@ function processBlocks(blockList: htmlBlock[], labelIndex: number) {
           if (block.isSeparated == true) {
             const content = block.content;
             const match = content.match(startLabelExp);
-            block.content = match[0] + "\n" + content.slice(match[0].length, content.length - endLabel.length).trim() + "\n" + endLabel;
+            block.content = match![0] + "\n" + content.slice(match![0].length, content.length - endLabel.length).trim() + "\n" + endLabel;
           }
         });
       }
@@ -73,9 +73,9 @@ function separateBlocks(content: string, reg: RegExp): htmlBlock[] {
   } else if (trimContent.search(reg) == 0) {
     const match = trimContent.match(reg);
     return [{
-      content: match[0],
+      content: match![0],
       isSeparated: true
-    }, ...separateBlocks(trimContent.slice(match[0].length), reg)];
+    }, ...separateBlocks(trimContent.slice(match![0].length), reg)];
   } else {
     return [{
       content: trimContent.slice(0, trimContent.search(reg)),

@@ -20,7 +20,7 @@ interface ExportOption {
 
 
 export class ExportManager {
-  private userConfig: {[key: string]: string};
+  private userConfig!: {[key: string]: string};
   private logger: ILogger;
 
   constructor (private plugin: SiYuanPluginCitation) {
@@ -71,7 +71,7 @@ export class ExportManager {
     // 拷贝设置然后修改
     const setConfig = Object.assign({}, this.userConfig);
     Object.keys(changedOptions).forEach(key => {
-      setConfig[key] = changedOptions[key];
+      setConfig[key] = (changedOptions as Record<string, any>)[key];
     });
     await this.plugin.kernelApi.setExport(setConfig);
   }

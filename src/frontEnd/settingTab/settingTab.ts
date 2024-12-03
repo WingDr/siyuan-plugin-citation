@@ -23,7 +23,7 @@ export class SettingTab {
     });
 
     const component = new ExampleComponent({
-      target: settingTab.element.querySelector(`#${id}`),
+      target: settingTab.element.querySelector(`#${id}`)!,
       props: {
         plugin: this.plugin,
         logger: this.logger

@@ -79,7 +79,7 @@ export class LiteratureNote {
 
     private async updateDataSourceItem(key: string, entry: any) {
       const fileID = this.plugin.literaturePool.get(key);
-      const itemAttrs = {};
+      const itemAttrs:Record<string, any> = {};
       // 获取反链标题
       const titleTemplate = this.plugin.data[STORAGE_NAME].zoteroLinkTitleTemplate as string;
       if (titleTemplate.length) {
@@ -113,7 +113,7 @@ export class LiteratureNote {
 
     private async _processExistedLiteratureNote(literatureId: string, key: string, entry: any, noConfirmUserData=this.plugin.data[STORAGE_NAME].deleteUserDataWithoutConfirm) {
       // 文件存在就更新文件内容
-      let deleteList = [];
+      let deleteList: string[] = [];
       // 首先将文献的基本内容塞到用户文档的自定义属性中
       this.plugin.kernelApi.setBlockEntry(literatureId, JSON.stringify(cleanEmptyKey(Object.assign({}, entry))));
       // 查找用户自定义片段
@@ -167,16 +167,16 @@ export class LiteratureNote {
       let userDataLink = "";
       // 首先判断是否有新式的用户数据情况
       let res = await this.plugin.kernelApi.getLiteratureUserData(literatureId);
-      if ((res.data as string[]).length) return {
-        deleteList: dataIds.slice(0, dataIds.indexOf(res.data[0].block_id)),
-        userDataId: res.data[0].block_id as string,
+      if (res.data && (res.data as any[]).length) return {
+        deleteList: dataIds.slice(0, dataIds.indexOf((res.data as any[])[0].block_id)),
+        userDataId: (res.data as any[])[0].block_id as string,
         userDataLink: "",
         hasUserData: true
       };
       // 否则根据旧版规则查找第一个块的内容中是否包含用户自定义片段
       res = await this.plugin.kernelApi.getBlock(dataIds[0]);
-      const dyMatch = (res.data[0].markdown as string).match(refRegDynamic);
-      const stMatch = (res.data[0].markdown as string).match(refRegStatic);
+      const dyMatch = ((res.data as any[])[0].markdown as string).match(refRegDynamic);
+      const stMatch = ((res.data as any[])[0].markdown as string).match(refRegStatic);
       if (dyMatch && dyMatch.length && dyMatch[0] && dataIds.indexOf(dyMatch[0].split(" ")[0].slice(2)) != -1) {
         // 如果能查找到链接，并且链接存在于文本中，则说明存在用户数据区域
         const idx = dataIds.indexOf(dyMatch[0].split(" ")[0].slice(2));
@@ -209,7 +209,7 @@ export class LiteratureNote {
         };
       } else {
         if (isDev) this.logger.info("未匹配到用户片段链接 =>", {
-          markdown: res.data[0].markdown, stMatch, dyMatch, totalIds: dataIds
+          markdown: (res.data as any[])[0].markdown, stMatch, dyMatch, totalIds: dataIds
         });
         // 执行后续操作之前先更新文献池
         this.plugin.literaturePool.set({id: literatureId, key: key});
@@ -245,14 +245,14 @@ export class LiteratureNote {
     private async _insertComplexContents(literatureId: string, userDataId: string, userDataLink: string, entry: any, deleteList: string[]) {
       const noteTemplate = this.plugin.data[STORAGE_NAME].noteTemplate as string;
       const note = entry.note;
-      entry.note = entry.note?.map(n => {
+      entry.note = entry.note?.map((n: { prefix: string; index: any; }) => {
         return n.prefix + `\n\n{ {note${n.index}} }`;
         // return `${n.prefix}\n\n${n.content}`;
       }).join("\n\n");
       // const annotations = entry.annotations;
       // 和 literature note 一起更新，而不是单独更新，减少更新时间
-      const annoPList = entry.annotations.map( async anno => {
-        const filePList = anno.content.map(async content => {
+      const annoPList = entry.annotations.map( async (anno: { content: any[]; title: string; }) => {
+        const filePList = anno.content.map(async (content: any) => {
           // return `{ {annotation-${anno.index}-${content.index}} }`;
           return await this._generateSingleAnnotation(content);
         });
@@ -263,7 +263,7 @@ export class LiteratureNote {
       if (deleteList.length) await this.plugin.networkManager.sendNetworkMission([deleteList], this._deleteBlocks.bind(this));
       if (isDev) this.logger.info("向literature note发起插入请求, content=>", {literatureNote});
       this.plugin.kernelApi.prependBlock(literatureId, userDataLink + literatureNote);
-      note.forEach( async n => {
+      note.forEach( async (n: { content: string; index: any; }) => {
         const processor = new NoteProcessor(this.plugin);
         n.content = await processor.processNote(n.content as string);
         this.plugin.eventTrigger.addSQLIndexEvent({
@@ -274,7 +274,7 @@ export class LiteratureNote {
             literatureId,
             userDataId,
             callbackTimes: 0
-          },
+          } as Record<string, any>,
           type: "once"
         });
       });
@@ -356,7 +356,7 @@ export class LiteratureNote {
       const userDataTitle = this.plugin.data[STORAGE_NAME].userDataTitle as string;
       await this.plugin.kernelApi.updateBlockContent(rootId, "markdown", `# ${userDataTitle}\n{: custom-literature-block-type="user data"}`);
       const res = await this.plugin.kernelApi.getChidBlocks(rootId);
-      const userDataId = res.data[0].id as string;
+      const userDataId = (res.data as any[])[0].id as string;
       if (isDev) this.logger.info("获取用户区域标题，ID =>", userDataId);
       return userDataId;
     }

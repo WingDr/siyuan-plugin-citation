@@ -20,20 +20,20 @@ class QueueT<T> {
 
 interface EventQueue {
   type: "repeated" | "once";
-  params: {[param: string]: any};
+  params: Record<string, any>;
   queue?: QueueT<TriggeredEvent>;
-  triggerFns?: ((params: {[param: string]: any}) => any)[];
+  triggerFns?: ((params: any) => any)[];
 }
 
 export interface TriggeredEvent {
-  triggerFn: (params: {[param: string]: any}) => any;
-  params: {[param: string]: any};
+  triggerFn: (params: any) => any;
+  params: Record<string, any>;
   type: "repeated" | "once"
 }
 
 // 管理特殊的事件触发
 export class EventTrigger {
-  private eventQueue: {[name: string]: EventQueue};
+  private eventQueue: Record<string, EventQueue>;
   private logger: ILogger;
   private customEvent: CustomEventBus;
   private onProcessing: boolean;
@@ -71,6 +71,7 @@ export class EventTrigger {
       const triggerEvent = this.eventQueue[name];
       // 对于重复执行的任务，就不需要触发输出了，不然太麻烦
       // if (isDev) this.logger.info("事件执行，event=>", {...triggerEvent, name});
+      if (!this.eventQueue[name].triggerFns) return;
       const pList = this.eventQueue[name].triggerFns.map(async (triggerFn) => {
         await triggerFn({...triggerEvent.params, event});
       });
@@ -105,8 +106,8 @@ export class EventTrigger {
         params: event.params
       };
     }
-    if (event.type == "once") this.eventQueue[name].queue.push(event);
-    else if (event.type == "repeated") this.eventQueue[name].triggerFns.push(event.triggerFn);
+    if (event.type == "once") this.eventQueue[name].queue!.push(event);
+    else if (event.type == "repeated") this.eventQueue[name].triggerFns!.push(event.triggerFn);
   }
 
   private withdrawEvent(name: string): undefined | TriggeredEvent {

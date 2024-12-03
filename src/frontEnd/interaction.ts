@@ -62,7 +62,6 @@ interface IMenuItemSetting {
 
 export class InteractionManager {
   public plugin: SiYuanPluginCitation;
-  public setting: Setting;
   private logger: ILogger;
   private protyleSlashs: any[];
   private commands:ICommandSetting[];
@@ -324,10 +323,10 @@ export class InteractionManager {
     if (autoReplace) {
       event.preventDefault();
       const zoteroURLMatch = resHTML.match(zoteroURLReg);
-      const itemKey = zoteroURLMatch[1];
+      const itemKey = zoteroURLMatch![1];
       const key = "1_" + itemKey;
       if (isDev) this.logger.info("确认到从Zotero拖拽事件, itemKey=>", {itemKey});
-      const content = await this.plugin.reference.processReferenceContents([key], null, "", true, false);
+      const content = await this.plugin.reference.processReferenceContents([key], "", "", true, false);
       if (!content[0]) return;
       citeDetail = content[0];
       if (isDev) this.logger.info("获取到插入内容, content=>", {citeDetail});
@@ -344,18 +343,18 @@ export class InteractionManager {
       if (!citeDetail) {
         // 如果之前没插入就插入一遍
         const zoteroURLMatch = resHTML.match(zoteroURLReg);
-        const itemKey = zoteroURLMatch[1];
+        const itemKey = zoteroURLMatch![1];
         const key = "1_" + itemKey;
-        const content = await this.plugin.reference.processReferenceContents([key], null, "", true, false);
+        const content = await this.plugin.reference.processReferenceContents([key], "", "", true, false);
         if (!content[0]) return;
         citeDetail = content[0];
         if (isDev) this.logger.info("获取到插入内容, content=>", {citeDetail});
       }
       let resLink = "";
-      const annoKey = zoteroAnnotationMatch[2];
-      citeDetail.entry.annotationList.forEach(anno => {
+      const annoKey = zoteroAnnotationMatch![2];
+      citeDetail.entry.annotationList.forEach((anno: { details: any[]; }) => {
         if (resLink.length) return;
-        anno.details.forEach(detail => {
+        anno.details.forEach((detail: { key: string; dateAdded: string; annotationType: any; parentKey: any; }) => {
           if (resLink.length) return;
           if (detail.key == annoKey) {
             const time = detail.dateAdded.replace(/[-:\s]/g, "");
@@ -428,8 +427,8 @@ export class InteractionManager {
           (event.detail.menu as Menu).addItem({
             iconHTML: item.iconHTML,
             label: this.plugin.i18n.prefix + item.label,
-            click: () => {item.clickCallback(id);},
-            submenu: item.submenu ?? (item.generateSubMenu ? item.generateSubMenu(event.detail) : null)
+            click: () => {item.clickCallback!(id);},
+            submenu: item.submenu ?? (item.generateSubMenu ? item.generateSubMenu(event.detail) : undefined)
           });
         }
       }
@@ -454,7 +453,7 @@ export class InteractionManager {
           (event.detail.menu as subMenu).addItem({
             iconHTML: item.iconHTML,
             label: this.plugin.i18n.prefix + item.label,
-            click: () => {item.clickCallback(event.detail);},
+            click: () => {item.clickCallback!(event.detail);},
             submenu: item.submenu ?? (item.generateSubMenu ? item.generateSubMenu(event.detail) : null)
           } as IMenu);
         }
@@ -463,7 +462,7 @@ export class InteractionManager {
   }
 
   private generateChangeCiteMenu(detail: any): IMenu[] {
-    return this.plugin.data[STORAGE_NAME].linkTemplatesGroup.map(set => {
+    return this.plugin.data[STORAGE_NAME].linkTemplatesGroup.map((set: { name: string; }) => {
       return {
         label: set.name,
         icon: "iconRefresh",
@@ -492,70 +491,10 @@ export class InteractionManager {
           (event.detail.menu as Menu).addItem({
             iconHTML: item.iconHTML,
             label: this.plugin.i18n.prefix + item.label,
-            click: () => {item.clickCallback(id);}
+            click: () => {item.clickCallback!(id);}
           });
         }
       }
     });
-    // (event.detail.menu as Menu).addItem({
-    //   iconHTML: `<div class="b3-menu__icon" style>${pluginIconSVG}</div>`,
-    //   label: ,
-    //   submenu: submenu
-    // });
-  }
-
-  private getNode(node:HTMLElement) {
-    let nowNode = node;
-    if (!nowNode) return null;
-    while (!nowNode.getAttribute("data-node-id")) {
-      nowNode = nowNode.parentElement;
-      if (!nowNode) return null;
-    }
-    return nowNode;
-  }
-
-  private async hookTransactions(params: {event: CustomEvent<any>}) {
-    const detail = params.event.detail.data[0].doOperations[0];
-    const autoReplace = this.plugin.data[STORAGE_NAME].autoReplace;
-    // 拖过来的时候只会产生uodate事件
-    if (autoReplace && detail.action == "update") {
-      let id = detail.id;
-      const data = detail.data as string;
-      const selection = window.getSelection();
-      let insertedNode = document.querySelector(`div[data-node-id="${id}"]`);
-      // 不管是拖进来还是复制的，光标应该都在原位
-      if (selection.anchorNode.parentElement && (this.getNode(selection.anchorNode.parentElement)?.getAttribute("data-node-id") != id)) {
-        if (isDev) this.logger.info("触发位置不为光标位置, detail=>", {selection, detail});
-        return;
-      }
-      const zoteroURLReg = /data-href=\"zotero:\/\/select\/library\/items\/(.*?)\"/;
-      const zoteroURLMatch = data.match(zoteroURLReg);
-      // 在data里面找到zotero链接才是zotero传过来的
-      if (insertedNode && zoteroURLMatch && zoteroURLMatch.length) {
-        const itemKey = zoteroURLMatch[1];
-        const key = "1_" + itemKey;
-        const linkNode = insertedNode.querySelector(`span[data-href="zotero://select/library/items/${itemKey}"]`);
-        // 事件会执行两次，但是其实只需要替换一次
-        if (linkNode && linkNode.parentNode) {
-          if (isDev) this.logger.info("确认到从Zotero拖拽事件, itemKey=>", {itemKey});
-          const content = await this.plugin.reference.processReferenceContents([key], null, "", true, false);
-          if (!content[0]) return;
-          if (isDev) this.logger.info("获取到插入内容, content=>", {content:content[0]});
-          // const noteContent = (await this.plugin.kernelApi.getBlock(id)).data[0].markdown as string;
-          // const insertContent = noteContent.replace(/\([(.*?)]\(zotero:\/\/select\/library\/items\/(.*?)\)\)/, content[0]);
-          // await this.plugin.kernelApi.updateBlockContent(id, "markdown", insertContent);
-          const useDynamicRefLink = this.plugin.data[STORAGE_NAME].useDynamicRefLink;
-          const insertHTML = `<span data-type="block-ref" data-subtype="${useDynamicRefLink ? "d" : "s"}" data-id="${content[0].citeId}">${content[0].content}</span>`;
-          const newRefNode = (new DOMParser()).parseFromString(insertHTML, "text/html").querySelector(`span[data-id="${content[0].citeId}"]`);
-          linkNode.parentNode.replaceChild(newRefNode, linkNode);
-          insertedNode = this.getNode(newRefNode as HTMLElement);
-          if (isDev) this.logger.info("获取到链接和包含链接的最小节点, node=>", {newRefNode, insertedNode});
-          id = insertedNode.getAttribute("data-node-id");
-          const updateHTML = insertedNode.children.item(0);
-          await this.plugin.kernelApi.updateBlockContent(id, "dom", updateHTML.innerHTML);
-          if (isDev) this.logger.info("从Zotero拖拽/粘贴事件处理完成");
-        }
-      }
-    }
   }
 }

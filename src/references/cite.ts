@@ -41,7 +41,7 @@ export class Cite {
     if (!entry) {
       if (isDev) this.logger.error("找不到文献数据");
       this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);
-      return null;
+      return "";
     }
     if (isDev) this.logger.info("仅包含链接的模板 =>", {index, id: this.plugin.literaturePool.get(key)});
     return generateFromTemplate(template, {
@@ -61,7 +61,7 @@ export class Cite {
     if (!entry) {
       if (isDev) this.logger.error("找不到文献数据");
       this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);
-      return null;
+      return "";
     }
     return generateFromTemplate(nameTemplate, {
       citeFileID: this.plugin.literaturePool.get(key),

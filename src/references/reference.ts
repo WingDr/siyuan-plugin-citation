@@ -136,13 +136,13 @@ export class Reference {
       if (isDev) this.logger.info("获取到引用行级元素span=>", spans);
       // 引用块的结构：(( id "content" )){: ial_data }，因此要通过查找到的spans进行处理
       const reg = refReg;
-      const cited_spans = spans.reduce((acc, cur) => {
+      const cited_spans = spans.reduce((acc:any[], cur) => {
         const matchRes = cur.markdown.match(reg);
-        const target_id = matchRes[1].split(" ")[0];
+        const target_id = matchRes![1].split(" ")[0];
         // 如果不在文献池里说明不是文献的引用
         if (!this.plugin.literaturePool.get(target_id))  return acc;
         const full_content = cur.markdown + cur.ial;
-        const cite_type = cur.ial.match(/custom-cite-type=\"(.*?)\"/)[1];
+        const cite_type = cur.ial.match(/custom-cite-type=\"(.*?)\"/)![1];
         const startPos = block.content.indexOf(full_content);
         const endPos = startPos+full_content.length;
         let res = acc;
@@ -165,9 +165,9 @@ export class Reference {
         return res;
       }, []);
       if (!cited_spans.length) return;
-      const replaceList = [];
+      const replaceList: { full_content: any; insertContent: any; }[] = [];
       await Promise.all(cited_spans.map(async group_cite => {
-        const insertContent = await this.processReferenceContents(group_cite.map(span => span.key), fileId, group_cite[0].cite_type);
+        const insertContent = await this.processReferenceContents(group_cite.map((span: { key: any; }) => span.key), fileId, group_cite[0].cite_type);
         return group_cite.map((span: any, idx: number) => {
           replaceList.push({
             full_content: span.full_content,
@@ -215,9 +215,9 @@ export class Reference {
         this.plugin.literaturePool.delete(key);
         return;
       } 
-      const title = res.data[0].content;
-      if (noteTitle != title) await this.plugin.kernelApi.renameDoc(notebookId, res.data[0].path , noteTitle);
-      const literatureKey = (await this.plugin.kernelApi.getBlockAttrs(literatureId)).data["custom-literature-key"];
+      const title = (res.data as any[])[0].content;
+      if (noteTitle != title) await this.plugin.kernelApi.renameDoc(notebookId, (res.data as any[])[0].path , noteTitle);
+      const literatureKey = ((await this.plugin.kernelApi.getBlockAttrs(literatureId)) as any).data["custom-literature-key"];
       if (literatureKey != entry.key) {
         if (isDev) this.logger.info("给文档刷新key，detail=>", {id: literatureId, name: entry.key});
         await this.plugin.kernelApi.setBlockKey(literatureId, entry.key);
@@ -263,7 +263,7 @@ export class Reference {
     return;
   }
 
-  public async insertContent(protyle, content: string) {
+  public async insertContent(protyle: Protyle, content: string) {
     if (isDev) this.logger.info("插入内容, detail=>", {protyle, content});
     const blockId = protyle.protyle.block.id;
     const rootId = protyle.protyle.block.rootID;
@@ -272,8 +272,8 @@ export class Reference {
     if (isDev) this.logger.info("插入的内容为, content=>", content);
     if (isDev) this.logger.info("头尾引用为, nodes=>", {start: this.refStartNode, end: this.refEndNode});
     // 避免重复设置或者不设置导致的bug
-    if (this.refStartNode && this.refStartNode != protyle.protyle.toolbar.range.startContainer) protyle.protyle.toolbar.range.setStartBefore(this.refStartNode);
-    if (this.refEndNode && this.refEndNode != protyle.protyle.toolbar.range.endContainer) protyle.protyle.toolbar.range.setEndAfter(this.refEndNode);
+    if (this.refStartNode && this.refStartNode != protyle.protyle.toolbar!.range.startContainer) protyle.protyle.toolbar!.range.setStartBefore(this.refStartNode);
+    if (this.refEndNode && this.refEndNode != protyle.protyle.toolbar!.range.endContainer) protyle.protyle.toolbar!.range.setEndAfter(this.refEndNode);
     await protyle.insert(content, false, true);
     // TODO 等待前后端联动API更新再更新文档标号
     // if (isDev) this.getCursorOffsetInBlock(blockId);
@@ -290,7 +290,7 @@ export class Reference {
   // Extra Functions
   public getCurrentTypeSetting(type_name: string) {
     let typeSetting = {};
-    const nameList = this.plugin.data[STORAGE_NAME].linkTemplatesGroup.map(tmp => {
+    const nameList = this.plugin.data[STORAGE_NAME].linkTemplatesGroup.map((tmp: { name: any; }) => {
       return tmp.name;
     }) as string[];
     if (!type_name.length || nameList.indexOf(type_name) == -1) {
@@ -361,7 +361,7 @@ export class Reference {
     if (
       element.getAttribute &&
       element.getAttribute("data-type") == "block-ref" &&
-      this.plugin.literaturePool.get(element.getAttribute("data-id"))) {
+      this.plugin.literaturePool.get(element.getAttribute("data-id")!)) {
         //说明输入在引用内
         return true;
     }
@@ -385,7 +385,7 @@ export class Reference {
     let i = 1;
     while (!target.getAttribute("data-node-id") && i < 10) {
       i = i+1;
-      target = target.parentElement;
+      target = target.parentElement!;
     }
     return target;
   }
