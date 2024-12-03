@@ -21,9 +21,9 @@ export class Reference {
   private logger: ILogger;
   private Cite: Cite;
   private LiteratureNote: LiteratureNote;
-  private refStartNode: HTMLElement;
-  private refEndNode: HTMLElement;
-  private refSpanList: HTMLElement[];
+  private refStartNode!: HTMLElement | null;
+  private refEndNode!: HTMLElement | null;
+  private refSpanList!: HTMLElement[];
 
   constructor(plugin: SiYuanPluginCitation) {
     this.plugin = plugin;
@@ -40,12 +40,26 @@ export class Reference {
     const refPath = this.plugin.data[STORAGE_NAME].referencePath as string;
     const res = await this.plugin.kernelApi.searchFileInSpecificPath(notebookId, refPath);
     this.plugin.isRefPathExist = (res.data as any[]).length ? true: false;
+    this.refStartNode = null;
+    this.refEndNode = null;
+    this.refSpanList = [];
   }
 
   // Main Functions
 
+  public setEmptySelection(): void {
+    this.refStartNode = null;
+    this.refEndNode = null;
+    this.refSpanList = [];
+  }
+
   public getAllNeighborReference(protyle: IProtyle): string[] {
     if (isDev) this.logger.info("获取到protyle=>", protyle);
+    if (!protyle.toolbar) {
+      // 如果获取不到toolbar就不选择
+      this.setEmptySelection(); 
+      return[];
+    }
     if (isDev) this.logger.info("获取到选区=>", protyle.toolbar.range);
     const pRange = protyle.toolbar.range;
     const selectedNode = pRange.startContainer;
@@ -84,7 +98,7 @@ export class Reference {
     this.refSpanList = existRefSpanList;
     if (isDev) this.logger.info("所有引用=>", existRefSpanList);
     const existRefList = existRefSpanList.map((e:HTMLSpanElement) => {
-      return this.plugin.literaturePool.get(e.getAttribute("data-id"));
+      return this.plugin.literaturePool.get(e.getAttribute("data-id") as string);
     });
     if (isDev) this.logger.info("所有引用, key=>", existRefList);
     return existRefList;
@@ -256,9 +270,10 @@ export class Reference {
     if (isDev) this.logger.info("Protyle块ID =>", blockId);
     if (isDev) this.logger.info("Protyle文档ID =>", rootId);
     if (isDev) this.logger.info("插入的内容为, content=>", content);
-    // 避免重复设置导致的bug
-    if (this.refStartNode != protyle.protyle.toolbar.range.startContainer) protyle.protyle.toolbar.range.setStartBefore(this.refStartNode);
-    if (this.refEndNode != protyle.protyle.toolbar.range.endContainer) protyle.protyle.toolbar.range.setEndAfter(this.refEndNode);
+    if (isDev) this.logger.info("头尾引用为, nodes=>", {start: this.refStartNode, end: this.refEndNode});
+    // 避免重复设置或者不设置导致的bug
+    if (this.refStartNode && this.refStartNode != protyle.protyle.toolbar.range.startContainer) protyle.protyle.toolbar.range.setStartBefore(this.refStartNode);
+    if (this.refEndNode && this.refEndNode != protyle.protyle.toolbar.range.endContainer) protyle.protyle.toolbar.range.setEndAfter(this.refEndNode);
     await protyle.insert(content, false, true);
     // TODO 等待前后端联动API更新再更新文档标号
     // if (isDev) this.getCursorOffsetInBlock(blockId);
@@ -285,6 +300,10 @@ export class Reference {
       typeSetting = this.plugin.data[STORAGE_NAME].linkTemplatesGroup[nameList.indexOf(type_name)];
     }
     return typeSetting;
+  }
+
+  public async moveImgToAssets(imgPath: string, detail: any, linkType: "html" | "markdown" = "markdown"): Promise<string> {
+    return await this.LiteratureNote.moveImgToAssets(imgPath, detail, linkType);
   }
 
   public async processReferenceContents(keys: string[], fileId?: string, type_name="", returnDetail=false, errorReminder=true): Promise<any[]> {

@@ -120,6 +120,10 @@ export class Database {
     return content;
   }
 
+  public async getAttachmentByItemKey(itemKey: string) {
+    return await this.dataModal.getAttachmentByItemKey(itemKey);
+  }
+
   public getTotalKeys() {
     return this.dataModal.getTotalKeys();
   }
@@ -155,8 +159,8 @@ export class Database {
             const content = await this.plugin.reference.processReferenceContents(keys, fileId, tmp.name);
             this.plugin.reference.insertContent(this.protyle, content.join(""));
           }
-        })
-      })
+        });
+      });
       if (isDev) this.logger.info("展示引用类型选择菜单", menu);
       const rect = this.protyle.protyle.toolbar.range.getBoundingClientRect();
       menu.open({
@@ -168,7 +172,7 @@ export class Database {
 
   private async insertNotesBySelection(keys: string[]) {
     const insertContent = keys.map(async key => {
-      return await this.plugin.database.dataModal.getCollectedNotesFromKey(key);
+      return await this.dataModal.getCollectedNotesFromKey(key);
     });
     const content = await Promise.all(insertContent);
     this.plugin.reference.insertContent(this.protyle, content.join(""));
@@ -184,7 +188,7 @@ export class Database {
 
   private async copyNotesBySelection(keys: string[]) {
     const insertContent = keys.map(async key => {
-      return await this.plugin.database.dataModal.getCollectedNotesFromKey(key);
+      return await this.dataModal.getCollectedNotesFromKey(key);
     });
     const content = await Promise.all(insertContent);
     this.plugin.reference.copyContent(content.join(""), this.plugin.i18n.notes);

@@ -57,7 +57,6 @@
     }
 
     function keyboardReaction(ev: KeyboardEvent) {
-        console.log(ev)
         if (ev.key == "ArrowUp") {
             ev.preventDefault();
             changeSelection(false);

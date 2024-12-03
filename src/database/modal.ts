@@ -26,25 +26,29 @@ import { htmlNotesProcess } from "../utils/notes";
 import { createLogger, type ILogger } from "../utils/simple-logger";
 import { isDev, REF_DIR_PATH, STORAGE_NAME } from "../utils/constants";
 import { fileSearch, generateFileLinks } from "../utils/util";
+import { NoteProcessor } from "../references/noteProcessor";
 
 export abstract class DataModal {
-  public logger: ILogger;
-  public plugin: SiYuanPluginCitation;
-  public protyle: Protyle;
-  public selectedList: string[];
-  public onSelection: (keys: string[]) => void;
+  public logger!: ILogger;
+  public plugin!: SiYuanPluginCitation;
+  public protyle!: Protyle;
+  public selectedList!: string[];
+  public onSelection!: (keys: string[]) => void;
   public abstract buildModal();
   public abstract getContentFromKey(key: string);
   public abstract getCollectedNotesFromKey(key: string);
   public abstract showSearching(protyle:Protyle, onSelection: (keys: string[]) => void);
   public abstract getTotalKeys(): string[];
   public async getSelectedItems(): Promise<string[]> {
-    if (isDev) this.logger.info("改数据模型无法执行此方法，modal=>", this);
+    if (isDev) this.logger.info("该数据模型无法执行此方法，modal=>", this);
     return [];
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public async updateDataSourceItem(key: string, content: {[attr: string]: any}) {
     if (isDev) this.logger.info("改数据模型无法执行此方法，modal=>", this);
+  }
+  public async getAttachmentByItemKey(itemKey: string): Promise<any> {
+    return null;
   }
 }
 
@@ -60,9 +64,9 @@ function processKey(key: string): [number, string] {
 }
 
 export class FilesModal extends DataModal {
-  private fuse: Fuse<any>;
-  private searchDialog: SearchDialog;
-  private library: Library;
+  private fuse!: Fuse<any> | null;
+  private searchDialog!: SearchDialog;
+  private library!: Library | null;
 
   constructor(plugin: SiYuanPluginCitation) {
     super();
@@ -117,6 +121,7 @@ export class FilesModal extends DataModal {
 
   public getContentFromKey (key: string) {
     const [, citekey] = processKey(key);
+    if (!this.library) return null;
     const entry = this.library.getTemplateVariablesForCitekey(citekey);
     if (entry.files) entry.files = generateFileLinks(entry.files);
     if (isDev) this.logger.info("文献内容 =>", entry);
@@ -125,6 +130,7 @@ export class FilesModal extends DataModal {
 
   public getCollectedNotesFromKey(key: string) {
     const [, citekey] = processKey(key);
+    if (!this.library) return "";
     const entry = this.library.getTemplateVariablesForCitekey(citekey);
     return entry.note;
   }
@@ -323,8 +329,8 @@ export class ZoteroModal extends DataModal {
       if (!item.citekey && !item.citationKey) return null;
       return item.libraryID + "_" + (item.citekey || item.citationKey);
     }).filter(e => !!e);
-    if (!citekeys.length) return [];
-    return citekeys;
+    if (!citekeys || !citekeys.length) return [];
+    return citekeys as string[];
   }
 
   private async checkZoteroRunning(): Promise<boolean> {
@@ -451,9 +457,10 @@ export class ZoteroDBModal extends DataModal {
     if (itemKey) {
       const res = await this.getNotesByItemKey(...processKey(itemKey));
       if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, res);
-      return (res as any[]).map((singleNote, index) => {
-        return `\n\n---\n\n###### Note No.${index+1}\t[[Locate]](zotero://select/items/0_${singleNote.key}/)\t[[Open]](zotero://note/u/${singleNote.key}/)\n\n\n\n` + htmlNotesProcess(singleNote.note.replace(/\\(.?)/g, (m, p1) => p1));
-      }).join("\n\n");
+      return (await Promise.all((res as any[]).map( async (singleNote, index) => {
+        const processor = new NoteProcessor(this.plugin);
+        return `\n\n---\n\n###### Note No.${index+1}\t[[Locate]](zotero://select/items/0_${singleNote.key}/)\t[[Open]](zotero://note/u/${singleNote.key}/)\n\n\n\n` + await processor.processNote(htmlNotesProcess(singleNote.note.replace(/\\(.?)/g, (m, p1) => p1)));
+      }))).join("\n\n");
     } else return "";
   }
 
@@ -480,7 +487,14 @@ export class ZoteroDBModal extends DataModal {
           case "tags": this._addTagsToItem(...processKey(itemKey), content[attr]);
         }
       });
-    } else return null;
+    }
+  }
+
+  public async getAttachmentByItemKey(itemKey: string): Promise<any> {
+    return await this._callZoteroJS("getAttachmentByItemKey", `
+      var key = "${itemKey}";
+      var libraryID = 1;
+    `);
   }
 
   private async checkBeforeRunning(key: string): Promise<string | null> {

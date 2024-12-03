@@ -10,6 +10,7 @@ import { type ILogger, createLogger } from "../utils/simple-logger";
 import { generateFromTemplate } from "../utils/templates";
 import { cleanEmptyKey } from "../utils/util";
 import { confirm, getFrontend } from "siyuan";
+import { NoteProcessor } from "./noteProcessor";
 
 export class LiteratureNote {
     plugin: SiYuanPluginCitation;
@@ -55,6 +56,25 @@ export class LiteratureNote {
         this.updateDataSourceItem(key, entry);
         return;
       }
+    }
+
+    public async moveImgToAssets(imgPath: string, detail: any, linkType: "html" | "markdown" = "markdown"): Promise<string> {
+      const time = detail.dateAdded.replace(/[-:\s]/g, "");
+      // 用于欺骗思源的随机（伪）字符串，是7位的小写字母和数字（itemKey是8位）
+      const randomStr = (detail.key as string).toLowerCase().slice(1);
+      const name = `zotero-annotations-${detail.annotationType}-${detail.parentKey}-${detail.key}-${time}-${randomStr}`;
+      const assetPath = `assets/${name}.png`;
+      const assetAbsPath = "/data/" + assetPath;
+      if (!(await this.plugin.kernelApi.getFile(assetAbsPath, "any"))) {
+          // 如果文件不存在（同时会检验添加时间、父条目key和annotation自己的key，基本可以确定不存在了）
+          await this.plugin.kernelApi.globalCopyFiles([imgPath], "/data/assets");
+          const originFilename = imgPath.split("\\").slice(-1)[0];
+          await this.plugin.kernelApi.renameFile(`/data/assets/${originFilename}`, assetAbsPath);
+          if (isDev) this.logger.info("移动批注图片到工作空间, info=>", {imgPath, assetAbsPath});
+      } 
+      // 添加width属性避免图片太大
+      if (linkType == "html") return `<img src="${assetPath}" data-src="${assetPath}" style="width:100%" alt="img">`;
+      return `![img](${assetPath})`;
     }
 
     private async updateDataSourceItem(key: string, entry: any) {
@@ -243,7 +263,9 @@ export class LiteratureNote {
       if (deleteList.length) await this.plugin.networkManager.sendNetworkMission([deleteList], this._deleteBlocks.bind(this));
       if (isDev) this.logger.info("向literature note发起插入请求, content=>", {literatureNote});
       this.plugin.kernelApi.prependBlock(literatureId, userDataLink + literatureNote);
-      note.forEach(n => {
+      note.forEach( async n => {
+        const processor = new NoteProcessor(this.plugin);
+        n.content = await processor.processNote(n.content as string);
         this.plugin.eventTrigger.addSQLIndexEvent({
           triggerFn: this._insertNotes.bind(this),
           params: {
@@ -306,7 +328,7 @@ export class LiteratureNote {
       switch (type) {
         case "image": {
           if (!["browser-desktop", "browser-mobile", "mobile"].includes(getFrontend())) {
-            quoteContent = await this._moveImgToAssets(detail.imagePath, detail);
+            quoteContent = await this.moveImgToAssets(detail.imagePath, detail);
           }
           break;
         }
@@ -321,29 +343,13 @@ export class LiteratureNote {
         }
         case "ink": {
           if (!["browser-desktop", "browser-mobile", "mobile"].includes(getFrontend())) {
-            quoteContent = await this._moveImgToAssets(detail.imagePath, detail);
+            quoteContent = await this.moveImgToAssets(detail.imagePath, detail);
           }
           break;
         }
       }
       // return `{{{row\n> ${quoteContent}\n[Open on Zotero](${content.openURI})\n\n${content.detail.annotationComment ? content.detail.annotationComment : ""}\n}}}`;
       return `{{{row\n> ${quoteContent}\n[Open on Zotero](${content.openURI})\n\n${content.detail.annotationComment ? content.detail.annotationComment : ""}\n}}}\n{: custom-annotation-color="${content.detail.annotationColor}" style="border:dashed 0.2em ${content.detail.annotationColor}" }`;
-    }
-    
-    private async _moveImgToAssets(imgPath: string, detail: any) {
-      const time = detail.dateAdded.replace(/[-:\s]/g, "");
-      // 用于欺骗思源的随机（伪）字符串，是7位的小写字母和数字（itemKey是8位）
-      const randomStr = (detail.key as string).toLowerCase().slice(1);
-      const name = `zotero-annotations-${detail.annotationType}-${detail.parentKey}-${detail.key}-${time}-${randomStr}`;
-      const assetPath = `assets/${name}.png`;
-      const assetAbsPath = "/data/" + assetPath;
-      if (!(await this.plugin.kernelApi.getFile(assetAbsPath, "any"))) {
-          // 如果文件不存在（同时会检验添加时间、父条目key和annotation自己的key，基本可以确定不存在了）
-          await this.plugin.kernelApi.globalCopyFiles([imgPath], "/data/assets");
-          await this.plugin.kernelApi.renameFile(`/data/assets/${detail.key}.png`, assetAbsPath);
-          if (isDev) this.logger.info("移动批注图片到工作空间, info=>", {imgPath, assetAbsPath});
-      } 
-      return `![img](${assetPath})`;
     }
     
     private async _updateEmptyNote(rootId: string): Promise<string> {

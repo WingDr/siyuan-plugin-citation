@@ -110,6 +110,8 @@ export class InteractionManager {
         </div>`,
         id: "add-notes",
         callback: async (protyle: Protyle) => {
+          this.plugin.database.setSelected([]);
+          this.plugin.reference.setEmptySelection();
           return this.plugin.database.insertNotes(protyle);
         }
       },
@@ -123,6 +125,8 @@ export class InteractionManager {
         </div>`,
         id: "add-selected-items",
         callback: async (protyle: Protyle) => {
+          this.plugin.database.setSelected([]);
+          this.plugin.reference.setEmptySelection();
           return this.plugin.database.insertSelectedCiteLink(protyle);
         },
         supportDatabase: ["Juris-M (debug-bridge)", "Zotero (debug-bridge)"],
@@ -133,7 +137,8 @@ export class InteractionManager {
         langKey: "addCitation",
         hotkey: "⌥⇧A",
         editorCallback: (p) => {
-          const protyle = p.getInstance();
+          const protyle = p.getInstance() as Protyle;
+          this.plugin.database.setSelected(this.plugin.reference.getAllNeighborReference(protyle.protyle));
           this.plugin.database.insertCiteLink(protyle);
         },
         callback: () => { return this.plugin.database.copyCiteLink(); }
@@ -142,7 +147,9 @@ export class InteractionManager {
         langKey: "addNotes",
         hotkey: "",
         editorCallback: (p) => {
-          const protyle = p.getInstance();
+          const protyle = p.getInstance() as Protyle;
+          this.plugin.database.setSelected([]);
+          this.plugin.reference.setEmptySelection();
           this.plugin.database.insertNotes(protyle);
         },
         callback: () => { return this.plugin.database.copyNotes(); }
@@ -176,7 +183,9 @@ export class InteractionManager {
         hotkey: "",
         callback: () => { return this.plugin.database.copySelectedCiteLink();},
         editorCallback: (p) => {
-          const protyle = p.getInstance();
+          const protyle = p.getInstance() as Protyle;
+          this.plugin.database.setSelected([]);
+          this.plugin.reference.setEmptySelection();
           this.plugin.database.insertSelectedCiteLink(protyle);
         }
       }
