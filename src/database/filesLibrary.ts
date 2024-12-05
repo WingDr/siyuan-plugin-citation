@@ -130,7 +130,7 @@ export function loadEntries(
     libraryArray = parsed.entries;
   }
 
-  return libraryArray;
+  return libraryArray!;
 }
 
 export interface Author {
@@ -167,8 +167,8 @@ export abstract class Entry {
 
   public abstract abstract?: string;
   public abstract author?: Author[];
-  public abstract creators?;
-  public abstract firstCreator?;
+  public abstract creators?: any;
+  public abstract firstCreator?: any;
 
   /**
    * A comma-separated list of authors, each of the format `<firstname> <lastname>`.
@@ -217,7 +217,7 @@ export abstract class Entry {
   public abstract eprinttype?: string;
 
   protected _year?: string;
-  public get year(): number {
+  public get year(): number | undefined {
     return this._year
       ? parseInt(this._year)
       : this.issuedDate?.getFullYear();
@@ -237,11 +237,11 @@ export abstract class Entry {
   }
 
   public get annotations() {
-    return [];
+    return [] as any[];
   }
 
   public get annotationList() {
-    return [];
+    return [] as any[];
   }
 
   public get key(): string {
@@ -305,9 +305,9 @@ export class EntryCSLAdapter extends Entry {
     this.shortAuthorLimit = shortAuthorLimit;
   }
 
-  eprint: string = null;
-  eprinttype: string = null;
-  files: string[] = null;
+  eprint: string | undefined = undefined;
+  eprinttype: string | undefined = undefined;
+  files: string[] | undefined = undefined;
   fileList?: File[] = [];
 
   get id() {
@@ -333,15 +333,16 @@ export class EntryCSLAdapter extends Entry {
     return this.data.author ? this.data.author[0] : null;
   }
 
-  get authorString(): string | null {
+  get authorString(): string | undefined {
     return this.data.author
       ? this.data.author.map((a) => `${a.given} ${a.family}`).join(", ")
-      : null;
+      : undefined;
   }
 
   get shortAuthor(): string {
     const limit = this.shortAuthorLimit;
     let shortAuthor = "";
+    if (!this.data.author) return "";
     const author = this.data.author;
     if (author.length == 0) {
       return "";
@@ -388,7 +389,7 @@ export class EntryCSLAdapter extends Entry {
         this.data.issued["date-parts"][0].length > 0
       )
     )
-      return null;
+      return undefined;
 
     const [year, month, day] = this.data.issued["date-parts"][0];
     return new Date(Date.UTC(year, (month || 1) - 1, day || 1));
@@ -572,8 +573,8 @@ export class EntryBibLaTeXAdapter extends Entry {
     }
     for (let i = 0; i < limit && i < author.length; i++) {
       let name = "";
-      if (author[i].literal) name = author[i].literal;
-      else name = author[i].lastName;
+      if (author[i].literal) name = author[i].literal!;
+      else name = author[i].lastName!;
       
       if (i == 0) {
         shortAuthor += name ?? "";
@@ -608,7 +609,7 @@ export class EntryBibLaTeXAdapter extends Entry {
   }
 
   get issuedDate() {
-    return this.issued ? new Date(this.issued) : null;
+    return this.issued ? new Date(this.issued) : undefined;
   }
 
   get author(): Author[] {

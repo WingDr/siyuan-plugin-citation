@@ -123,7 +123,7 @@ export class EntryZoteroAdapter extends Entry {
   event?: string;
   eventPlace?: string;
   issued?: string;
-  itemKey: string;
+  itemKey!: string;
   page?: string;
   primaryclass?: string;
   publisher?: string;
@@ -148,7 +148,7 @@ export class EntryZoteroAdapter extends Entry {
       (map: [string, string]) => {
         const [src, tgt] = map;
         if (Object.keys(this.data).indexOf(src) != -1) {
-          const val = this.data[src];
+          const val = (this.data as Record<string, any>)[src];
 
           (this as IIndexable)[tgt] = val;
         }
@@ -157,7 +157,7 @@ export class EntryZoteroAdapter extends Entry {
   }
 
   get id() {
-    return this.data.citekey || this.data.citationKey;
+    return (this.data.citekey || this.data.citationKey)!;
   }
 
   get key() {
@@ -166,7 +166,7 @@ export class EntryZoteroAdapter extends Entry {
   }
 
   get type() {
-    return this.data.itemType;
+    return this.data.itemType!;
   }
 
   get files(): string[] {
@@ -224,7 +224,7 @@ export class EntryZoteroAdapter extends Entry {
       });
       return names.join(", ");
     } else {
-      return null;
+      return undefined;
     }
   }
 
@@ -310,7 +310,7 @@ export class EntryZoteroAdapter extends Entry {
     } else if (this.type === "thesis") {
       return `${this.publisher} ${this.thesis}`;
     } else {
-      return null;
+      return undefined;
     }
   }
 
@@ -326,7 +326,7 @@ export class EntryZoteroAdapter extends Entry {
         }
       }
       return moment(this.issued, "YYYY").toDate();
-    } else return null;
+    } else return undefined;
   }
 
   get author(): Author[] {
@@ -351,16 +351,16 @@ export class EntryZoteroAdapter extends Entry {
   }
 
   get note(): SingleNote[] {
-    return this._note?.map((singleNote, index) => {
+    return this._note ? this._note.map((singleNote, index) => {
       return {
         index: index,
         prefix: `\n\n---\n\n###### Note No.${index+1}\t[[Locate]](zotero://select/items/0_${singleNote.key}/)\n\n\n\n`,
-        content: `<div>\n${singleNote.note.replace(/\\(.?)/g, (m, p1) => p1)}\n</div>`
+        content: `<div>\n${singleNote.note.replace(/\\(.?)/g, (_m: any, p1: any) => p1)}\n</div>`
       };
-    });
+    }) : [];
   }
 
-  get tags(): string {
+  get tags(): string | undefined {
     return this._tags?.map(tag => tag.tag).join(", ");
   }
 

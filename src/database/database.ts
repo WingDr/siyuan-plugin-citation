@@ -17,14 +17,13 @@ export type DatabaseType = typeof databaseType[number];
 export class Database {
   private logger: ILogger;
   public type: DatabaseType | null;
-  private dataModal: DataModal;
+  private dataModal!: DataModal;
 
-  private protyle: Protyle;
+  private protyle!: Protyle;
 
   constructor(private plugin: SiYuanPluginCitation) {
     this.logger = createLogger("database");
     this.type = null;
-    this.dataModal = null;
   }
 
   public async buildDatabase(type: DatabaseType) {
@@ -36,7 +35,7 @@ export class Database {
     this.type = type;
 
     // 如果已经存在就删除原先的
-    if (this.dataModal) delete this.dataModal;
+    // if (this.dataModal) delete this.dataModal;
 
     if (isDev) this.logger.info("建立数据库类型=>", {type});
     switch (type) {
@@ -153,7 +152,7 @@ export class Database {
     if (this.plugin.isRefPathExist) {
       const menu = new Menu("cite-type-selection");
       const linkTempGroup = this.plugin.data[STORAGE_NAME].linkTemplatesGroup;
-      linkTempGroup.map(tmp => {
+      linkTempGroup.map((tmp: { name: string | undefined; }) => {
         menu.addItem({
           label: tmp.name,
           click: async () => {
@@ -163,7 +162,7 @@ export class Database {
         });
       });
       if (isDev) this.logger.info("展示引用类型选择菜单", menu);
-      const rect = this.protyle.protyle.toolbar.range.getBoundingClientRect();
+      const rect = this.protyle.protyle.toolbar!.range.getBoundingClientRect();
       menu.open({
         x: rect.left,
         y: rect.top

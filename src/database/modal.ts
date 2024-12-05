@@ -37,7 +37,7 @@ export abstract class DataModal {
   public abstract buildModal():any;
   public abstract getContentFromKey(key: string):any;
   public abstract getCollectedNotesFromKey(key: string):any;
-  public abstract showSearching(protyle:Protyle, onSelection: (keys: string[]) => void): void;
+  public abstract showSearching(protyle:Protyle | null, onSelection: (keys: string[]) => void): void;
   public abstract getTotalKeys(): string[];
   public async getSelectedItems(): Promise<string[]> {
     if (isDev) this.logger.info("该数据模型无法执行此方法，modal=>", this);
@@ -146,10 +146,10 @@ export class FilesModal extends DataModal {
    */
   private search(pattern: string) {
     const adaptedSearchPattern = pattern.split(" ").filter(pt => pt != "").reduce((previousValue, currentValue) => previousValue + ` '${currentValue}`, "");
-    return this.fuse.search(adaptedSearchPattern);
+    return this.fuse!.search(adaptedSearchPattern);
   }
 
-  private async loadLibrary(): Promise<Library> {
+  private async loadLibrary(): Promise<Library | null> {
     const logger = createLogger("load library");
     const noticer = this.plugin.noticer;
     const files = await fileSearch(this.plugin, REF_DIR_PATH, this.plugin.noticer);
@@ -178,13 +178,13 @@ export class FilesModal extends DataModal {
         }
     });
     return Promise.all(promises).then((res) => {
-        let adapter: new (data: EntryData) => Entry;
+        let adapter: new (data: EntryData, shortAuthorLimit?: number) => Entry;
         let idKey: string;
   
         const entries: any[] = [];
         res.forEach(fileEntries => {
-            entries.push(...fileEntries.entries.map((e) => {
-                switch (fileEntries.type) {
+            entries.push(...fileEntries!.entries.map((e) => {
+                switch (fileEntries!.type) {
                     case "biblatex":
                       adapter = EntryBibLaTeXAdapter;
                       idKey = "key";
