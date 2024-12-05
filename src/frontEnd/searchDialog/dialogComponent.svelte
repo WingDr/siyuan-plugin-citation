@@ -1,18 +1,29 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import { type SearchRes, type Match } from "./searchDialog";
     import { isDev } from "../../utils/constants";
 
     let resList: SearchRes[] = [];
-    let selector: number = 0;
-    let pattern: string = "";
-    export let onSelection: (keys: string[]) => void;
-    export let search: (pattern: string) => any;
+    let selector: number = $state(0);
+    let pattern: string = $state("");
 
-    let highlightedRes: {key: string, item: any, title: string, year: string, authorString: string}[] = [];
-    export let selectedList: {key: string, author: string, year: string}[] = [];
+    let highlightedRes: {key: string, item: any, title: string, year: string, authorString: string}[] = $state([]);
+    interface Props {
+        onSelection: (keys: string[]) => void;
+        search: (pattern: string) => any;
+        selectedList?: {key: string, author: string, year: string}[];
+        refresh: () => void;
+        confirm: () => void;
+        select: (selector: number) => void;
+    }
 
-    const dispatcher = createEventDispatcher();
+    let { 
+        onSelection, 
+        search, 
+        selectedList = $bindable([]),
+        refresh,
+        confirm,
+        select 
+    }: Props = $props();
 
     function matchHighlight(match: Match) {
         // if (isDev) this.logger.info("搜索匹配=>", match);
@@ -31,7 +42,7 @@
         };
     }
 
-    function inputReaction( ev ) {
+    function inputReaction( _ev: any ) {
         resList = []
         resList = search(pattern) as SearchRes[];
         selector = 0;
@@ -46,14 +57,14 @@
         }).filter(item => {
             return selectedKeys.indexOf(item.key) == -1;
         });
-        dispatcher("refresh");
+        refresh();
     }
 
     function clickReaction(ev: MouseEvent) {
         const target = ev.target as HTMLElement;
-        const key = target.parentElement.getAttribute("data-search-id");
+        const key = target.parentElement!.getAttribute("data-search-id")!;
         onSelection([key]);
-        dispatcher("confirm");
+        confirm();
     }
 
     function keyboardReaction(ev: KeyboardEvent) {
@@ -79,12 +90,12 @@
                 highlightedRes = [];
             } else if (selectedList.length) {
                 onSelection(selectedList.map(item => item.key));
-                dispatcher("confirm");
+                confirm();
             } else {
-                dispatcher("confirm");
+                confirm();
             }
         } else if (ev.key == "Escape") {
-            dispatcher("confirm")
+            confirm();
         }
     }
 
@@ -96,12 +107,13 @@
         } else {
             selector += plus ? 1 : -1;
         }
-        dispatcher("select", {selector});
+        select(selector);
+        // dispatcher("select", {selector});
     }
 
     function deleteTag(ev: MouseEvent) {
         const target = ev.target as HTMLElement;
-        const index = eval(target.getAttribute("data-index"));
+        const index = eval(target.getAttribute("data-index")!);
         selectedList = selectedList.filter(item => item.key != selectedList[index].key);
     }
 
@@ -172,15 +184,15 @@
     style="width: 100%" 
     placeholder="Searching literature"
     bind:value={pattern}
-    on:keydown={keyboardReaction}
-    on:input={inputReaction}>
+    onkeydown={keyboardReaction}
+    oninput={inputReaction}>
 </div>
 <div class="tag-container" id="tag-container">
     {#each selectedList as sItem, sIndex}
         <div class="tag-container__tag">
             <div class="tag-container__tag__author" data-tag-id={sItem.key}>{sItem.author}</div>
             <div class="tag-container__tag__year" data-tag-id={sItem.key}>{sItem.year}</div>
-            <button class="tag-container__tag__close" on:click={deleteTag} data-index={sIndex}>&#215;</button>
+            <button class="tag-container__tag__close" onclick={deleteTag} data-index={sIndex}>&#215;</button>
         </div>
     {/each}
 </div>
@@ -189,11 +201,11 @@
         <div id="search-list-top"></div>
         {#each highlightedRes as resItem, index}
             <li class="b3-list-item {(index == selector) ? "b3-list-item--focus" : ""}">
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
                 <div class="search-item" data-type="search-item" data-search-id={resItem.key}
                 role="listitem"
-                on:click={clickReaction}>
+                onclick={clickReaction}>
                     <div class="b3-list-item__text" style="font-weight:bold;border-bottom:0.5px solid #CCC"> {@html resItem.title}</div>
                     <div class="b3-list-item__text">{@html resItem.year + "\t | \t" + resItem.authorString}</div>
                 </div>

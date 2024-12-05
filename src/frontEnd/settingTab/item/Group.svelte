@@ -18,12 +18,17 @@
 <!-- 设置项组 -->
 
 <script lang="ts">
-    export let title: string; // 标题文本
+    interface Props {
+        title: string; // 标题文本
+        children?: import('svelte').Snippet;
+    }
+
+    let { title, children }: Props = $props();
 </script>
 
 <div class="b3-label">
     {@html title}
     <div class="config-query">
-        <slot />
+        {@render children?.()}
     </div>
 </div>

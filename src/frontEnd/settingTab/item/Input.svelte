@@ -23,27 +23,53 @@
     import { ItemType, type ILimits, type IOptions } from "./item";
     import type { IInputEvent } from "./../event";
 
-    export let type: ItemType; // Setting Type
-    export let settingKey: string;
-    export let settingValue: any;
 
-    export let disabled: boolean = false; // Disable Input
-    export let block: boolean = false; // Using Block Style
-    export let normal: boolean = true; // Normal Size
-    export let placeholder: string = ""; // Use it if type is text/number/textarea
-    export let options: IOptions = []; // Use it if type is select
-    export let limits: ILimits = { min: 0, max: 100, step: 1 }; // Use it if type is number/slider
-    export let height: number = 0; // Use it if type is textarea
-    export let rows: number = 0;
+    interface Props {
+        type: ItemType; // Setting Type
+        settingKey: string;
+        settingValue: any;
+        disabled?: boolean; // Disable Input
+        block?: boolean; // Using Block Style
+        normal?: boolean; // Normal Size
+        placeholder?: string; // Use it if type is text/number/textarea
+        options?: IOptions; // Use it if type is select
+        limits?: ILimits; // Use it if type is number/slider
+        height?: number; // Use it if type is textarea
+        rows?: number;
+        onchanged?: (event: {detail: {key: string, value: any, event: Event}}) => void;
+        onclicked?: (event: {detail: {event: MouseEvent}}) => void;
+    }
+
+    let {
+        type,
+        settingKey,
+        settingValue = $bindable(),
+        disabled = false,
+        block = false,
+        normal = true,
+        placeholder = "",
+        options = [],
+        limits = { min: 0, max: 100, step: 1 },
+        height = 0,
+        rows = 0,
+        onchanged,
+        onclicked
+    }: Props = $props();
 
     const dispatch = createEventDispatcher<IInputEvent>();
 
     function clicked(event: MouseEvent) {
-        dispatch("clicked", { event });
+        if (onclicked) onclicked({
+            detail: {event}
+        })
+        // dispatch("clicked", { event });
     }
 
     function changed(event: Event) {
-        dispatch("changed", { key: settingKey, value: settingValue, event });
+        if (onchanged) onchanged({
+            detail: { key: settingKey, value: settingValue, event }
+        })
+        // dispatch("changed", { key: settingKey, value: settingValue, event });
     }
 </script>
 
@@ -56,7 +82,7 @@
         class:fn__flex-center={!block}
         type="checkbox"
         bind:checked={settingValue}
-        on:change={changed}
+        onchange={changed}
     />
 {:else if type === ItemType.text}
     <!-- Text Input -->
@@ -68,7 +94,7 @@
         class:fn__flex-center={!block}
         {placeholder}
         bind:value={settingValue}
-        on:change={changed}
+        onchange={changed}
     />
 {:else if type === ItemType.number}
     <!-- Number Input -->
@@ -84,7 +110,7 @@
         max={limits.max}
         step={limits.step}
         bind:value={settingValue}
-        on:change={changed}
+        onchange={changed}
     />
 {:else if type === ItemType.slider}
     <!-- Slider -->
@@ -98,7 +124,7 @@
         max={limits.max}
         step={limits.step}
         bind:value={settingValue}
-        on:change={changed}
+        onchange={changed}
     />
 {:else if type === ItemType.button}
     <!-- Button Input -->
@@ -108,7 +134,7 @@
         class:fn__block={block}
         class:fn__size200={!block && normal}
         class:fn__flex-center={!block}
-        on:click={clicked}
+        onclick={clicked}
     >
         {settingValue}
     </button>
@@ -121,7 +147,7 @@
         class:fn__size200={!block && normal}
         class:fn__flex-center={!block}
         bind:value={settingValue}
-        on:change={changed}
+        onchange={changed}
     >
         {#each options as option (option.key)}
             <option value={option.key}>{option.text}</option>
@@ -139,7 +165,7 @@
         style:resize={block ? "vertical": "auto"}
         rows={rows > 0 ? rows : undefined}
         bind:value={settingValue}
-        on:change={changed}
+        onchange={changed}
     ></textarea>
 {/if}
 

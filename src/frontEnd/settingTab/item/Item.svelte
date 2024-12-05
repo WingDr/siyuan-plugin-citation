@@ -22,9 +22,18 @@
 
 <script lang="ts">
     //Optional
-    export let title: string = ""; // Displaying Setting Title
-    export let text: string = ""; // Displaying Setting Text
-    export let block: boolean = false; // Using Block Style
+    interface Props {
+        title?: string,
+        text?: string,
+        block?: boolean,
+        input?: any,
+        titleSlot?:any,
+        textSlot?:any
+    }
+    let {title, text, block = false, input, titleSlot, textSlot}:Props = $props();
+    // export let title: string = ""; // Displaying Setting Title
+    // export let text: string = ""; // Displaying Setting Text
+    // export let block: boolean = false; // Using Block Style
 </script>
 
 <label class="fn__flex b3-label">
@@ -32,20 +41,22 @@
         class="fn__flex-1"
         class:visible={block}
     >
-        <slot name="title">{@html title}</slot>
+        {@render titleSlot?.()}
+        <div>{@html title}</div>
         <div class="b3-label__text">
-            <slot name="text">{@html text}</slot>
+            {@render textSlot?.()}
+            <div>{@html text}</div>
         </div>
 
         {#if block}
             <div class="fn__hr" ></div>
-            <slot name="input" />
+            {@render input?.()}
         {/if}
     </div>
 
     {#if !block}
         <span class="fn__space" ></span>
-        <slot name="input" />
+        {@render input?.()}
     {/if}
 </label>
 

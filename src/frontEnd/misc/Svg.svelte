@@ -16,10 +16,19 @@
 -->
 
 <script lang="ts">
-    export let icon: string;
-    export let id: string = "";
-    export let className: string = "";
-    export let style: string = "";
+    interface Props {
+        icon?: string;
+        id?: string;
+        className?: string;
+        style?: string;
+    }
+
+    let {
+        icon,
+        id = "",
+        className = "",
+        style = ""
+    }: Props = $props();
 </script>
 
 <svg

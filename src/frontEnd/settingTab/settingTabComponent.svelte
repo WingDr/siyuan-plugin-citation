@@ -83,27 +83,27 @@
   // 显示数据
   const eMail = "siyuan_citation@126.com";
   const issuesURL = "https://github.com/WingDr/siyuan-plugin-citation/issues";
-  let pluginVersion: string = $state();
-  let notebookOptions: IOptions = $state();
-  let databaseOptions: IOptions = $state();
-  let dbSearchDialogOptions: IOptions = $state();
+  let pluginVersion: string = $state("");
+  let notebookOptions: IOptions = $state([]);
+  let databaseOptions: IOptions = $state([]);
+  let dbSearchDialogOptions: IOptions = $state([]);
 
   // 设定数据
   // 基本设定变量
-  let referenceNotebook: string = $state();
-  let referencePath: string = $state();
-  let database: string = $state();
-  let useItemKey: boolean = $state();
-  let autoReplace: boolean = $state();
-  let deleteUserDataWithoutConfirm: boolean = $state();
+  let referenceNotebook: string = $state()!;
+  let referencePath: string = $state()!;
+  let database: string = $state()!;
+  let useItemKey: boolean = $state()!;
+  let autoReplace: boolean = $state()!;
+  let deleteUserDataWithoutConfirm: boolean = $state()!;
   // 思源模板设定变量
-  let titleTemplate: string = $state();
-  let userDataTitle: string = $state();
-  let noteTemplate: string = $state();
-  let linkTemplate: string = $state();
-  let customCiteText: boolean = $state();
-  let useDynamicRefLink: boolean = $state();
-  let nameTemplate: string = $state();
+  let titleTemplate: string = $state()!;
+  let userDataTitle: string = $state()!;
+  let noteTemplate: string = $state()!;
+  let linkTemplate: string = $state()!;
+  let customCiteText: boolean = $state()!;
+  let useDynamicRefLink: boolean = $state()!;
+  let nameTemplate: string = $state()!;
   let linkTemplatesGroup: {
     name: string,
     customCiteText: boolean,
@@ -115,17 +115,17 @@
     multiCiteSuffix: string,
     nameTemplate: string
   }[] = $state([]);
-  let shortAuthorLimit: number = $state();
-  let multiCitePrefix: string = $state();
-  let multiCiteConnector: string = $state();
-  let multiCiteSuffix: string = $state();
-  let citeName: string = $state();
+  let shortAuthorLimit: number = $state()!;
+  let multiCitePrefix: string = $state()!;
+  let multiCiteConnector: string = $state()!;
+  let multiCiteSuffix: string = $state()!;
+  let citeName: string = $state()!;
   // Zotero模板设定变量
-  let zoteroLinkTitleTemplate: string = $state();
-  let zoteroTagTemplate: string = $state();
+  let zoteroLinkTitleTemplate: string = $state()!;
+  let zoteroTagTemplate: string = $state()!;
   // debug-bridge变量
-  let dbPassword: string = $state();
-  let dbSearchDialogType: string = $state();
+  let dbPassword: string = $state()!;
+  let dbSearchDialogType: string = $state()!;
   
   let settingIndex = $state(0);
 
@@ -135,19 +135,19 @@
   const panels: IPanel[] = [
     {
       key: 1,
-      text: plugin.i18n.settingTab.basic.title,
+      text: (plugin.i18n.settingTab as any).basic.title,
       name: "citation-setting-basic",
       icon: "#iconSettings",
     },
     {
       key: 2,
-      text: plugin.i18n.settingTab.templates.title,
+      text: (plugin.i18n.settingTab as any).templates.title,
       name: "citation-setting-templates",
       icon: "#iconEdit",
     },
     {
       key: 3,
-      text: plugin.i18n.settingTab.debug_bridge.title,
+      text: (plugin.i18n.settingTab as any).debug_bridge.title,
       name: "citation-setting-debug-bridge",
       icon: "#iconPlugin",
       supportDatabase: ["Zotero (debug-bridge)", "Juris-M (debug-bridge)"],
@@ -158,19 +158,19 @@
   let template_tabs = [
     {
       key: 1,
-      text: plugin.i18n.settingTab.templates.citeLink.title,
+      text: (plugin.i18n.settingTab as any).templates.citeLink.title,
       name: "citation-setting-template-cite-link",
       icon: "",
     },
     {
       key: 2,
-      text: plugin.i18n.settingTab.templates.literatureNote.title,
+      text: (plugin.i18n.settingTab as any).templates.literatureNote.title,
       name: "citation-setting-template-literature-note",
       icon: "",
     },
     {
       key: 3,
-      text: plugin.i18n.settingTab.templates.userData.title,
+      text: (plugin.i18n.settingTab as any).templates.userData.title,
       name: "citation-setting-template-user-data",
       icon: "",
     },
@@ -179,20 +179,17 @@
   let debug_bridge_tabs = [
     {
       key: 1,
-      text: plugin.i18n.settingTab.debug_bridge.plugin.title,
+      text: (plugin.i18n.settingTab as any).debug_bridge.plugin.title,
       name: "citation-setting-debug-bridge-plugin",
       icon: "",
     },
     {
       key: 2,
-      text: plugin.i18n.settingTab.debug_bridge.zotero.title,
+      text: (plugin.i18n.settingTab as any).debug_bridge.zotero.title,
       name: "citation-setting-debug-bridge-zotero",
       icon: "",
     },
   ]
-
-
-  const dispatcher = createEventDispatcher();
 
   function generatePanels(panels: any[]) {
     return panels.reduce((acc, panel) => {
@@ -375,7 +372,7 @@
       }
       if (refreshName)
         plugin.noticer.info(
-          (plugin.i18n.notices.changeKey as string), {keyType: settingData.useItemKey ? "itemKey" : "citekey"}
+          ((plugin.i18n.notices as any).changeKey as string), {keyType: settingData.useItemKey ? "itemKey" : "citekey"}
         );
       if (isDev) logger.info("数据保存成功, settingData=>", settingData);
     });
@@ -383,10 +380,10 @@
 
   function clickCardSetting(event: any) {
     const target = event.target as HTMLElement;
-    let button_id = target.parentElement.parentElement.parentElement.getAttribute("id");
-    if (!button_id) button_id = target.parentElement.parentElement.getAttribute("id");
-    if (!button_id) button_id = target.parentElement.getAttribute("id");
-    const tmp = button_id.split("_");
+    let button_id = target.parentElement!.getAttribute("id");
+    if (!button_id) button_id = target.parentElement!.parentElement!.getAttribute("id");
+    if (!button_id) button_id = target.parentElement!.parentElement!.parentElement!.getAttribute("id");
+    const tmp = button_id!.split("_");
     const id  = eval(tmp[tmp.length-1]);
     if (show_link_detail && settingIndex == id) {
       show_link_detail = false;
@@ -423,10 +420,10 @@
 
   function deleteLinkTemp(event:any) {
     const target = event.target as HTMLElement;
-    let button_id = target.parentElement.parentElement.parentElement.getAttribute("id");
-    if (!button_id) button_id = target.parentElement.parentElement.getAttribute("id");
-    if (!button_id) button_id = target.parentElement.getAttribute("id");
-    const tmp = button_id.split("_");
+    let button_id = target.parentElement!.getAttribute("id");
+    if (!button_id) button_id = target.parentElement!.parentElement!.getAttribute("id");
+    if (!button_id) button_id = target.parentElement!.parentElement!.parentElement!.getAttribute("id");
+    const tmp = button_id!.split("_");
     const id  = eval(tmp[tmp.length-1]);
     linkTemplatesGroup = [...linkTemplatesGroup.slice(0, id), ...linkTemplatesGroup.slice(id+1)]
   }
@@ -437,17 +434,17 @@
   {#snippet children({ focus: panel_focus })}
     <Panel display={panels[0].key === panel_focus}>
       <Item>
-        {#snippet title()}
+        {#snippet titleSlot()}
             <h4 >
-            {plugin.i18n.settingTab.settingTabTitle.replace(
+            {(plugin.i18n.settingTab as any).settingTabTitle.replace(
               "${version}",
               pluginVersion
             )}
           </h4>
           {/snippet}
-        {#snippet text()}
+        {#snippet textSlot()}
             <span >
-            {@html plugin.i18n.settingTab.settingTabDescription
+            {@html (plugin.i18n.settingTab as any).settingTabDescription
               .replaceAll("${e-mail}", eMail)
               .replace("${issuesURL}", issuesURL)}
           </span>
@@ -457,8 +454,8 @@
       <!-- 选择笔记本 -->
       <Item
         block={false}
-        title={plugin.i18n.settingTab.basic.notebookSelectorTitle}
-        text={plugin.i18n.settingTab.basic.databaseSelectorDescription}
+        title={(plugin.i18n.settingTab as any).basic.notebookSelectorTitle}
+        text={(plugin.i18n.settingTab as any).basic.databaseSelectorDescription}
       >
         {#snippet input()}
             <Input
@@ -469,7 +466,7 @@
             settingKey="Select"
             settingValue={referenceNotebook}
             options={notebookOptions}
-            on:changed={(event) => {
+            onchanged={(event) => {
               if (isDev)
                 logger.info(
                   `Select changed: ${event.detail.key} = ${event.detail.value}`
@@ -483,8 +480,8 @@
       <!-- 设置文献库路径 -->
       <Item
         block={false}
-        title={plugin.i18n.settingTab.basic.referencePathInputTitle}
-        text={plugin.i18n.settingTab.basic.referencePathInputDescription}
+        title={(plugin.i18n.settingTab as any).basic.referencePathInputTitle}
+        text={(plugin.i18n.settingTab as any).basic.referencePathInputDescription}
       >
         {#snippet input()}
             <Input
@@ -495,7 +492,7 @@
             settingKey="Text"
             settingValue={referencePath}
             placeholder="Input the path"
-            on:changed={(event) => {
+            onchanged={(event) => {
               if (isDev)
                 logger.info(
                   `Input changed: ${event.detail.key} = ${event.detail.value}`
@@ -509,8 +506,8 @@
       <!-- 选择数据库类型 -->
       <Item
         block={false}
-        title={plugin.i18n.settingTab.basic.databaseSelectorTitle}
-        text={plugin.i18n.settingTab.basic.databaseSelectorDescription}
+        title={(plugin.i18n.settingTab as any).basic.databaseSelectorTitle}
+        text={(plugin.i18n.settingTab as any).basic.databaseSelectorDescription}
       >
         {#snippet input()}
             <Input
@@ -521,7 +518,7 @@
             settingKey="Select"
             settingValue={database}
             options={databaseOptions}
-            on:changed={(event) => {
+            onchanged={(event) => {
               if (isDev)
                 logger.info(
                   `Select changed: ${event.detail.key} = ${event.detail.value}`
@@ -538,8 +535,8 @@
         <!-- 是否使用itemKey作为文献内容索引 -->
         <Item
           block={false}
-          title={plugin.i18n.settingTab.basic.UseItemKeySwitchTitle}
-          text={plugin.i18n.settingTab.basic.UseItemKeySwitchDescription}
+          title={(plugin.i18n.settingTab as any).basic.UseItemKeySwitchTitle}
+          text={(plugin.i18n.settingTab as any).basic.UseItemKeySwitchDescription}
         >
           {#snippet input()}
                 <Input
@@ -549,7 +546,7 @@
               type={ItemType.checkbox}
               settingKey="Checkbox"
               settingValue={useItemKey}
-              on:changed={(event) => {
+              onchanged={(event) => {
                 if (isDev)
                   logger.info(
                     `Checkbox changed: ${event.detail.key} = ${event.detail.value}`
@@ -564,8 +561,8 @@
       <!-- 是否开启zotero链接自动替换 -->
       <Item
         block={false}
-        title={plugin.i18n.settingTab.basic.AutoReplaceSwitchTitle}
-        text={plugin.i18n.settingTab.basic.AutoReplaceSwitchDescription}
+        title={(plugin.i18n.settingTab as any).basic.AutoReplaceSwitchTitle}
+        text={(plugin.i18n.settingTab as any).basic.AutoReplaceSwitchDescription}
       >
         {#snippet input()}
             <Input
@@ -575,7 +572,7 @@
             type={ItemType.checkbox}
             settingKey="Checkbox"
             settingValue={autoReplace}
-            on:changed={(event) => {
+            onchanged={(event) => {
               if (isDev)
                 logger.info(
                   `Checkbox changed: ${event.detail.key} = ${event.detail.value}`
@@ -589,8 +586,8 @@
       <!-- 是否选择不提示删除用户数据 -->
       <Item
         block={false}
-        title={plugin.i18n.settingTab.basic.DeleteUserDataWithoutConfirmSwitchTitle}
-        text={plugin.i18n.settingTab.basic.DeleteUserDataWithoutConfirmSwitchDescription}
+        title={(plugin.i18n.settingTab as any).basic.DeleteUserDataWithoutConfirmSwitchTitle}
+        text={(plugin.i18n.settingTab as any).basic.DeleteUserDataWithoutConfirmSwitchDescription}
       >
         {#snippet input()}
             <Input
@@ -600,7 +597,7 @@
             type={ItemType.checkbox}
             settingKey="Checkbox"
             settingValue={deleteUserDataWithoutConfirm}
-            on:changed={(event) => {
+            onchanged={(event) => {
               if (isDev)
                 logger.info(
                   `Checkbox changed: ${event.detail.key} = ${event.detail.value}`
@@ -614,8 +611,8 @@
       <!-- 重载数据库 -->
       <Item
         block={false}
-        title={plugin.i18n.settingTab.basic.reloadBtnTitle}
-        text={plugin.i18n.settingTab.basic.reloadBtnDescription}
+        title={(plugin.i18n.settingTab as any).basic.reloadBtnTitle}
+        text={(plugin.i18n.settingTab as any).basic.reloadBtnDescription}
       >
         {#snippet input()}
             <Input
@@ -624,8 +621,8 @@
             normal={true}
             type={ItemType.button}
             settingKey="Button"
-            settingValue={plugin.i18n.settingTab.basic.reloadBtnText}
-            on:clicked={() => {
+            settingValue={(plugin.i18n.settingTab as any).basic.reloadBtnText}
+            onclicked={() => {
               if (isDev) logger.info("Button clicked");
               reloadDatabase(database);
               // dispatcher("reload database", { database });
@@ -637,8 +634,8 @@
       <!-- 删除数据 -->
       <Item
         block={false}
-        title={plugin.i18n.settingTab.basic.deleteDataBtnTitle}
-        text={plugin.i18n.settingTab.basic.deleteDataBtnDescription}
+        title={(plugin.i18n.settingTab as any).basic.deleteDataBtnTitle}
+        text={(plugin.i18n.settingTab as any).basic.deleteDataBtnDescription}
       >
         {#snippet input()}
             <Input
@@ -647,12 +644,12 @@
             normal={true}
             type={ItemType.button}
             settingKey="Button"
-            settingValue={plugin.i18n.settingTab.basic.deleteDataBtnText}
-            on:clicked={() => {
+            settingValue={(plugin.i18n.settingTab as any).basic.deleteDataBtnText}
+            onclicked={() => {
               if (isDev) logger.info("Button clicked");
               confirm(
                 "⚠️",
-                plugin.i18n.settingTab.basic.confirmRemove.replace(
+                (plugin.i18n.settingTab as any).basic.confirmRemove.replace(
                   "${name}",
                   plugin.name
                 ),
@@ -675,7 +672,7 @@
             <!-- 标签页 1 内容 -->
           <div data-type={template_tabs[0].name} class:fn__none={template_tabs[0].key !== focus}>
             <!-- 多个配置的卡片 -->
-            <Group title={plugin.i18n.settingTab.templates.citeLink.citeTypeCardTitle}>
+            <Group title={(plugin.i18n.settingTab as any).templates.citeLink.citeTypeCardTitle}>
               {#each linkTemplatesGroup as linkItem, index }
                 <MiniItem minWidth="200px">
                   {#snippet title()}
@@ -686,7 +683,7 @@
                       <button
                         class="b3-tooltips b3-tooltips__nw block__icon block__icon--show"
                         data-type="setting"
-                        aria-label={plugin.i18n.settingTab.templates.citeLink.citeTypeCardSet}
+                        aria-label={(plugin.i18n.settingTab as any).templates.citeLink.citeTypeCardSet}
                         onclick={clickCardSetting}
                       >
                         <Svg
@@ -698,7 +695,7 @@
                       <button
                         class="b3-tooltips b3-tooltips__nw block__icon block__icon--show"
                         data-type="delete"
-                        aria-label={plugin.i18n.settingTab.templates.citeLink.citeTypeCardDelete}
+                        aria-label={(plugin.i18n.settingTab as any).templates.citeLink.citeTypeCardDelete}
                         onclick={deleteLinkTemp}
                       >
                         <Svg
@@ -716,7 +713,7 @@
                 type={ItemType.button}
                 settingKey="Button"
                 settingValue={"添加"}
-                on:clicked={() => {
+                onclicked={() => {
                   if (isDev) logger.info("Button clicked");
                   addLinkTemp();
                 }}
@@ -729,8 +726,8 @@
               <!-- 引用类型名称 -->
               <Item
                 block={true}
-                title={plugin.i18n.settingTab.templates.citeLink.citeNameTitle}
-                text={plugin.i18n.settingTab.templates.citeLink.citeNameDescription}
+                title={(plugin.i18n.settingTab as any).templates.citeLink.citeNameTitle}
+                text={(plugin.i18n.settingTab as any).templates.citeLink.citeNameDescription}
               >
                 {#snippet input()}
                         <Input
@@ -741,7 +738,7 @@
                     settingKey="Text"
                     settingValue={citeName}
                     placeholder="Input the citation link template"
-                    on:changed={(event) => {
+                    onchanged={(event) => {
                       if (isDev)
                         logger.info(
                           `Input changed: ${event.detail.key} = ${event.detail.value}`
@@ -751,13 +748,13 @@
                       linkTemplatesGroup = linkTemplatesGroup;
                     }}
                   />
-                      {/snippet}
+                {/snippet}
               </Item>
               <!-- 引用链接模板 -->
               <Item
                 block={true}
-                title={plugin.i18n.settingTab.templates.citeLink.linkTempInputTitle}
-                text={plugin.i18n.settingTab.templates.citeLink.linkTempInputDescription}
+                title={(plugin.i18n.settingTab as any).templates.citeLink.linkTempInputTitle}
+                text={(plugin.i18n.settingTab as any).templates.citeLink.linkTempInputDescription}
               >
                 {#snippet input()}
                         <Input
@@ -768,7 +765,7 @@
                     settingKey="Text"
                     settingValue={linkTemplate}
                     placeholder="Input the citation link template"
-                    on:changed={(event) => {
+                    onchanged={(event) => {
                       if (isDev)
                         logger.info(
                           `Input changed: ${event.detail.key} = ${event.detail.value}`
@@ -783,8 +780,8 @@
               <!-- shortAuthor长度 -->
               <Item
                 block={false}
-                title={plugin.i18n.settingTab.templates.citeLink.shortAuthorLimitTitle}
-                text={plugin.i18n.settingTab.templates.citeLink.shortAuthorLimitDescription}
+                title={(plugin.i18n.settingTab as any).templates.citeLink.shortAuthorLimitTitle}
+                text={(plugin.i18n.settingTab as any).templates.citeLink.shortAuthorLimitDescription}
               >
                 {#snippet input()}
                         <Input
@@ -796,7 +793,7 @@
                     settingValue={shortAuthorLimit}
                     placeholder="Input the citation link template"
                     limits={{min:1, max:10, step:1}}
-                    on:changed={(event) => {
+                    onchanged={(event) => {
                       if (isDev)
                         logger.info(
                           `Input changed: ${event.detail.key} = ${event.detail.value}`
@@ -811,9 +808,9 @@
               <!-- 多文献引用设置 -->
               <label class="fn__flex b3-label">
                 <div class="fn__flex-1">
-                    {#if title}{@render title()}{:else}{@html plugin.i18n.settingTab.templates.citeLink.multiCiteTitle}{/if}
+                    {#if title}{@render title()}{:else}{@html (plugin.i18n.settingTab as any).templates.citeLink.multiCiteTitle}{/if}
                     <div class="b3-label__text">
-                        {#if text}{@render text()}{:else}{@html plugin.i18n.settingTab.templates.citeLink.multiCiteDescription}{/if}
+                        {#if text}{@render text()}{:else}{@html (plugin.i18n.settingTab as any).templates.citeLink.multiCiteDescription}{/if}
                     </div>
                     
                 </div>
@@ -826,7 +823,7 @@
                     settingKey="Text"
                     settingValue={multiCitePrefix}
                     placeholder="Multi-Cite Prefix"
-                    on:changed={(event) => {
+                    onchanged={(event) => {
                       if (isDev)
                         logger.info(
                           `Input changed: ${event.detail.key} = ${event.detail.value}`
@@ -844,7 +841,7 @@
                     settingKey="Text"
                     settingValue={multiCiteConnector}
                     placeholder="Multi-Cite Connector"
-                    on:changed={(event) => {
+                    onchanged={(event) => {
                       if (isDev)
                         logger.info(
                           `Input changed: ${event.detail.key} = ${event.detail.value}`
@@ -862,7 +859,7 @@
                     settingKey="Text"
                     settingValue={multiCiteSuffix}
                     placeholder="Multi-Cite Suffix"
-                    on:changed={(event) => {
+                    onchanged={(event) => {
                       if (isDev)
                         logger.info(
                           `Input changed: ${event.detail.key} = ${event.detail.value}`
@@ -877,8 +874,8 @@
               <!-- 是否完全自定义引用 -->
               <Item
                 block={false}
-                title={plugin.i18n.settingTab.templates.citeLink.CustomCiteTextSwitchTitle}
-                text={plugin.i18n.settingTab.templates.citeLink.CustomCiteTextSwitchDescription}
+                title={(plugin.i18n.settingTab as any).templates.citeLink.CustomCiteTextSwitchTitle}
+                text={(plugin.i18n.settingTab as any).templates.citeLink.CustomCiteTextSwitchDescription}
               >
                 {#snippet input()}
                         <Input
@@ -888,7 +885,7 @@
                     type={ItemType.checkbox}
                     settingKey="Checkbox"
                     settingValue={customCiteText}
-                    on:changed={(event) => {
+                    onchanged={(event) => {
                       if (isDev)
                         logger.info(
                           `Checkbox changed: ${event.detail.key} = ${event.detail.value}`
@@ -903,8 +900,8 @@
               <!-- 是否使用动态锚文本-->
               <Item
                 block={false}
-                title={plugin.i18n.settingTab.templates.citeLink.useDynamicRefLinkSwitchTitle}
-                text={plugin.i18n.settingTab.templates.citeLink.useDynamicRefLinkSwitchDescription}
+                title={(plugin.i18n.settingTab as any).templates.citeLink.useDynamicRefLinkSwitchTitle}
+                text={(plugin.i18n.settingTab as any).templates.citeLink.useDynamicRefLinkSwitchDescription}
               >
                 {#snippet input()}
                         <Input
@@ -914,7 +911,7 @@
                     type={ItemType.checkbox}
                     settingKey="Checkbox"
                     settingValue={useDynamicRefLink}
-                    on:changed={(event) => {
+                    onchanged={(event) => {
                       if (isDev)
                         logger.info(
                           `Checkbox changed: ${event.detail.key} = ${event.detail.value}`
@@ -930,8 +927,8 @@
                 <!-- 文献内容文档命名模板 -->
                 <Item
                   block={true}
-                  title={plugin.i18n.settingTab.templates.citeLink.nameTempInputTitle}
-                  text={plugin.i18n.settingTab.templates.citeLink.nameTempInputDescription}
+                  title={(plugin.i18n.settingTab as any).templates.citeLink.nameTempInputTitle}
+                  text={(plugin.i18n.settingTab as any).templates.citeLink.nameTempInputDescription}
                 >
                   {#snippet input()}
                             <Input
@@ -942,7 +939,7 @@
                       settingKey="Text"
                       settingValue={nameTemplate}
                       placeholder="Input the literature note's name template"
-                      on:changed={(event) => {
+                      onchanged={(event) => {
                         if (isDev)
                           logger.info(
                             `Input changed: ${event.detail.key} = ${event.detail.value}`
@@ -963,8 +960,8 @@
             <!-- 文档标题模板 -->
             <Item
               block={true}
-              title={plugin.i18n.settingTab.templates.literatureNote.titleTemplateInputTitle}
-              text={plugin.i18n.settingTab.templates.literatureNote.titleTemplateInputDescription}
+              title={(plugin.i18n.settingTab as any).templates.literatureNote.titleTemplateInputTitle}
+              text={(plugin.i18n.settingTab as any).templates.literatureNote.titleTemplateInputDescription}
             >
               {#snippet input()}
                     <Input
@@ -975,7 +972,7 @@
                   settingKey="Text"
                   settingValue={titleTemplate}
                   placeholder="Input the title template"
-                  on:changed={(event) => {
+                  onchanged={(event) => {
                     if (isDev)
                       logger.info(
                         `Input changed: ${event.detail.key} = ${event.detail.value}`
@@ -988,8 +985,8 @@
             <!-- 刷新全部文档标题 -->
             <Item
               block={false}
-              title={plugin.i18n.settingTab.templates.literatureNote.refreshLiteratureNoteBtnTitle}
-              text={plugin.i18n.settingTab.templates.literatureNote.refreshLiteratureNoteBtnDesciption}
+              title={(plugin.i18n.settingTab as any).templates.literatureNote.refreshLiteratureNoteBtnTitle}
+              text={(plugin.i18n.settingTab as any).templates.literatureNote.refreshLiteratureNoteBtnDesciption}
             >
               {#snippet input()}
                     <Input
@@ -998,8 +995,8 @@
                   normal={true}
                   type={ItemType.button}
                   settingKey="Button"
-                  settingValue={plugin.i18n.settingTab.templates.literatureNote.refreshLiteratureNoteBtnText}
-                  on:clicked={() => {
+                  settingValue={(plugin.i18n.settingTab as any).templates.literatureNote.refreshLiteratureNoteBtnText}
+                  onclicked={() => {
                     if (isDev) logger.info("Button clicked");
                     refreshLiteratureNoteTitle(titleTemplate);
                     // dispatcher("refresh literature note title", { titleTemplate });
@@ -1010,8 +1007,8 @@
             <!-- 文献内容模板 -->
             <Item
               block={true}
-              title={plugin.i18n.settingTab.templates.literatureNote.noteTempTexareaTitle}
-              text={plugin.i18n.settingTab.templates.literatureNote.noteTempTexareaDescription}
+              title={(plugin.i18n.settingTab as any).templates.literatureNote.noteTempTexareaTitle}
+              text={(plugin.i18n.settingTab as any).templates.literatureNote.noteTempTexareaDescription}
             >
               {#snippet input()}
                     <Input
@@ -1023,7 +1020,7 @@
                   settingKey="Textarea"
                   settingValue={noteTemplate}
                   placeholder="Input the literature note template"
-                  on:changed={(event) => {
+                  onchanged={(event) => {
                     if (isDev)
                       logger.info(
                       `Input changed: ${event.detail.key} = ${event.detail.value}`
@@ -1040,8 +1037,8 @@
             <!-- 自定义用户数据标题 -->
             <Item
               block={true}
-              title={plugin.i18n.settingTab.templates.userData.titleUserDataInput}
-              text={plugin.i18n.settingTab.templates.userData.titleUserDataInputDescription}
+              title={(plugin.i18n.settingTab as any).templates.userData.titleUserDataInput}
+              text={(plugin.i18n.settingTab as any).templates.userData.titleUserDataInputDescription}
             >
               {#snippet input()}
                     <Input
@@ -1052,7 +1049,7 @@
                   settingKey="Text"
                   settingValue={userDataTitle}
                   placeholder="Input the 'User Data' title"
-                  on:changed={(event) => {
+                  onchanged={(event) => {
                     if (isDev)
                       logger.info(
                       `Input changed: ${event.detail.key} = ${event.detail.value}`
@@ -1075,8 +1072,8 @@
             <!-- debug-bridge密码 -->
             <Item
               block={false}
-              title={plugin.i18n.settingTab.debug_bridge.plugin.dbPasswordInputTitle}
-              text={plugin.i18n.settingTab.debug_bridge.plugin.dbPasswordInputDescription}
+              title={(plugin.i18n.settingTab as any).debug_bridge.plugin.dbPasswordInputTitle}
+              text={(plugin.i18n.settingTab as any).debug_bridge.plugin.dbPasswordInputDescription}
             >
               {#snippet input()}
                     <Input
@@ -1087,7 +1084,7 @@
                   settingKey="Text"
                   settingValue={dbPassword}
                   placeholder="Input debug-bridge password"
-                  on:changed={(event) => {
+                  onchanged={(event) => {
                     if (isDev)
                       logger.info(
                         `Input changed: ${event.detail.key} = ${event.detail.value}`
@@ -1100,8 +1097,8 @@
             <!-- 使用的搜索面板 -->
             <Item
               block={false}
-              title={plugin.i18n.settingTab.debug_bridge.plugin.searchDialogSelectorTitle}
-              text={plugin.i18n.settingTab.debug_bridge.plugin.searchDialogSelectorDescription}
+              title={(plugin.i18n.settingTab as any).debug_bridge.plugin.searchDialogSelectorTitle}
+              text={(plugin.i18n.settingTab as any).debug_bridge.plugin.searchDialogSelectorDescription}
             >
               {#snippet input()}
                     <Input
@@ -1112,7 +1109,7 @@
                   settingKey="Select"
                   settingValue={dbSearchDialogType}
                   options={dbSearchDialogOptions}
-                  on:changed={(event) => {
+                  onchanged={(event) => {
                     if (isDev)
                       logger.info(
                         `Select changed: ${event.detail.key} = ${event.detail.value}`
@@ -1128,22 +1125,22 @@
           <div data-type={debug_bridge_tabs[1].name} class:fn__none={debug_bridge_tabs[1].key !== focus}>
             {#if !isDebugBridge}
               <Item>
-                {#snippet title()}
+                {#snippet titleSlot()}
                         <h3 >
-                    {plugin.i18n.settingTab.debug_bridge.zotero.notAbleTitle}
+                    {(plugin.i18n.settingTab as any).debug_bridge.zotero.notAbleTitle}
                   </h3>
                       {/snippet}
-                {#snippet text()}
+                {#snippet textSlot()}
                         <span >
-                    {@html plugin.i18n.settingTab.debug_bridge.zotero.notAbleDescription}
+                    {@html (plugin.i18n.settingTab as any).debug_bridge.zotero.notAbleDescription}
                   </span>
                       {/snippet}
               </Item>
             {:else}
               <Item
                 block={false}
-                title={plugin.i18n.settingTab.debug_bridge.zotero.zoteroLinkTitleTemplateTitle}
-                text={plugin.i18n.settingTab.debug_bridge.zotero.zoteroLinkTitleTemplateDescription}
+                title={(plugin.i18n.settingTab as any).debug_bridge.zotero.zoteroLinkTitleTemplateTitle}
+                text={(plugin.i18n.settingTab as any).debug_bridge.zotero.zoteroLinkTitleTemplateDescription}
               >
                 {#snippet input()}
                         <Input
@@ -1154,7 +1151,7 @@
                     settingKey="Text"
                     settingValue={zoteroLinkTitleTemplate}
                     placeholder="Input the title"
-                    on:changed={(event) => {
+                    onchanged={(event) => {
                       if (isDev)
                         logger.info(
                           `Input changed: ${event.detail.key} = ${event.detail.value}`
@@ -1166,8 +1163,8 @@
               </Item>
               <Item
                 block={false}
-                title={plugin.i18n.settingTab.debug_bridge.zotero.zoteroTagTemplateTitle}
-                text={plugin.i18n.settingTab.debug_bridge.zotero.zoteroTagTemplateDescription}
+                title={(plugin.i18n.settingTab as any).debug_bridge.zotero.zoteroTagTemplateTitle}
+                text={(plugin.i18n.settingTab as any).debug_bridge.zotero.zoteroTagTemplateDescription}
               >
                 {#snippet input()}
                         <Input
@@ -1178,7 +1175,7 @@
                     settingKey="Text"
                     settingValue={zoteroTagTemplate}
                     placeholder="Input the tags"
-                    on:changed={(event) => {
+                    onchanged={(event) => {
                       if (isDev)
                         logger.info(
                           `Input changed: ${event.detail.key} = ${event.detail.value}`

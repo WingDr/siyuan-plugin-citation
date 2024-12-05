@@ -18,9 +18,25 @@
 <!-- 小型设置项(用于设置项组内) -->
 
 <script>
-    export let minWidth = "24em";
-    export let marginRight = "2em";
-    export let isCard = true;
+    /**
+     * @typedef {Object} Props
+     * @property {string} [minWidth]
+     * @property {string} [marginRight]
+     * @property {boolean} [isCard]
+     * @property {import('svelte').Snippet} [icon]
+     * @property {import('svelte').Snippet} [title]
+     * @property {import('svelte').Snippet} [input]
+     */
+
+    /** @type {Props} */
+    let {
+        minWidth = "24em",
+        marginRight = "2em",
+        isCard = true,
+        icon,
+        title,
+        input
+    } = $props();
 </script>
 
 <label
@@ -28,17 +44,17 @@
     class="fn__flex"
     class:card-style={isCard}
 >
-    <slot name="icon" />
+    {@render icon?.()}
 
     <span class="fn__space" ></span>
 
     <div class="fn__flex-1">
-        <slot name="title" />
+        {@render title?.()}
     </div>
 
     <span class="fn__space" ></span>
 
-    <slot name="input" />
+    {@render input?.()}
 </label>
 
 <style>
