@@ -26,6 +26,7 @@ import { changeUpdate } from "./utils/updates";
 import { LiteraturePool } from "./references/pool";
 import type { EventTrigger } from "./events/eventTrigger";
 import { SettingTab } from "./frontEnd/settingTab/settingTab";
+import { NetworkMananger } from "./api/networkManagers";
 
 export default class SiYuanPluginCitation extends Plugin {
 
@@ -41,6 +42,7 @@ export default class SiYuanPluginCitation extends Plugin {
     public kernelApi!: KernelApi;
     public eventTrigger!: EventTrigger;
     public settingTab!: SettingTab;
+    public networkManager!: NetworkMananger;
 
     public noticer!: INoticer;
     private logger!: ILogger;
@@ -49,6 +51,7 @@ export default class SiYuanPluginCitation extends Plugin {
         this.logger = createLogger("index");
         this.noticer = createNoticer();
         this.literaturePool = new LiteraturePool();
+        this.networkManager = new NetworkMananger(this, 64);
 
         if (isDev) this.logger.info("插件载入");
 
