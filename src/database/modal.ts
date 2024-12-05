@@ -34,10 +34,10 @@ export abstract class DataModal {
   public protyle!: Protyle;
   public selectedList!: string[];
   public onSelection!: (keys: string[]) => void;
-  public abstract buildModal();
-  public abstract getContentFromKey(key: string);
-  public abstract getCollectedNotesFromKey(key: string);
-  public abstract showSearching(protyle:Protyle, onSelection: (keys: string[]) => void);
+  public abstract buildModal():any;
+  public abstract getContentFromKey(key: string):any;
+  public abstract getCollectedNotesFromKey(key: string):any;
+  public abstract showSearching(protyle:Protyle, onSelection: (keys: string[]) => void): void;
   public abstract getTotalKeys(): string[];
   public async getSelectedItems(): Promise<string[]> {
     if (isDev) this.logger.info("该数据模型无法执行此方法，modal=>", this);
@@ -91,7 +91,7 @@ export class FilesModal extends DataModal {
       // ignoreFieldNorm: false,
       // fieldNormWeight: 1,
       keys: [
-        {name: "keystring", getFn: entry => entry.title + "\n" + entry.year + "\n" + entry.authorString}
+        {name: "keystring", getFn: (entry: { title: string; year: string; authorString: string; }) => entry.title + "\n" + entry.year + "\n" + entry.authorString}
       ]
     };
     return this.loadLibrary().then(library => {
@@ -359,8 +359,8 @@ export class ZoteroDBModal extends DataModal {
   private type: ZoteroType;
   private absZoteroJSPath: string;
   private searchOptions: any;
-  private fuse: Fuse<any>;
-  private searchDialog: SearchDialog;
+  private fuse!: Fuse<any>;
+  private searchDialog!: SearchDialog;
 
   constructor(plugin: SiYuanPluginCitation, zoteroType: ZoteroType, private useItemKey = false) {
     super();
@@ -383,7 +383,7 @@ export class ZoteroDBModal extends DataModal {
       // ignoreFieldNorm: false,
       // fieldNormWeight: 1,
       keys: [
-        {name: "keystring", getFn: entry => entry.title + "\n" + entry.year + "\n" + entry.authorString}
+        {name: "keystring", getFn: (entry: { title: string; year: string; authorString: string; }) => entry.title + "\n" + entry.year + "\n" + entry.authorString}
       ]
     };
   }
@@ -403,7 +403,7 @@ export class ZoteroDBModal extends DataModal {
       if (dbSearchDialogType === "SiYuan") {
         const items = await this.getAllItems();
         if (isDev) this.logger.info(`从${this.type}接收到数据 =>`, items);
-        if (!this.useItemKey && !items[0].citationKey.length) {
+        if (!this.useItemKey && !items[0].citationKey!.length) {
           this.plugin.noticer.error((this.plugin.i18n.errors as any).bbtDisabled as string);
           return null;
         }
@@ -417,7 +417,7 @@ export class ZoteroDBModal extends DataModal {
           const item = searchItems.filter(item => item.key == key)[0];
           return {
             key,
-            author: item.author[0] ? item.author[0].family : item.title,
+            author: item.author[0] ? item.author[0].family! : item.title!,
             year: "" + item.year
           };
         });
@@ -459,7 +459,7 @@ export class ZoteroDBModal extends DataModal {
       if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, res);
       return (await Promise.all((res as any[]).map( async (singleNote, index) => {
         const processor = new NoteProcessor(this.plugin);
-        return `\n\n---\n\n###### Note No.${index+1}\t[[Locate]](zotero://select/items/0_${singleNote.key}/)\t[[Open]](zotero://note/u/${singleNote.key}/)\n\n\n\n` + await processor.processNote(htmlNotesProcess(singleNote.note.replace(/\\(.?)/g, (m, p1) => p1)));
+        return `\n\n---\n\n###### Note No.${index+1}\t[[Locate]](zotero://select/items/0_${singleNote.key}/)\t[[Open]](zotero://note/u/${singleNote.key}/)\n\n\n\n` + await processor.processNote(htmlNotesProcess(singleNote.note.replace(/\\(.?)/g, (m: any, p1: any) => p1)));
       }))).join("\n\n");
     } else return "";
   }
@@ -473,7 +473,7 @@ export class ZoteroDBModal extends DataModal {
       return await this._getSelectedItems();
     } else {
       this.plugin.noticer.error(((this.plugin.i18n.errors as any).zoteroNotRunning as string), {type: this.type});
-      return null;
+      return [];
     }
   }
 
@@ -598,7 +598,7 @@ export class ZoteroDBModal extends DataModal {
         Authorization: `Bearer ${password}`
       },
       data: prefix + "\n" + jsContent
-    }).catch(e => {
+    }).catch((e: { response: { status: number; }; }) => {
       if (isDev) this.logger.error("访问Zotero发生错误, error=>", e);
       if (e.response?.status == 401) this.plugin.noticer.error((this.plugin.i18n.errors as any).wrongDBPassword); // 密码错误
       else if (e.response?.status == 403) this.plugin.noticer.error(((this.plugin.i18n.errors as any).zoteroNotRunning as string), {type: this.type}); // 访问请求被禁止，建议更新到最新版本citation插件

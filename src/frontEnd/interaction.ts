@@ -4,7 +4,7 @@ import {
   Menu,
   openTab
 } from "siyuan";
-import { type IMenu, subMenu } from "siyuan/types";
+import { type IMenu, subMenu } from "siyuan";
 import SiYuanPluginCitation from "../index";
 import {
   STORAGE_NAME,

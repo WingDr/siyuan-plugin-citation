@@ -1,8 +1,9 @@
 import { Dialog } from "siyuan";
+import { mount, unmount } from "svelte";
 
 import { createLogger, type ILogger } from "../../utils/simple-logger";
 import type SiYuanPluginCitation from "../../index";
-import ExampleComponent from "./settingTabComponent.svelte";
+import SettingTabComponent from "./settingTabComponent.svelte";
 import { isDev } from "../../utils/constants";
 import { type DatabaseType } from "../../database/database";
 
@@ -19,30 +20,25 @@ export class SettingTab {
       content: `<div id="${id}" class="b3-dialog__body"/>`,
       width: this.plugin.isMobile ? "92vw" : "850px",
       height: "70vh",
-      destroyCallback: () => { component?.$destroy(); }
+      destroyCallback: () => { if (component) unmount(component) }
     });
 
-    const component = new ExampleComponent({
-      target: settingTab.element.querySelector(`#${id}`)!,
-      props: {
-        plugin: this.plugin,
-        logger: this.logger
+    const props = {
+      plugin: this.plugin,
+      logger: this.logger,
+      reloadDatabase: async (database: string) => {
+        if (isDev) this.logger.info("reload database");
+        await this.plugin.database.buildDatabase(database as DatabaseType);
+        return await this.plugin.reference.checkRefDirExist();
+      },
+      refreshLiteratureNoteTitle: async (titleTemplate: string) => {
+        if (isDev) this.logger.info("refresh literature note title");
+        return this.plugin.reference.refreshLiteratureNoteTitles(titleTemplate);
       }
-    });
-
-    component.$on("confirm", ()=> {
-      settingTab.destroy();
-    });
-
-    component.$on("reload database", async (e:CustomEvent<any>) => {
-      const database = e.detail.database;
-      await this.plugin.database.buildDatabase(database as DatabaseType);
-      return await this.plugin.reference.checkRefDirExist();
-    });
-
-    component.$on("refresh literature note title", (e: CustomEvent<any>) => {
-      const titleTemplate = e.detail.titleTemplate as string;
-      return this.plugin.reference.refreshLiteratureNoteTitles(titleTemplate);
-    });
+    };
+    const component = mount(SettingTabComponent, {
+      target: settingTab.element.querySelector(`#${id}`)!,
+      props,
+    })
   }
 }

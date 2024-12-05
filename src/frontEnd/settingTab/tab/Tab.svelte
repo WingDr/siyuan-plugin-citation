@@ -21,9 +21,21 @@
     import type { TabKey } from "./../tab";
     import type { ITabEvent } from "./../event";
 
-    export let key: TabKey; // 该页签的唯一标识
-    export let name: string = ""; // 该页签的名称
-    export let focus: boolean = false; // 该页签是否聚焦
+    interface Props {
+        key: TabKey; // 该页签的唯一标识
+        name?: string; // 该页签的名称
+        focus?: boolean; // 该页签是否聚焦
+        icon?: import('svelte').Snippet;
+        text?: import('svelte').Snippet;
+    }
+
+    let {
+        key,
+        name = "",
+        focus = false,
+        icon,
+        text
+    }: Props = $props();
 
     const dispatch = createEventDispatcher<ITabEvent>();
 
@@ -34,25 +46,25 @@
     }
 </script>
 
-<!-- svelte-ignore a11y-interactive-supports-focus -->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y_interactive_supports_focus -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
 <div
     role="button"
     data-type={name}
-    on:click={changed}
+    onclick={changed}
     class:item--focus={focus}
     class="item item--full"
 >
     <!-- [组件子级 / Checking for slot content • Svelte 教程 | Svelte 中文网](https://www.svelte.cn/tutorial/optional-slots) -->
     <span class="fn__flex-1" ></span>
-    {#if $$slots.icon}
+    {#if icon}
         <span class="item__icon">
-            <slot name="icon" />
+            {@render icon?.()}
         </span>
     {/if}
 
     <span class="item__text">
-        <slot name="text">text</slot>
+        {#if text}{@render text()}{:else}text{/if}
     </span>
 
     <span class="fn__flex-1" ></span>

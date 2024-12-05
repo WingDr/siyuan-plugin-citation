@@ -30,40 +30,60 @@
     import { type IMouseStatus, MouseButton, MouseEvent } from "../../../utils/shortcut";
     import type { IShortcutEvent } from "./../event";
 
-    export let title: string; // 标题
-    export let shortcut: IMouseStatus; // 快捷键
+    interface Props {
+        title: string; // 标题
+        shortcut: IMouseStatus; // 快捷键
+        /* 最小宽度 */
+        minWidth?: any;
+        marginRight?: any;
+        /* 是否显示 */
+        displayCtrlKey?: boolean;
+        displayShiftKey?: boolean;
+        displayAltKey?: boolean;
+        displayMetaKey?: boolean;
+        displayMouseButton?: boolean;
+        displayMouseEvent?: boolean;
+        /* 是否禁用 */
+        disabledCtrlKey?: boolean;
+        disabledShiftKey?: boolean;
+        disabledAltKey?: boolean;
+        disabledMetaKey?: boolean;
+        disabledMouseButton?: boolean;
+        disabledMouseEvent?: boolean;
+        /* 显示内容 */
+        mouseButtonTitle?: string;
+        mouseEventTitle?: string;
+        mouseButtonOptions?: any;
+        mouseEventOptions?: any;
+    }
 
-    /* 最小宽度 */
-    export let minWidth = undefined;
-    export let marginRight = undefined;
-
-    /* 是否显示 */
-    export let displayCtrlKey = true;
-    export let displayShiftKey = true;
-    export let displayAltKey = true;
-    export let displayMetaKey = true;
-    export let displayMouseButton = true;
-    export let displayMouseEvent = true;
-
-    /* 是否禁用 */
-    export let disabledCtrlKey = false;
-    export let disabledShiftKey = false;
-    export let disabledAltKey = false;
-    export let disabledMetaKey = false;
-    export let disabledMouseButton = false;
-    export let disabledMouseEvent = false;
-
-    /* 显示内容 */
-    export let mouseButtonTitle = "Mouse Button";
-    export let mouseEventTitle = "Mouse Event";
-    export let mouseButtonOptions = [
+    let {
+        title,
+        shortcut = $bindable(),
+        minWidth = undefined,
+        marginRight = undefined,
+        displayCtrlKey = true,
+        displayShiftKey = true,
+        displayAltKey = true,
+        displayMetaKey = true,
+        displayMouseButton = true,
+        displayMouseEvent = true,
+        disabledCtrlKey = false,
+        disabledShiftKey = false,
+        disabledAltKey = false,
+        disabledMetaKey = false,
+        disabledMouseButton = false,
+        disabledMouseEvent = false,
+        mouseButtonTitle = "Mouse Button",
+        mouseEventTitle = "Mouse Event",
+        mouseButtonOptions = [
         { key: MouseButton.Left, text: "Left" },
         { key: MouseButton.Middle, text: "Middle" },
         { key: MouseButton.Right, text: "Right" },
         { key: MouseButton.Back, text: "Back" },
         { key: MouseButton.Forward, text: "Forward" },
-    ];
-    export let mouseEventOptions = [
+    ],
+        mouseEventOptions = [
         { key: MouseEvent.click, text: MouseEvent.click },
         { key: MouseEvent.dblclick, text: MouseEvent.dblclick },
         { key: MouseEvent.mousedown, text: MouseEvent.mousedown },
@@ -74,7 +94,8 @@
         { key: MouseEvent.mouseover, text: MouseEvent.mouseover },
         { key: MouseEvent.mousemove, text: MouseEvent.mousemove },
         { key: MouseEvent.mouseout, text: MouseEvent.mouseout },
-    ];
+    ]
+    }: Props = $props();
 
     const dispatch = createEventDispatcher<IShortcutEvent>();
     function changed(e: ComponentEvents<Input>["changed"]) {
@@ -95,16 +116,20 @@
                 icon="#iconKeymap"
                 className="svg"
             />
-            <kbd slot="title">Ctrl</kbd>
-            <Input
-                slot="input"
-                normal={false}
-                disabled={disabledCtrlKey}
-                type={ItemType.checkbox}
-                settingKey="ctrlKey"
-                settingValue={shortcut.ctrlKey}
-                on:changed={changed}
-            />
+            {#snippet title()}
+                        <kbd >Ctrl</kbd>
+                    {/snippet}
+            {#snippet input()}
+                        <Input
+                    
+                    normal={false}
+                    disabled={disabledCtrlKey}
+                    type={ItemType.checkbox}
+                    settingKey="ctrlKey"
+                    settingValue={shortcut.ctrlKey}
+                    on:changed={changed}
+                />
+                    {/snippet}
         </MiniItem>
     {/if}
     {#if displayShiftKey}
@@ -116,16 +141,20 @@
                 icon="#iconKeymap"
                 className="svg"
             />
-            <kbd slot="title">Shift</kbd>
-            <Input
-                slot="input"
-                normal={false}
-                disabled={disabledShiftKey}
-                type={ItemType.checkbox}
-                settingKey="shiftKey"
-                settingValue={shortcut.shiftKey}
-                on:changed={changed}
-            />
+            {#snippet title()}
+                        <kbd >Shift</kbd>
+                    {/snippet}
+            {#snippet input()}
+                        <Input
+                    
+                    normal={false}
+                    disabled={disabledShiftKey}
+                    type={ItemType.checkbox}
+                    settingKey="shiftKey"
+                    settingValue={shortcut.shiftKey}
+                    on:changed={changed}
+                />
+                    {/snippet}
         </MiniItem>
     {/if}
     {#if displayAltKey}
@@ -137,16 +166,20 @@
                 icon="#iconKeymap"
                 className="svg"
             />
-            <kbd slot="title">Alt</kbd>
-            <Input
-                slot="input"
-                normal={false}
-                disabled={disabledAltKey}
-                type={ItemType.checkbox}
-                settingKey="altKey"
-                settingValue={shortcut.altKey}
-                on:changed={changed}
-            />
+            {#snippet title()}
+                        <kbd >Alt</kbd>
+                    {/snippet}
+            {#snippet input()}
+                        <Input
+                    
+                    normal={false}
+                    disabled={disabledAltKey}
+                    type={ItemType.checkbox}
+                    settingKey="altKey"
+                    settingValue={shortcut.altKey}
+                    on:changed={changed}
+                />
+                    {/snippet}
         </MiniItem>
     {/if}
     {#if displayMetaKey}
@@ -158,16 +191,20 @@
                 icon="#iconKeymap"
                 className="svg"
             />
-            <kbd slot="title">Meta</kbd>
-            <Input
-                slot="input"
-                normal={false}
-                disabled={disabledMetaKey}
-                type={ItemType.checkbox}
-                settingKey="metaKey"
-                settingValue={shortcut.metaKey}
-                on:changed={changed}
-            />
+            {#snippet title()}
+                        <kbd >Meta</kbd>
+                    {/snippet}
+            {#snippet input()}
+                        <Input
+                    
+                    normal={false}
+                    disabled={disabledMetaKey}
+                    type={ItemType.checkbox}
+                    settingKey="metaKey"
+                    settingValue={shortcut.metaKey}
+                    on:changed={changed}
+                />
+                    {/snippet}
         </MiniItem>
     {/if}
     {#if displayMouseButton}
@@ -179,17 +216,21 @@
                 icon="#iconSelectText"
                 className="svg"
             />
-            <span slot="title">{mouseButtonTitle}</span>
-            <Input
-                slot="input"
-                normal={false}
-                disabled={disabledMouseButton}
-                type={ItemType.select}
-                settingKey="button"
-                settingValue={shortcut.button}
-                options={mouseButtonOptions}
-                on:changed={changed}
-            />
+            {#snippet title()}
+                        <span >{mouseButtonTitle}</span>
+                    {/snippet}
+            {#snippet input()}
+                        <Input
+                    
+                    normal={false}
+                    disabled={disabledMouseButton}
+                    type={ItemType.select}
+                    settingKey="button"
+                    settingValue={shortcut.button}
+                    options={mouseButtonOptions}
+                    on:changed={changed}
+                />
+                    {/snippet}
         </MiniItem>
     {/if}
     {#if displayMouseEvent}
@@ -201,17 +242,21 @@
                 icon="#iconSelectText"
                 className="svg"
             />
-            <span slot="title">{mouseEventTitle}</span>
-            <Input
-                slot="input"
-                normal={false}
-                disabled={disabledMouseEvent}
-                type={ItemType.select}
-                settingKey="type"
-                settingValue={shortcut.type}
-                options={mouseEventOptions}
-                on:changed={changed}
-            />
+            {#snippet title()}
+                        <span >{mouseEventTitle}</span>
+                    {/snippet}
+            {#snippet input()}
+                        <Input
+                    
+                    normal={false}
+                    disabled={disabledMouseEvent}
+                    type={ItemType.select}
+                    settingKey="type"
+                    settingValue={shortcut.type}
+                    options={mouseEventOptions}
+                    on:changed={changed}
+                />
+                    {/snippet}
         </MiniItem>
     {/if}
 </Group>

@@ -18,9 +18,19 @@
 <!-- 面板容器 -->
 
 <script lang="ts">
-    export let display = true; // 是否显示该面板
-    export let top = false; // 是否移除保留面板上下边距，目前思源原版样式已经自动移除
-    export let name = ""; // 面板名称
+    interface Props {
+        display?: boolean; // 是否显示该面板
+        top?: boolean; // 是否移除保留面板上下边距，目前思源原版样式已经自动移除
+        name?: string; // 面板名称
+        children?: import('svelte').Snippet;
+    }
+
+    let {
+        display = true,
+        top = false,
+        name = "",
+        children
+    }: Props = $props();
 </script>
 
 <div
@@ -29,5 +39,5 @@
     class:config__tab-container--top={top}
     class="config__tab-container"
 >
-    <slot />
+    {@render children?.()}
 </div>

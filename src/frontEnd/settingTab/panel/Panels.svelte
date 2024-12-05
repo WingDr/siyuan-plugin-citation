@@ -23,12 +23,24 @@
     import type { ITab, TabKey } from "./../tab";
     import type { IPanelsEvent } from "./../event";
 
-    export let panels: ITab[]; // 面板标签列表
-    export let focus: TabKey; // 当前选中的面板的 key
 
-    export let searchEnable = false; // 是否启用搜索
-    export let searchPlaceholder = ""; // 搜索提示内容
-    export let searchValue = ""; // 搜索框内容
+    interface Props {
+        panels: ITab[]; // 面板标签列表
+        focus: TabKey; // 当前选中的面板的 key
+        searchEnable?: boolean; // 是否启用搜索
+        searchPlaceholder?: string; // 搜索提示内容
+        searchValue?: string; // 搜索框内容
+        children?: import('svelte').Snippet<[any]>;
+    }
+
+    let {
+        panels,
+        focus = $bindable(),
+        searchEnable = false,
+        searchPlaceholder = "",
+        searchValue = $bindable(""),
+        children
+    }: Props = $props();
 
     const dispatch = createEventDispatcher<IPanelsEvent>();
 
@@ -54,7 +66,7 @@
                 />
                 <input
                     bind:value={searchValue}
-                    on:change={searchChanged}
+                    onchange={searchChanged}
                     placeholder={searchPlaceholder}
                     class="b3-text-field fn__block b3-form__icon-input"
                 />
@@ -62,11 +74,11 @@
         {/if}
 
         {#each panels as panel (panel.key)}
-            <!-- svelte-ignore a11y-no-noninteractive-element-to-interactive-role -->
+            <!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
             <li
                 role="button"
-                on:click={() => changed(panel.key)}
-                on:keyup={() => changed(panel.key)}
+                onclick={() => changed(panel.key)}
+                onkeyup={() => changed(panel.key)}
                 data-name={panel.name}
                 class:b3-list-item--focus={panel.key === focus}
                 class="b3-list-item"
@@ -84,7 +96,7 @@
 
     <!-- 面板主体 -->
     <div class="config__tab-wrap">
-        <slot {focus}>Container</slot>
+        {#if children}{@render children({ focus, })}{:else}Container{/if}
     </div>
 </div>
 

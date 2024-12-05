@@ -16,7 +16,7 @@ export type DatabaseType = typeof databaseType[number];
 
 export class Database {
   private logger: ILogger;
-  public type: DatabaseType;
+  public type: DatabaseType | null;
   private dataModal: DataModal;
 
   private protyle: Protyle;
@@ -30,6 +30,7 @@ export class Database {
   public async buildDatabase(type: DatabaseType) {
     // 如果数据库类型没变化就不需要再构建
     if (type === this.type) {
+      if (isDev) this.logger.info("数据库无变化，不需要重建");
       return null;
     }
     this.type = type;

@@ -28,8 +28,23 @@
     import { max } from "moment";
     import Card from "./item/Card.svelte";
 
-  export let plugin: SiYuanPluginCitation;
-  export let logger: ILogger;
+  interface Props {
+    plugin: SiYuanPluginCitation;
+    logger: ILogger;
+    title?: import('svelte').Snippet;
+    text?: import('svelte').Snippet;
+    reloadDatabase: (database: string) => void;
+    refreshLiteratureNoteTitle: (titleTemplate: string) => void;
+  }
+
+  let {
+    plugin = $bindable(),
+    logger,
+    title,
+    text,
+    reloadDatabase,
+    refreshLiteratureNoteTitle
+  }: Props = $props();
 
   /**
    * 设置面板的设计
@@ -68,27 +83,27 @@
   // 显示数据
   const eMail = "siyuan_citation@126.com";
   const issuesURL = "https://github.com/WingDr/siyuan-plugin-citation/issues";
-  let pluginVersion: string;
-  let notebookOptions: IOptions;
-  let databaseOptions: IOptions;
-  let dbSearchDialogOptions: IOptions;
+  let pluginVersion: string = $state();
+  let notebookOptions: IOptions = $state();
+  let databaseOptions: IOptions = $state();
+  let dbSearchDialogOptions: IOptions = $state();
 
   // 设定数据
   // 基本设定变量
-  let referenceNotebook: string;
-  let referencePath: string;
-  let database: string;
-  let useItemKey: boolean;
-  let autoReplace: boolean;
-  let deleteUserDataWithoutConfirm: boolean;
+  let referenceNotebook: string = $state();
+  let referencePath: string = $state();
+  let database: string = $state();
+  let useItemKey: boolean = $state();
+  let autoReplace: boolean = $state();
+  let deleteUserDataWithoutConfirm: boolean = $state();
   // 思源模板设定变量
-  let titleTemplate: string;
-  let userDataTitle: string;
-  let noteTemplate: string;
-  let linkTemplate: string;
-  let customCiteText: boolean;
-  let useDynamicRefLink: boolean;
-  let nameTemplate: string;
+  let titleTemplate: string = $state();
+  let userDataTitle: string = $state();
+  let noteTemplate: string = $state();
+  let linkTemplate: string = $state();
+  let customCiteText: boolean = $state();
+  let useDynamicRefLink: boolean = $state();
+  let nameTemplate: string = $state();
   let linkTemplatesGroup: {
     name: string,
     customCiteText: boolean,
@@ -99,22 +114,22 @@
     multiCiteConnector: string,
     multiCiteSuffix: string,
     nameTemplate: string
-  }[] = [];
-  let shortAuthorLimit: number;
-  let multiCitePrefix: string;
-  let multiCiteConnector: string;
-  let multiCiteSuffix: string;
-  let citeName: string;
+  }[] = $state([]);
+  let shortAuthorLimit: number = $state();
+  let multiCitePrefix: string = $state();
+  let multiCiteConnector: string = $state();
+  let multiCiteSuffix: string = $state();
+  let citeName: string = $state();
   // Zotero模板设定变量
-  let zoteroLinkTitleTemplate: string;
-  let zoteroTagTemplate: string;
+  let zoteroLinkTitleTemplate: string = $state();
+  let zoteroTagTemplate: string = $state();
   // debug-bridge变量
-  let dbPassword: string;
-  let dbSearchDialogType: string;
+  let dbPassword: string = $state();
+  let dbSearchDialogType: string = $state();
   
-  let settingIndex = 0;
+  let settingIndex = $state(0);
 
-  let show_link_detail = false;
+  let show_link_detail = $state(false);
 
   let panel_focus_key = 1;
   const panels: IPanel[] = [
@@ -138,7 +153,7 @@
       supportDatabase: ["Zotero (debug-bridge)", "Juris-M (debug-bridge)"],
     },
   ];
-  let displayPanels: ITab[] = [];
+  let displayPanels: ITab[] = $state([]);
   let template_tab_focus_key = 1;
   let template_tabs = [
     {
@@ -176,7 +191,6 @@
     },
   ]
 
-  $: isDebugBridge = _checkDebugBridge(database);
 
   const dispatcher = createEventDispatcher();
 
@@ -416,703 +430,768 @@
     const id  = eval(tmp[tmp.length-1]);
     linkTemplatesGroup = [...linkTemplatesGroup.slice(0, id), ...linkTemplatesGroup.slice(id+1)]
   }
+  let isDebugBridge = $derived(_checkDebugBridge(database));
 </script>
 
-<Panels panels={displayPanels} focus={panel_focus_key} let:focus={panel_focus}>
-  <Panel display={panels[0].key === panel_focus}>
-    <Item>
-      <h4 slot="title">
-        {plugin.i18n.settingTab.settingTabTitle.replace(
-          "${version}",
-          pluginVersion
-        )}
-      </h4>
-      <span slot="text">
-        {@html plugin.i18n.settingTab.settingTabDescription
-          .replaceAll("${e-mail}", eMail)
-          .replace("${issuesURL}", issuesURL)}
-      </span>
-    </Item>
+<Panels panels={displayPanels} focus={panel_focus_key} >
+  {#snippet children({ focus: panel_focus })}
+    <Panel display={panels[0].key === panel_focus}>
+      <Item>
+        {#snippet title()}
+            <h4 >
+            {plugin.i18n.settingTab.settingTabTitle.replace(
+              "${version}",
+              pluginVersion
+            )}
+          </h4>
+          {/snippet}
+        {#snippet text()}
+            <span >
+            {@html plugin.i18n.settingTab.settingTabDescription
+              .replaceAll("${e-mail}", eMail)
+              .replace("${issuesURL}", issuesURL)}
+          </span>
+          {/snippet}
+      </Item>
 
-    <!-- 选择笔记本 -->
-    <Item
-      block={false}
-      title={plugin.i18n.settingTab.basic.notebookSelectorTitle}
-      text={plugin.i18n.settingTab.basic.databaseSelectorDescription}
-    >
-      <Input
-        slot="input"
-        block={false}
-        normal={true}
-        type={ItemType.select}
-        settingKey="Select"
-        settingValue={referenceNotebook}
-        options={notebookOptions}
-        on:changed={(event) => {
-          if (isDev)
-            logger.info(
-              `Select changed: ${event.detail.key} = ${event.detail.value}`
-            );
-          referenceNotebook = event.detail.value;
-        }}
-      />
-    </Item>
-
-    <!-- 设置文献库路径 -->
-    <Item
-      block={false}
-      title={plugin.i18n.settingTab.basic.referencePathInputTitle}
-      text={plugin.i18n.settingTab.basic.referencePathInputDescription}
-    >
-      <Input
-        slot="input"
-        block={false}
-        normal={true}
-        type={ItemType.text}
-        settingKey="Text"
-        settingValue={referencePath}
-        placeholder="Input the path"
-        on:changed={(event) => {
-          if (isDev)
-            logger.info(
-              `Input changed: ${event.detail.key} = ${event.detail.value}`
-            );
-          referencePath = event.detail.value;
-        }}
-      />
-    </Item>
-
-    <!-- 选择数据库类型 -->
-    <Item
-      block={false}
-      title={plugin.i18n.settingTab.basic.databaseSelectorTitle}
-      text={plugin.i18n.settingTab.basic.databaseSelectorDescription}
-    >
-      <Input
-        slot="input"
-        block={false}
-        normal={true}
-        type={ItemType.select}
-        settingKey="Select"
-        settingValue={database}
-        options={databaseOptions}
-        on:changed={(event) => {
-          if (isDev)
-            logger.info(
-              `Select changed: ${event.detail.key} = ${event.detail.value}`
-            );
-          database = event.detail.value;
-          displayPanels = generatePanels(panels);
-          if (!_checkDebugBridge(database)) useItemKey = false;
-        }}
-      />
-    </Item>
-
-    {#if isDebugBridge}
-      <!-- 是否使用itemKey作为文献内容索引 -->
+      <!-- 选择笔记本 -->
       <Item
         block={false}
-        title={plugin.i18n.settingTab.basic.UseItemKeySwitchTitle}
-        text={plugin.i18n.settingTab.basic.UseItemKeySwitchDescription}
+        title={plugin.i18n.settingTab.basic.notebookSelectorTitle}
+        text={plugin.i18n.settingTab.basic.databaseSelectorDescription}
       >
-        <Input
-          slot="input"
-          block={false}
-          normal={true}
-          type={ItemType.checkbox}
-          settingKey="Checkbox"
-          settingValue={useItemKey}
-          on:changed={(event) => {
-            if (isDev)
-              logger.info(
-                `Checkbox changed: ${event.detail.key} = ${event.detail.value}`
-              );
-            useItemKey = event.detail.value;
-          }}
-        />
-      </Item>
-    {/if}
-
-    <!-- 是否开启zotero链接自动替换 -->
-    <Item
-      block={false}
-      title={plugin.i18n.settingTab.basic.AutoReplaceSwitchTitle}
-      text={plugin.i18n.settingTab.basic.AutoReplaceSwitchDescription}
-    >
-      <Input
-        slot="input"
-        block={false}
-        normal={true}
-        type={ItemType.checkbox}
-        settingKey="Checkbox"
-        settingValue={autoReplace}
-        on:changed={(event) => {
-          if (isDev)
-            logger.info(
-              `Checkbox changed: ${event.detail.key} = ${event.detail.value}`
-            );
-            autoReplace = event.detail.value;
-        }}
-      />
-    </Item>
-
-    <!-- 是否选择不提示删除用户数据 -->
-    <Item
-      block={false}
-      title={plugin.i18n.settingTab.basic.DeleteUserDataWithoutConfirmSwitchTitle}
-      text={plugin.i18n.settingTab.basic.DeleteUserDataWithoutConfirmSwitchDescription}
-    >
-      <Input
-        slot="input"
-        block={false}
-        normal={true}
-        type={ItemType.checkbox}
-        settingKey="Checkbox"
-        settingValue={deleteUserDataWithoutConfirm}
-        on:changed={(event) => {
-          if (isDev)
-            logger.info(
-              `Checkbox changed: ${event.detail.key} = ${event.detail.value}`
-            );
-            deleteUserDataWithoutConfirm = event.detail.value;
-        }}
-      />
-    </Item>
-
-    <!-- 重载数据库 -->
-    <Item
-      block={false}
-      title={plugin.i18n.settingTab.basic.reloadBtnTitle}
-      text={plugin.i18n.settingTab.basic.reloadBtnDescription}
-    >
-      <Input
-        slot="input"
-        block={false}
-        normal={true}
-        type={ItemType.button}
-        settingKey="Button"
-        settingValue={plugin.i18n.settingTab.basic.reloadBtnText}
-        on:clicked={() => {
-          if (isDev) logger.info("Button clicked");
-          dispatcher("reload database", { database });
-        }}
-      />
-    </Item>
-
-    <!-- 删除数据 -->
-    <Item
-      block={false}
-      title={plugin.i18n.settingTab.basic.deleteDataBtnTitle}
-      text={plugin.i18n.settingTab.basic.deleteDataBtnDescription}
-    >
-      <Input
-        slot="input"
-        block={false}
-        normal={true}
-        type={ItemType.button}
-        settingKey="Button"
-        settingValue={plugin.i18n.settingTab.basic.deleteDataBtnText}
-        on:clicked={() => {
-          if (isDev) logger.info("Button clicked");
-          confirm(
-            "⚠️",
-            plugin.i18n.settingTab.basic.confirmRemove.replace(
-              "${name}",
-              plugin.name
-            ),
-            () => {
-              plugin.removeData(STORAGE_NAME).then(async () => {
-                await initializeData()
-                plugin.data[STORAGE_NAME] = defaultSettingData;
-                plugin.noticer.info(`[${plugin.name}]: ${plugin.i18n.removedData}`);
-              });
-            }
-          );
-        }}
-      />
-    </Item>
-  </Panel>
-  <Panel display={panels[1].key === panel_focus}>
-    <Tabs focus={template_tab_focus_key} tabs={template_tabs} let:focus>
-      <!-- 标签页 1 内容 -->
-      <div data-type={template_tabs[0].name} class:fn__none={template_tabs[0].key !== focus}>
-        <!-- 多个配置的卡片 -->
-        <Group title={plugin.i18n.settingTab.templates.citeLink.citeTypeCardTitle}>
-          {#each linkTemplatesGroup as linkItem, index }
-            <MiniItem minWidth="200px">
-              <span data-type="title" id={"linkItem_" + index} slot="title">{@html linkItem.name}</span>
-              <div slot="input" style="display: flex;flex-direction:row" id={"linkItem_" + index}>
-                <button
-                  class="b3-tooltips b3-tooltips__nw block__icon block__icon--show"
-                  data-type="setting"
-                  aria-label={plugin.i18n.settingTab.templates.citeLink.citeTypeCardSet}
-                  on:click={clickCardSetting}
-                >
-                  <Svg
-                    icon="#iconSettings"
-                    className="svg"
-                  />
-                </button>
-                <span class="fn__space" ></span>
-                <button
-                  class="b3-tooltips b3-tooltips__nw block__icon block__icon--show"
-                  data-type="delete"
-                  aria-label={plugin.i18n.settingTab.templates.citeLink.citeTypeCardDelete}
-                  on:click={deleteLinkTemp}
-                >
-                  <Svg
-                    icon="#iconTrashcan"
-                    className="svg"
-                  />
-                </button>
-              </div>
-            </MiniItem>
-          {/each}
-          <Input
-            block={false}
-            normal={true}
-            type={ItemType.button}
-            settingKey="Button"
-            settingValue={"添加"}
-            on:clicked={() => {
-              if (isDev) logger.info("Button clicked");
-              addLinkTemp();
-            }}
-          />
-        </Group>
-
-        <div style="margin: 5px 0;background:var(--b3-border-color);height:1px"></div>
-        
-        {#if show_link_detail}
-          <!-- 引用类型名称 -->
-          <Item
-            block={true}
-            title={plugin.i18n.settingTab.templates.citeLink.citeNameTitle}
-            text={plugin.i18n.settingTab.templates.citeLink.citeNameDescription}
-          >
+        {#snippet input()}
             <Input
-              slot="input"
-              block={true}
-              normal={true}
-              type={ItemType.text}
-              settingKey="Text"
-              settingValue={citeName}
-              placeholder="Input the citation link template"
-              on:changed={(event) => {
-                if (isDev)
-                  logger.info(
-                    `Input changed: ${event.detail.key} = ${event.detail.value}`
-                  );
-                citeName = event.detail.value;
-                linkTemplatesGroup[settingIndex].name = citeName;
-                linkTemplatesGroup = linkTemplatesGroup;
-              }}
-            />
-          </Item>
-          <!-- 引用链接模板 -->
-          <Item
-            block={true}
-            title={plugin.i18n.settingTab.templates.citeLink.linkTempInputTitle}
-            text={plugin.i18n.settingTab.templates.citeLink.linkTempInputDescription}
-          >
-            <Input
-              slot="input"
-              block={true}
-              normal={true}
-              type={ItemType.text}
-              settingKey="Text"
-              settingValue={linkTemplate}
-              placeholder="Input the citation link template"
-              on:changed={(event) => {
-                if (isDev)
-                  logger.info(
-                    `Input changed: ${event.detail.key} = ${event.detail.value}`
-                  );
-                linkTemplate = event.detail.value;
-                linkTemplatesGroup[settingIndex].linkTemplate = event.detail.value;
-                linkTemplatesGroup = linkTemplatesGroup;
-              }}
-            />
-          </Item>
-          <!-- shortAuthor长度 -->
-          <Item
-            block={false}
-            title={plugin.i18n.settingTab.templates.citeLink.shortAuthorLimitTitle}
-            text={plugin.i18n.settingTab.templates.citeLink.shortAuthorLimitDescription}
-          >
-            <Input
-              slot="input"
-              block={false}
-              normal={true}
-              type={ItemType.number}
-              settingKey="Text"
-              settingValue={shortAuthorLimit}
-              placeholder="Input the citation link template"
-              limits={{min:1, max:10, step:1}}
-              on:changed={(event) => {
-                if (isDev)
-                  logger.info(
-                    `Input changed: ${event.detail.key} = ${event.detail.value}`
-                  );
-                shortAuthorLimit = event.detail.value;
-                linkTemplatesGroup[settingIndex].shortAuthorLimit = event.detail.value;
-                linkTemplatesGroup = linkTemplatesGroup;
-              }}
-            />
-          </Item>
-          <!-- 多文献引用设置 -->
-          <label class="fn__flex b3-label">
-            <div class="fn__flex-1">
-                <slot name="title">{@html plugin.i18n.settingTab.templates.citeLink.multiCiteTitle}</slot>
-                <div class="b3-label__text">
-                    <slot name="text">{@html plugin.i18n.settingTab.templates.citeLink.multiCiteDescription}</slot>
-                </div>
-                
-            </div>
-            <div class="fn__space" ></div>
-            <div style="display:flex;flex-direction:column;">
-              <Input
-                block={false}
-                normal={true}
-                type={ItemType.text}
-                settingKey="Text"
-                settingValue={multiCitePrefix}
-                placeholder="Multi-Cite Prefix"
-                on:changed={(event) => {
-                  if (isDev)
-                    logger.info(
-                      `Input changed: ${event.detail.key} = ${event.detail.value}`
-                    );
-                  multiCitePrefix = event.detail.value;
-                  linkTemplatesGroup[settingIndex].multiCitePrefix = event.detail.value;
-                  linkTemplatesGroup = linkTemplatesGroup;
-                }}
-              />
-              <span class="fn__hr"></span>
-              <Input
-                block={false}
-                normal={true}
-                type={ItemType.text}
-                settingKey="Text"
-                settingValue={multiCiteConnector}
-                placeholder="Multi-Cite Connector"
-                on:changed={(event) => {
-                  if (isDev)
-                    logger.info(
-                      `Input changed: ${event.detail.key} = ${event.detail.value}`
-                    );
-                  multiCiteConnector = event.detail.value;
-                  linkTemplatesGroup[settingIndex].multiCiteConnector = event.detail.value;
-                  linkTemplatesGroup = linkTemplatesGroup;
-                }}
-              /> 
-              <span class="fn__hr"></span>
-              <Input
-                block={false}
-                normal={true}
-                type={ItemType.text}
-                settingKey="Text"
-                settingValue={multiCiteSuffix}
-                placeholder="Multi-Cite Suffix"
-                on:changed={(event) => {
-                  if (isDev)
-                    logger.info(
-                      `Input changed: ${event.detail.key} = ${event.detail.value}`
-                    );
-                  multiCiteSuffix = event.detail.value;
-                  linkTemplatesGroup[settingIndex].multiCiteSuffix = event.detail.value;
-                  linkTemplatesGroup = linkTemplatesGroup;
-                }}
-              />
-            </div>
-        </label>
-          <!-- 是否完全自定义引用 -->
-          <Item
-            block={false}
-            title={plugin.i18n.settingTab.templates.citeLink.CustomCiteTextSwitchTitle}
-            text={plugin.i18n.settingTab.templates.citeLink.CustomCiteTextSwitchDescription}
-          >
-            <Input
-              slot="input"
-              block={false}
-              normal={true}
-              type={ItemType.checkbox}
-              settingKey="Checkbox"
-              settingValue={customCiteText}
-              on:changed={(event) => {
-                if (isDev)
-                  logger.info(
-                    `Checkbox changed: ${event.detail.key} = ${event.detail.value}`
-                  );
-                customCiteText = event.detail.value;
-                linkTemplatesGroup[settingIndex].customCiteText = event.detail.value;
-                linkTemplatesGroup = linkTemplatesGroup;
-              }}
-            />
-          </Item>
-          <!-- 是否使用动态锚文本-->
-          <Item
-            block={false}
-            title={plugin.i18n.settingTab.templates.citeLink.useDynamicRefLinkSwitchTitle}
-            text={plugin.i18n.settingTab.templates.citeLink.useDynamicRefLinkSwitchDescription}
-          >
-            <Input
-              slot="input"
-              block={false}
-              normal={true}
-              type={ItemType.checkbox}
-              settingKey="Checkbox"
-              settingValue={useDynamicRefLink}
-              on:changed={(event) => {
-                if (isDev)
-                  logger.info(
-                    `Checkbox changed: ${event.detail.key} = ${event.detail.value}`
-                  );
-                useDynamicRefLink = event.detail.value;
-                linkTemplatesGroup[settingIndex].useDynamicRefLink = event.detail.value;
-                linkTemplatesGroup = linkTemplatesGroup;
-              }}
-            />
-          </Item>
-          {#if customCiteText && useDynamicRefLink}
-            <!-- 文献内容文档命名模板 -->
-            <Item
-              block={true}
-              title={plugin.i18n.settingTab.templates.citeLink.nameTempInputTitle}
-              text={plugin.i18n.settingTab.templates.citeLink.nameTempInputDescription}
-            >
-              <Input
-                slot="input"
-                block={true}
-                normal={true}
-                type={ItemType.text}
-                settingKey="Text"
-                settingValue={nameTemplate}
-                placeholder="Input the literature note's name template"
-                on:changed={(event) => {
-                  if (isDev)
-                    logger.info(
-                      `Input changed: ${event.detail.key} = ${event.detail.value}`
-                    );
-                  nameTemplate = event.detail.value;
-                  linkTemplatesGroup[settingIndex].nameTemplate = event.detail.value;
-                  linkTemplatesGroup = linkTemplatesGroup;
-                }}
-              />
-            </Item>
-          {/if}
-        {/if}
-      </div>
-
-      <!-- 标签页 2 内容 -->
-      <div data-type={template_tabs[1].name} class:fn__none={template_tabs[1].key !== focus}>
-        <!-- 文档标题模板 -->
-        <Item
-          block={true}
-          title={plugin.i18n.settingTab.templates.literatureNote.titleTemplateInputTitle}
-          text={plugin.i18n.settingTab.templates.literatureNote.titleTemplateInputDescription}
-        >
-          <Input
-            slot="input"
-            block={true}
-            normal={true}
-            type={ItemType.text}
-            settingKey="Text"
-            settingValue={titleTemplate}
-            placeholder="Input the title template"
-            on:changed={(event) => {
-              if (isDev)
-                logger.info(
-                  `Input changed: ${event.detail.key} = ${event.detail.value}`
-                );
-              titleTemplate = event.detail.value;
-            }}
-          />
-        </Item>
-        <!-- 刷新全部文档标题 -->
-        <Item
-          block={false}
-          title={plugin.i18n.settingTab.templates.literatureNote.refreshLiteratureNoteBtnTitle}
-          text={plugin.i18n.settingTab.templates.literatureNote.refreshLiteratureNoteBtnDesciption}
-        >
-          <Input
-            slot="input"
-            block={false}
-            normal={true}
-            type={ItemType.button}
-            settingKey="Button"
-            settingValue={plugin.i18n.settingTab.templates.literatureNote.refreshLiteratureNoteBtnText}
-            on:clicked={() => {
-              if (isDev) logger.info("Button clicked");
-              dispatcher("refresh literature note title", { titleTemplate });
-            }}
-          />
-        </Item>
-        <!-- 文献内容模板 -->
-        <Item
-          block={true}
-          title={plugin.i18n.settingTab.templates.literatureNote.noteTempTexareaTitle}
-          text={plugin.i18n.settingTab.templates.literatureNote.noteTempTexareaDescription}
-        >
-          <Input
-            slot="input"
-            block={true}
-            normal={true}
-            rows={10}
-            type={ItemType.textarea}
-            settingKey="Textarea"
-            settingValue={noteTemplate}
-            placeholder="Input the literature note template"
-            on:changed={(event) => {
-              if (isDev)
-                logger.info(
-                `Input changed: ${event.detail.key} = ${event.detail.value}`
-                );
-              noteTemplate = event.detail.value;
-            }}
-          />
-        </Item>
-      </div>
-
-      <!-- 标签页 3 内容 -->
-      <div data-type={template_tabs[2].name} class:fn__none={template_tabs[2].key !== focus}>
-        <!-- 自定义用户数据标题 -->
-        <Item
-          block={true}
-          title={plugin.i18n.settingTab.templates.userData.titleUserDataInput}
-          text={plugin.i18n.settingTab.templates.userData.titleUserDataInputDescription}
-        >
-          <Input
-            slot="input"
-            block={true}
-            normal={true}
-            type={ItemType.text}
-            settingKey="Text"
-            settingValue={userDataTitle}
-            placeholder="Input the 'User Data' title"
-            on:changed={(event) => {
-              if (isDev)
-                logger.info(
-                `Input changed: ${event.detail.key} = ${event.detail.value}`
-              );
-              userDataTitle = event.detail.value; 
-            }}
-          />
-        </Item>
-      </div>
-    </Tabs>
-  </Panel>
-
-  <Panel display={panels[2].key === panel_focus}>
-    <Tabs focus={debug_bridge_tab_focus_key} tabs={debug_bridge_tabs} let:focus>
-      <!-- 标签页 1 内容 -->
-      <div data-type={debug_bridge_tabs[0].name} class:fn__none={debug_bridge_tabs[0].key !== focus}>
-        <!-- debug-bridge密码 -->
-        <Item
-          block={false}
-          title={plugin.i18n.settingTab.debug_bridge.plugin.dbPasswordInputTitle}
-          text={plugin.i18n.settingTab.debug_bridge.plugin.dbPasswordInputDescription}
-        >
-          <Input
-            slot="input"
-            block={false}
-            normal={true}
-            type={ItemType.text}
-            settingKey="Text"
-            settingValue={dbPassword}
-            placeholder="Input debug-bridge password"
-            on:changed={(event) => {
-              if (isDev)
-                logger.info(
-                  `Input changed: ${event.detail.key} = ${event.detail.value}`
-                );
-              dbPassword = event.detail.value;
-            }}
-          />
-        </Item>
-        <!-- 使用的搜索面板 -->
-        <Item
-          block={false}
-          title={plugin.i18n.settingTab.debug_bridge.plugin.searchDialogSelectorTitle}
-          text={plugin.i18n.settingTab.debug_bridge.plugin.searchDialogSelectorDescription}
-        >
-          <Input
-            slot="input"
+            
             block={false}
             normal={true}
             type={ItemType.select}
             settingKey="Select"
-            settingValue={dbSearchDialogType}
-            options={dbSearchDialogOptions}
+            settingValue={referenceNotebook}
+            options={notebookOptions}
             on:changed={(event) => {
               if (isDev)
                 logger.info(
                   `Select changed: ${event.detail.key} = ${event.detail.value}`
                 );
-              dbSearchDialogType = event.detail.value;
+              referenceNotebook = event.detail.value;
             }}
           />
-        </Item>
-      </div>
+          {/snippet}
+      </Item>
 
-      <!-- 标签页 2 内容 -->
-      <div data-type={debug_bridge_tabs[1].name} class:fn__none={debug_bridge_tabs[1].key !== focus}>
-        {#if !isDebugBridge}
-          <Item>
-            <h3 slot="title">
-              {plugin.i18n.settingTab.debug_bridge.zotero.notAbleTitle}
-            </h3>
-            <span slot="text">
-              {@html plugin.i18n.settingTab.debug_bridge.zotero.notAbleDescription}
-            </span>
-          </Item>
-        {:else}
-          <Item
-            block={false}
-            title={plugin.i18n.settingTab.debug_bridge.zotero.zoteroLinkTitleTemplateTitle}
-            text={plugin.i18n.settingTab.debug_bridge.zotero.zoteroLinkTitleTemplateDescription}
-          >
+      <!-- 设置文献库路径 -->
+      <Item
+        block={false}
+        title={plugin.i18n.settingTab.basic.referencePathInputTitle}
+        text={plugin.i18n.settingTab.basic.referencePathInputDescription}
+      >
+        {#snippet input()}
             <Input
-              slot="input"
+            
+            block={false}
+            normal={true}
+            type={ItemType.text}
+            settingKey="Text"
+            settingValue={referencePath}
+            placeholder="Input the path"
+            on:changed={(event) => {
+              if (isDev)
+                logger.info(
+                  `Input changed: ${event.detail.key} = ${event.detail.value}`
+                );
+              referencePath = event.detail.value;
+            }}
+          />
+          {/snippet}
+      </Item>
+
+      <!-- 选择数据库类型 -->
+      <Item
+        block={false}
+        title={plugin.i18n.settingTab.basic.databaseSelectorTitle}
+        text={plugin.i18n.settingTab.basic.databaseSelectorDescription}
+      >
+        {#snippet input()}
+            <Input
+            
+            block={false}
+            normal={true}
+            type={ItemType.select}
+            settingKey="Select"
+            settingValue={database}
+            options={databaseOptions}
+            on:changed={(event) => {
+              if (isDev)
+                logger.info(
+                  `Select changed: ${event.detail.key} = ${event.detail.value}`
+                );
+              database = event.detail.value;
+              displayPanels = generatePanels(panels);
+              if (!_checkDebugBridge(database)) useItemKey = false;
+            }}
+          />
+          {/snippet}
+      </Item>
+
+      {#if isDebugBridge}
+        <!-- 是否使用itemKey作为文献内容索引 -->
+        <Item
+          block={false}
+          title={plugin.i18n.settingTab.basic.UseItemKeySwitchTitle}
+          text={plugin.i18n.settingTab.basic.UseItemKeySwitchDescription}
+        >
+          {#snippet input()}
+                <Input
+              
               block={false}
               normal={true}
-              type={ItemType.text}
-              settingKey="Text"
-              settingValue={zoteroLinkTitleTemplate}
-              placeholder="Input the title"
+              type={ItemType.checkbox}
+              settingKey="Checkbox"
+              settingValue={useItemKey}
               on:changed={(event) => {
                 if (isDev)
                   logger.info(
-                    `Input changed: ${event.detail.key} = ${event.detail.value}`
+                    `Checkbox changed: ${event.detail.key} = ${event.detail.value}`
                   );
-                zoteroLinkTitleTemplate = event.detail.value;
+                useItemKey = event.detail.value;
               }}
             />
-          </Item>
-          <Item
-            block={false}
-            title={plugin.i18n.settingTab.debug_bridge.zotero.zoteroTagTemplateTitle}
-            text={plugin.i18n.settingTab.debug_bridge.zotero.zoteroTagTemplateDescription}
-          >
+              {/snippet}
+        </Item>
+      {/if}
+
+      <!-- 是否开启zotero链接自动替换 -->
+      <Item
+        block={false}
+        title={plugin.i18n.settingTab.basic.AutoReplaceSwitchTitle}
+        text={plugin.i18n.settingTab.basic.AutoReplaceSwitchDescription}
+      >
+        {#snippet input()}
             <Input
-              slot="input"
+            
+            block={false}
+            normal={true}
+            type={ItemType.checkbox}
+            settingKey="Checkbox"
+            settingValue={autoReplace}
+            on:changed={(event) => {
+              if (isDev)
+                logger.info(
+                  `Checkbox changed: ${event.detail.key} = ${event.detail.value}`
+                );
+                autoReplace = event.detail.value;
+            }}
+          />
+          {/snippet}
+      </Item>
+
+      <!-- 是否选择不提示删除用户数据 -->
+      <Item
+        block={false}
+        title={plugin.i18n.settingTab.basic.DeleteUserDataWithoutConfirmSwitchTitle}
+        text={plugin.i18n.settingTab.basic.DeleteUserDataWithoutConfirmSwitchDescription}
+      >
+        {#snippet input()}
+            <Input
+            
+            block={false}
+            normal={true}
+            type={ItemType.checkbox}
+            settingKey="Checkbox"
+            settingValue={deleteUserDataWithoutConfirm}
+            on:changed={(event) => {
+              if (isDev)
+                logger.info(
+                  `Checkbox changed: ${event.detail.key} = ${event.detail.value}`
+                );
+                deleteUserDataWithoutConfirm = event.detail.value;
+            }}
+          />
+          {/snippet}
+      </Item>
+
+      <!-- 重载数据库 -->
+      <Item
+        block={false}
+        title={plugin.i18n.settingTab.basic.reloadBtnTitle}
+        text={plugin.i18n.settingTab.basic.reloadBtnDescription}
+      >
+        {#snippet input()}
+            <Input
+            
+            block={false}
+            normal={true}
+            type={ItemType.button}
+            settingKey="Button"
+            settingValue={plugin.i18n.settingTab.basic.reloadBtnText}
+            on:clicked={() => {
+              if (isDev) logger.info("Button clicked");
+              reloadDatabase(database);
+              // dispatcher("reload database", { database });
+            }}
+          />
+          {/snippet}
+      </Item>
+
+      <!-- 删除数据 -->
+      <Item
+        block={false}
+        title={plugin.i18n.settingTab.basic.deleteDataBtnTitle}
+        text={plugin.i18n.settingTab.basic.deleteDataBtnDescription}
+      >
+        {#snippet input()}
+            <Input
+            
+            block={false}
+            normal={true}
+            type={ItemType.button}
+            settingKey="Button"
+            settingValue={plugin.i18n.settingTab.basic.deleteDataBtnText}
+            on:clicked={() => {
+              if (isDev) logger.info("Button clicked");
+              confirm(
+                "⚠️",
+                plugin.i18n.settingTab.basic.confirmRemove.replace(
+                  "${name}",
+                  plugin.name
+                ),
+                () => {
+                  plugin.removeData(STORAGE_NAME).then(async () => {
+                    await initializeData()
+                    plugin.data[STORAGE_NAME] = defaultSettingData;
+                    plugin.noticer.info(`[${plugin.name}]: ${plugin.i18n.removedData}`);
+                  });
+                }
+              );
+            }}
+          />
+          {/snippet}
+      </Item>
+    </Panel>
+    <Panel display={panels[1].key === panel_focus}>
+      <Tabs focus={template_tab_focus_key} tabs={template_tabs} >
+        {#snippet children({ focus })}
+            <!-- 标签页 1 内容 -->
+          <div data-type={template_tabs[0].name} class:fn__none={template_tabs[0].key !== focus}>
+            <!-- 多个配置的卡片 -->
+            <Group title={plugin.i18n.settingTab.templates.citeLink.citeTypeCardTitle}>
+              {#each linkTemplatesGroup as linkItem, index }
+                <MiniItem minWidth="200px">
+                  {#snippet title()}
+                            <span data-type="title" id={"linkItem_" + index} >{@html linkItem.name}</span>
+                          {/snippet}
+                  {#snippet input()}
+                            <div  style="display: flex;flex-direction:row" id={"linkItem_" + index}>
+                      <button
+                        class="b3-tooltips b3-tooltips__nw block__icon block__icon--show"
+                        data-type="setting"
+                        aria-label={plugin.i18n.settingTab.templates.citeLink.citeTypeCardSet}
+                        onclick={clickCardSetting}
+                      >
+                        <Svg
+                          icon="#iconSettings"
+                          className="svg"
+                        />
+                      </button>
+                      <span class="fn__space" ></span>
+                      <button
+                        class="b3-tooltips b3-tooltips__nw block__icon block__icon--show"
+                        data-type="delete"
+                        aria-label={plugin.i18n.settingTab.templates.citeLink.citeTypeCardDelete}
+                        onclick={deleteLinkTemp}
+                      >
+                        <Svg
+                          icon="#iconTrashcan"
+                          className="svg"
+                        />
+                      </button>
+                    </div>
+                          {/snippet}
+                </MiniItem>
+              {/each}
+              <Input
+                block={false}
+                normal={true}
+                type={ItemType.button}
+                settingKey="Button"
+                settingValue={"添加"}
+                on:clicked={() => {
+                  if (isDev) logger.info("Button clicked");
+                  addLinkTemp();
+                }}
+              />
+            </Group>
+
+            <div style="margin: 5px 0;background:var(--b3-border-color);height:1px"></div>
+            
+            {#if show_link_detail}
+              <!-- 引用类型名称 -->
+              <Item
+                block={true}
+                title={plugin.i18n.settingTab.templates.citeLink.citeNameTitle}
+                text={plugin.i18n.settingTab.templates.citeLink.citeNameDescription}
+              >
+                {#snippet input()}
+                        <Input
+                    
+                    block={true}
+                    normal={true}
+                    type={ItemType.text}
+                    settingKey="Text"
+                    settingValue={citeName}
+                    placeholder="Input the citation link template"
+                    on:changed={(event) => {
+                      if (isDev)
+                        logger.info(
+                          `Input changed: ${event.detail.key} = ${event.detail.value}`
+                        );
+                      citeName = event.detail.value;
+                      linkTemplatesGroup[settingIndex].name = citeName;
+                      linkTemplatesGroup = linkTemplatesGroup;
+                    }}
+                  />
+                      {/snippet}
+              </Item>
+              <!-- 引用链接模板 -->
+              <Item
+                block={true}
+                title={plugin.i18n.settingTab.templates.citeLink.linkTempInputTitle}
+                text={plugin.i18n.settingTab.templates.citeLink.linkTempInputDescription}
+              >
+                {#snippet input()}
+                        <Input
+                    
+                    block={true}
+                    normal={true}
+                    type={ItemType.text}
+                    settingKey="Text"
+                    settingValue={linkTemplate}
+                    placeholder="Input the citation link template"
+                    on:changed={(event) => {
+                      if (isDev)
+                        logger.info(
+                          `Input changed: ${event.detail.key} = ${event.detail.value}`
+                        );
+                      linkTemplate = event.detail.value;
+                      linkTemplatesGroup[settingIndex].linkTemplate = event.detail.value;
+                      linkTemplatesGroup = linkTemplatesGroup;
+                    }}
+                  />
+                      {/snippet}
+              </Item>
+              <!-- shortAuthor长度 -->
+              <Item
+                block={false}
+                title={plugin.i18n.settingTab.templates.citeLink.shortAuthorLimitTitle}
+                text={plugin.i18n.settingTab.templates.citeLink.shortAuthorLimitDescription}
+              >
+                {#snippet input()}
+                        <Input
+                    
+                    block={false}
+                    normal={true}
+                    type={ItemType.number}
+                    settingKey="Text"
+                    settingValue={shortAuthorLimit}
+                    placeholder="Input the citation link template"
+                    limits={{min:1, max:10, step:1}}
+                    on:changed={(event) => {
+                      if (isDev)
+                        logger.info(
+                          `Input changed: ${event.detail.key} = ${event.detail.value}`
+                        );
+                      shortAuthorLimit = event.detail.value;
+                      linkTemplatesGroup[settingIndex].shortAuthorLimit = event.detail.value;
+                      linkTemplatesGroup = linkTemplatesGroup;
+                    }}
+                  />
+                      {/snippet}
+              </Item>
+              <!-- 多文献引用设置 -->
+              <label class="fn__flex b3-label">
+                <div class="fn__flex-1">
+                    {#if title}{@render title()}{:else}{@html plugin.i18n.settingTab.templates.citeLink.multiCiteTitle}{/if}
+                    <div class="b3-label__text">
+                        {#if text}{@render text()}{:else}{@html plugin.i18n.settingTab.templates.citeLink.multiCiteDescription}{/if}
+                    </div>
+                    
+                </div>
+                <div class="fn__space" ></div>
+                <div style="display:flex;flex-direction:column;">
+                  <Input
+                    block={false}
+                    normal={true}
+                    type={ItemType.text}
+                    settingKey="Text"
+                    settingValue={multiCitePrefix}
+                    placeholder="Multi-Cite Prefix"
+                    on:changed={(event) => {
+                      if (isDev)
+                        logger.info(
+                          `Input changed: ${event.detail.key} = ${event.detail.value}`
+                        );
+                      multiCitePrefix = event.detail.value;
+                      linkTemplatesGroup[settingIndex].multiCitePrefix = event.detail.value;
+                      linkTemplatesGroup = linkTemplatesGroup;
+                    }}
+                  />
+                  <span class="fn__hr"></span>
+                  <Input
+                    block={false}
+                    normal={true}
+                    type={ItemType.text}
+                    settingKey="Text"
+                    settingValue={multiCiteConnector}
+                    placeholder="Multi-Cite Connector"
+                    on:changed={(event) => {
+                      if (isDev)
+                        logger.info(
+                          `Input changed: ${event.detail.key} = ${event.detail.value}`
+                        );
+                      multiCiteConnector = event.detail.value;
+                      linkTemplatesGroup[settingIndex].multiCiteConnector = event.detail.value;
+                      linkTemplatesGroup = linkTemplatesGroup;
+                    }}
+                  /> 
+                  <span class="fn__hr"></span>
+                  <Input
+                    block={false}
+                    normal={true}
+                    type={ItemType.text}
+                    settingKey="Text"
+                    settingValue={multiCiteSuffix}
+                    placeholder="Multi-Cite Suffix"
+                    on:changed={(event) => {
+                      if (isDev)
+                        logger.info(
+                          `Input changed: ${event.detail.key} = ${event.detail.value}`
+                        );
+                      multiCiteSuffix = event.detail.value;
+                      linkTemplatesGroup[settingIndex].multiCiteSuffix = event.detail.value;
+                      linkTemplatesGroup = linkTemplatesGroup;
+                    }}
+                  />
+                </div>
+            </label>
+              <!-- 是否完全自定义引用 -->
+              <Item
+                block={false}
+                title={plugin.i18n.settingTab.templates.citeLink.CustomCiteTextSwitchTitle}
+                text={plugin.i18n.settingTab.templates.citeLink.CustomCiteTextSwitchDescription}
+              >
+                {#snippet input()}
+                        <Input
+                    
+                    block={false}
+                    normal={true}
+                    type={ItemType.checkbox}
+                    settingKey="Checkbox"
+                    settingValue={customCiteText}
+                    on:changed={(event) => {
+                      if (isDev)
+                        logger.info(
+                          `Checkbox changed: ${event.detail.key} = ${event.detail.value}`
+                        );
+                      customCiteText = event.detail.value;
+                      linkTemplatesGroup[settingIndex].customCiteText = event.detail.value;
+                      linkTemplatesGroup = linkTemplatesGroup;
+                    }}
+                  />
+                      {/snippet}
+              </Item>
+              <!-- 是否使用动态锚文本-->
+              <Item
+                block={false}
+                title={plugin.i18n.settingTab.templates.citeLink.useDynamicRefLinkSwitchTitle}
+                text={plugin.i18n.settingTab.templates.citeLink.useDynamicRefLinkSwitchDescription}
+              >
+                {#snippet input()}
+                        <Input
+                    
+                    block={false}
+                    normal={true}
+                    type={ItemType.checkbox}
+                    settingKey="Checkbox"
+                    settingValue={useDynamicRefLink}
+                    on:changed={(event) => {
+                      if (isDev)
+                        logger.info(
+                          `Checkbox changed: ${event.detail.key} = ${event.detail.value}`
+                        );
+                      useDynamicRefLink = event.detail.value;
+                      linkTemplatesGroup[settingIndex].useDynamicRefLink = event.detail.value;
+                      linkTemplatesGroup = linkTemplatesGroup;
+                    }}
+                  />
+                      {/snippet}
+              </Item>
+              {#if customCiteText && useDynamicRefLink}
+                <!-- 文献内容文档命名模板 -->
+                <Item
+                  block={true}
+                  title={plugin.i18n.settingTab.templates.citeLink.nameTempInputTitle}
+                  text={plugin.i18n.settingTab.templates.citeLink.nameTempInputDescription}
+                >
+                  {#snippet input()}
+                            <Input
+                      
+                      block={true}
+                      normal={true}
+                      type={ItemType.text}
+                      settingKey="Text"
+                      settingValue={nameTemplate}
+                      placeholder="Input the literature note's name template"
+                      on:changed={(event) => {
+                        if (isDev)
+                          logger.info(
+                            `Input changed: ${event.detail.key} = ${event.detail.value}`
+                          );
+                        nameTemplate = event.detail.value;
+                        linkTemplatesGroup[settingIndex].nameTemplate = event.detail.value;
+                        linkTemplatesGroup = linkTemplatesGroup;
+                      }}
+                    />
+                          {/snippet}
+                </Item>
+              {/if}
+            {/if}
+          </div>
+
+          <!-- 标签页 2 内容 -->
+          <div data-type={template_tabs[1].name} class:fn__none={template_tabs[1].key !== focus}>
+            <!-- 文档标题模板 -->
+            <Item
+              block={true}
+              title={plugin.i18n.settingTab.templates.literatureNote.titleTemplateInputTitle}
+              text={plugin.i18n.settingTab.templates.literatureNote.titleTemplateInputDescription}
+            >
+              {#snippet input()}
+                    <Input
+                  
+                  block={true}
+                  normal={true}
+                  type={ItemType.text}
+                  settingKey="Text"
+                  settingValue={titleTemplate}
+                  placeholder="Input the title template"
+                  on:changed={(event) => {
+                    if (isDev)
+                      logger.info(
+                        `Input changed: ${event.detail.key} = ${event.detail.value}`
+                      );
+                    titleTemplate = event.detail.value;
+                  }}
+                />
+                  {/snippet}
+            </Item>
+            <!-- 刷新全部文档标题 -->
+            <Item
               block={false}
-              normal={true}
-              type={ItemType.text}
-              settingKey="Text"
-              settingValue={zoteroTagTemplate}
-              placeholder="Input the tags"
-              on:changed={(event) => {
-                if (isDev)
-                  logger.info(
-                    `Input changed: ${event.detail.key} = ${event.detail.value}`
-                  );
-                  zoteroTagTemplate = event.detail.value;
-              }}
-            />
-          </Item>
-        {/if}
-      </div>
-    </Tabs>
-  </Panel>
+              title={plugin.i18n.settingTab.templates.literatureNote.refreshLiteratureNoteBtnTitle}
+              text={plugin.i18n.settingTab.templates.literatureNote.refreshLiteratureNoteBtnDesciption}
+            >
+              {#snippet input()}
+                    <Input
+                  
+                  block={false}
+                  normal={true}
+                  type={ItemType.button}
+                  settingKey="Button"
+                  settingValue={plugin.i18n.settingTab.templates.literatureNote.refreshLiteratureNoteBtnText}
+                  on:clicked={() => {
+                    if (isDev) logger.info("Button clicked");
+                    refreshLiteratureNoteTitle(titleTemplate);
+                    // dispatcher("refresh literature note title", { titleTemplate });
+                  }}
+                />
+                  {/snippet}
+            </Item>
+            <!-- 文献内容模板 -->
+            <Item
+              block={true}
+              title={plugin.i18n.settingTab.templates.literatureNote.noteTempTexareaTitle}
+              text={plugin.i18n.settingTab.templates.literatureNote.noteTempTexareaDescription}
+            >
+              {#snippet input()}
+                    <Input
+                  
+                  block={true}
+                  normal={true}
+                  rows={10}
+                  type={ItemType.textarea}
+                  settingKey="Textarea"
+                  settingValue={noteTemplate}
+                  placeholder="Input the literature note template"
+                  on:changed={(event) => {
+                    if (isDev)
+                      logger.info(
+                      `Input changed: ${event.detail.key} = ${event.detail.value}`
+                      );
+                    noteTemplate = event.detail.value;
+                  }}
+                />
+                  {/snippet}
+            </Item>
+          </div>
+
+          <!-- 标签页 3 内容 -->
+          <div data-type={template_tabs[2].name} class:fn__none={template_tabs[2].key !== focus}>
+            <!-- 自定义用户数据标题 -->
+            <Item
+              block={true}
+              title={plugin.i18n.settingTab.templates.userData.titleUserDataInput}
+              text={plugin.i18n.settingTab.templates.userData.titleUserDataInputDescription}
+            >
+              {#snippet input()}
+                    <Input
+                  
+                  block={true}
+                  normal={true}
+                  type={ItemType.text}
+                  settingKey="Text"
+                  settingValue={userDataTitle}
+                  placeholder="Input the 'User Data' title"
+                  on:changed={(event) => {
+                    if (isDev)
+                      logger.info(
+                      `Input changed: ${event.detail.key} = ${event.detail.value}`
+                    );
+                    userDataTitle = event.detail.value; 
+                  }}
+                />
+                  {/snippet}
+            </Item>
+          </div>
+                  {/snippet}
+        </Tabs>
+    </Panel>
+
+    <Panel display={panels[2].key === panel_focus}>
+      <Tabs focus={debug_bridge_tab_focus_key} tabs={debug_bridge_tabs} >
+        {#snippet children({ focus })}
+            <!-- 标签页 1 内容 -->
+          <div data-type={debug_bridge_tabs[0].name} class:fn__none={debug_bridge_tabs[0].key !== focus}>
+            <!-- debug-bridge密码 -->
+            <Item
+              block={false}
+              title={plugin.i18n.settingTab.debug_bridge.plugin.dbPasswordInputTitle}
+              text={plugin.i18n.settingTab.debug_bridge.plugin.dbPasswordInputDescription}
+            >
+              {#snippet input()}
+                    <Input
+                  
+                  block={false}
+                  normal={true}
+                  type={ItemType.text}
+                  settingKey="Text"
+                  settingValue={dbPassword}
+                  placeholder="Input debug-bridge password"
+                  on:changed={(event) => {
+                    if (isDev)
+                      logger.info(
+                        `Input changed: ${event.detail.key} = ${event.detail.value}`
+                      );
+                    dbPassword = event.detail.value;
+                  }}
+                />
+                  {/snippet}
+            </Item>
+            <!-- 使用的搜索面板 -->
+            <Item
+              block={false}
+              title={plugin.i18n.settingTab.debug_bridge.plugin.searchDialogSelectorTitle}
+              text={plugin.i18n.settingTab.debug_bridge.plugin.searchDialogSelectorDescription}
+            >
+              {#snippet input()}
+                    <Input
+                  
+                  block={false}
+                  normal={true}
+                  type={ItemType.select}
+                  settingKey="Select"
+                  settingValue={dbSearchDialogType}
+                  options={dbSearchDialogOptions}
+                  on:changed={(event) => {
+                    if (isDev)
+                      logger.info(
+                        `Select changed: ${event.detail.key} = ${event.detail.value}`
+                      );
+                    dbSearchDialogType = event.detail.value;
+                  }}
+                />
+                  {/snippet}
+            </Item>
+          </div>
+
+          <!-- 标签页 2 内容 -->
+          <div data-type={debug_bridge_tabs[1].name} class:fn__none={debug_bridge_tabs[1].key !== focus}>
+            {#if !isDebugBridge}
+              <Item>
+                {#snippet title()}
+                        <h3 >
+                    {plugin.i18n.settingTab.debug_bridge.zotero.notAbleTitle}
+                  </h3>
+                      {/snippet}
+                {#snippet text()}
+                        <span >
+                    {@html plugin.i18n.settingTab.debug_bridge.zotero.notAbleDescription}
+                  </span>
+                      {/snippet}
+              </Item>
+            {:else}
+              <Item
+                block={false}
+                title={plugin.i18n.settingTab.debug_bridge.zotero.zoteroLinkTitleTemplateTitle}
+                text={plugin.i18n.settingTab.debug_bridge.zotero.zoteroLinkTitleTemplateDescription}
+              >
+                {#snippet input()}
+                        <Input
+                    
+                    block={false}
+                    normal={true}
+                    type={ItemType.text}
+                    settingKey="Text"
+                    settingValue={zoteroLinkTitleTemplate}
+                    placeholder="Input the title"
+                    on:changed={(event) => {
+                      if (isDev)
+                        logger.info(
+                          `Input changed: ${event.detail.key} = ${event.detail.value}`
+                        );
+                      zoteroLinkTitleTemplate = event.detail.value;
+                    }}
+                  />
+                      {/snippet}
+              </Item>
+              <Item
+                block={false}
+                title={plugin.i18n.settingTab.debug_bridge.zotero.zoteroTagTemplateTitle}
+                text={plugin.i18n.settingTab.debug_bridge.zotero.zoteroTagTemplateDescription}
+              >
+                {#snippet input()}
+                        <Input
+                    
+                    block={false}
+                    normal={true}
+                    type={ItemType.text}
+                    settingKey="Text"
+                    settingValue={zoteroTagTemplate}
+                    placeholder="Input the tags"
+                    on:changed={(event) => {
+                      if (isDev)
+                        logger.info(
+                          `Input changed: ${event.detail.key} = ${event.detail.value}`
+                        );
+                        zoteroTagTemplate = event.detail.value;
+                    }}
+                  />
+                      {/snippet}
+              </Item>
+            {/if}
+          </div>
+                  {/snippet}
+        </Tabs>
+    </Panel>
+  {/snippet}
 </Panels>

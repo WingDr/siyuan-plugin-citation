@@ -23,8 +23,13 @@
     import Svg from "./../../misc/Svg.svelte";
     import { type ITab } from "./../tab";
 
-    export let tabs: ITab[];
-    export let focus: string | number;
+    interface Props {
+        tabs: ITab[];
+        focus: string | number;
+        children?: import('svelte').Snippet<[any]>;
+    }
+
+    let { tabs, focus = $bindable(), children }: Props = $props();
 
     function changed(e: ComponentEvents<Tab>["changed"]) {
         focus = e.detail.key;
@@ -45,16 +50,20 @@
                 name={tab.name}
                 focus={tab.key === focus}
             >
-                <span slot="icon">
-                    {#if tab.icon.startsWith("#")}
-                        <Svg icon={tab.icon} />
-                    {:else}
-                        {@html tab.icon}
-                    {/if}
-                </span>
-                <span slot="text">
-                    {@html tab.text}
-                </span>
+                {#snippet icon()}
+                                <span >
+                        {#if tab.icon.startsWith("#")}
+                            <Svg icon={tab.icon} />
+                        {:else}
+                            {@html tab.icon}
+                        {/if}
+                    </span>
+                            {/snippet}
+                {#snippet text()}
+                                <span >
+                        {@html tab.text}
+                    </span>
+                            {/snippet}
             </Tab>
         {/each}
     </div>
@@ -62,6 +71,6 @@
     <!-- 选项卡内容栏 -->
     <!-- [Svelte API 中文文档 | Svelte 中文网](https://www.svelte.cn/docs#slot_let) -->
     <div class="fn__flex-1">
-        <slot {focus}>Container</slot>
+        {#if children}{@render children({ focus, })}{:else}Container{/if}
     </div>
 </div>
