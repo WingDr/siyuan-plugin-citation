@@ -113,43 +113,8 @@ export class LiteratureNote {
     }
 
     private async _updateAttrView(key: string, entry: any) {
-      const attrViewBlock = "20241015103632-o5ez4a0";
-      const attrViewTemplate = `
-      [{
-        "keyID": "20241213145643-93lsu79",
-        "value": {
-          "number": {
-                "content": {{ year ? year + ".0" : 0 }},
-                "isNotEmpty": {{ year ? "true" : "false"}}
-          }
-        }
-      },
-      {
-        "keyID": "20241213154218-0xmwul5",
-        "value": {
-          "text": {"content": "{{ authorString }}"}
-        }
-      },
-      {
-        "keyID": "20241213154247-n49kxja",
-        "value": {
-          "mSelect": [{"content": "{{ containerTitle }}"}]
-        }
-      },
-      {
-        "keyID": "20241213154804-8m6pn1p",
-        "value": {
-          "url": {"content": "{{ zoteroSelectURI }}"}
-        }
-      },
-      {
-        "keyID": "20241213154948-lsl87m9",
-        "value": {
-          "mSelect": {{ tags ? "[" + tags.split(", ").map(tag => \`{ "content": "\${tag}" }\`).join(",") + "]" : "[]" }}
-        }
-      }
-      ]
-      `;
+      const attrViewBlock = this.plugin.data[STORAGE_NAME].attrViewBlock;
+      const attrViewTemplate = this.plugin.data[STORAGE_NAME].attrViewTemplate;
       const blockID = this.plugin.literaturePool.get(key);
       let res = await this.plugin.kernelApi.getBlock(attrViewBlock);
       const content = (res.data as any[])[0].markdown as string;

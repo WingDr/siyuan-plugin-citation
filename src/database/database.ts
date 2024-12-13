@@ -18,12 +18,16 @@ export class Database {
   private logger: ILogger;
   public type: DatabaseType | null;
   private dataModal!: DataModal;
+  private refStartNode: HTMLElement | null;
+  private refEndNode: HTMLElement | null;
 
   private protyle!: Protyle;
 
   constructor(private plugin: SiYuanPluginCitation) {
     this.logger = createLogger("database");
     this.type = null;
+    this.refStartNode = null;
+    this.refEndNode = null;
   }
 
   public async buildDatabase(type: DatabaseType) {
@@ -112,7 +116,17 @@ export class Database {
   // Group: 间接通用接口
 
   public setSelected(keys: string[]) {
+    if (!keys.length) {
+      // 确保可能导致选择问题的全部为空
+      this.setRefNode(null, null);
+      this.plugin.reference.setEmptySelection();
+    }
     this.dataModal.selectedList = keys;
+  }
+
+  public setRefNode(refStartNode: HTMLElement | null, refEndNode: HTMLElement | null) {
+    this.refStartNode = refStartNode;
+    this.refEndNode = refEndNode;
   }
 
   public async getContentByKey(key: string) {
@@ -158,7 +172,7 @@ export class Database {
           icon: "iconRef",
           click: async () => {
             const content = await this.plugin.reference.processReferenceContents(keys, fileId, tmp.name);
-            this.plugin.reference.insertContent(this.protyle, content.join(""));
+            this.plugin.reference.insertContent(this.protyle, content.join(""), this.refStartNode, this.refEndNode);
           }
         });
       });

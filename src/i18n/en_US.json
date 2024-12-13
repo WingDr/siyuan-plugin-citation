@@ -80,7 +80,11 @@
       "userData": {
         "title": "User Data",
         "titleUserDataInput": "Custom 'User Data' headers",
-        "titleUserDataInputDescription": "The default is 'User Data', which can be customized"
+        "titleUserDataInputDescription": "The default is 'User Data', which can be customized",
+        "attrViewBlockInput": "Database block id",
+        "attrViewBlockDescription": "The id of the database that needed to be update during citation",
+        "attrViewTemplateInput": "Database attribute template",
+        "attrViewTemplateDescription": "Add the content document of the literature to the specified database during the citation, and adjust the database properties according to this template. The following will dynamically display the corresponding relationship between the database block ID and column names:<br>"
       }
     },
     "debug_bridge": {

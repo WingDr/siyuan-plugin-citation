@@ -54,6 +54,8 @@ export const defaultNoteTemplate = `
 export const defaultLinkTemplate = "({{shortAuthor}} {{year}})";
 export const defaultDBPassword = "CTT";
 export const defaultUserDataTile = "User Data";
+export const defaultAttrViewBlock = "";
+export const defaultAttrViewTemplate = "";
 
 export const defaultSettingData = {
     referenceNotebook: "",
@@ -77,5 +79,7 @@ export const defaultSettingData = {
     multiCitePrefix: "",
     multiCiteConnector: "",
     multiCiteSuffix: "",
-    linkTemplatesGroup: []
+    linkTemplatesGroup: [],
+    attrViewBlock: defaultAttrViewBlock,
+    attrViewTemplate: defaultAttrViewTemplate
 };

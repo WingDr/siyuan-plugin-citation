@@ -53,12 +53,24 @@ export class Reference {
     this.refSpanList = [];
   }
 
-  public getAllNeighborReference(protyle: IProtyle): string[] {
+  public getAllNeighborReference(protyle: IProtyle): {
+    keyList: string[],
+    refStartNode: HTMLElement | null,
+    refEndNode: HTMLElement | null
+  } {
+    // 只允许使用debug-bridge和siyuan面板的使用neighbor特性
+    const database = this.plugin.data[STORAGE_NAME].database;
+    const dbSearchDialogType = this.plugin.data[STORAGE_NAME].dbSearchDialogType;
+    if (["Zotero (debug-bridge)", "Juris-M (debug-bridge)"].indexOf(database) == -1 || dbSearchDialogType != "SiYuan") {
+      this.refStartNode = null;
+      this.refEndNode = null;
+      return {keyList: [], refStartNode: null, refEndNode: null};
+    }
     if (isDev) this.logger.info("获取到protyle=>", protyle);
     if (!protyle.toolbar) {
       // 如果获取不到toolbar就不选择
       this.setEmptySelection(); 
-      return[];
+      return {keyList: [], refStartNode: null, refEndNode: null};
     }
     if (isDev) this.logger.info("获取到选区=>", protyle.toolbar.range);
     const pRange = protyle.toolbar.range;
@@ -92,16 +104,23 @@ export class Reference {
       endElements = [currentElement, ...this._getNeighborReference(currentElement.nextElementSibling as HTMLSpanElement, false)];
     }
     if (isDev) this.logger.info("获取到尾引用=>", endElements);
-    this.refStartNode = startElements[0];
-    this.refEndNode = endElements[endElements.length - 1];
+    const refStartNode = startElements[0];
+    const refEndNode = endElements[endElements.length - 1]
+    this.refStartNode = refStartNode;
+    this.refEndNode = refEndNode;
     const existRefSpanList = isInRef ? [...startElements.slice(0, -1), ...endElements] : [...startElements.slice(0, -1), ...endElements.slice(1)];
     this.refSpanList = existRefSpanList;
     if (isDev) this.logger.info("所有引用=>", existRefSpanList);
     const existRefList = existRefSpanList.map((e:HTMLSpanElement) => {
       return this.plugin.literaturePool.get(e.getAttribute("data-id") as string);
     });
+    if (isDev) this.logger.info("头尾引用为, nodes=>", {start: this.refStartNode, end: this.refEndNode});
     if (isDev) this.logger.info("所有引用, key=>", existRefList);
-    return existRefList;
+    return {
+      keyList: existRefList,
+      refStartNode: refStartNode,
+      refEndNode: refEndNode
+    };
   }
 
   public async updateNeighborLinks(element:HTMLElement, protyle: IProtyle, target_type: string) {
@@ -110,7 +129,7 @@ export class Reference {
     if (isDev) this.logger.info("获取到当前元素所在块：", {block, blockID});
     if (isDev) this.logger.info("更新结果：", {block, blockID});
     if (!blockID) return;
-    const keys = this.getAllNeighborReference(protyle);
+    const keys = this.getAllNeighborReference(protyle).keyList;
     const content = await this.processReferenceContents(keys, protyle.block.rootID, target_type);
     const replacedHTML = this.refSpanList.map(e => e.outerHTML).join("");
     if (isDev) this.logger.info("更新前的HTML：", {block:block.innerHTML, span:replacedHTML});
@@ -266,17 +285,17 @@ export class Reference {
     return;
   }
 
-  public async insertContent(protyle: Protyle, content: string) {
+  public async insertContent(protyle: Protyle, content: string, refStartNode: HTMLElement | null = null, refEndNode: HTMLElement | null = null) {
     if (isDev) this.logger.info("插入内容, detail=>", {protyle, content});
     const blockId = protyle.protyle.block.id;
     const rootId = protyle.protyle.block.rootID;
     if (isDev) this.logger.info("Protyle块ID =>", blockId);
     if (isDev) this.logger.info("Protyle文档ID =>", rootId);
     if (isDev) this.logger.info("插入的内容为, content=>", content);
-    if (isDev) this.logger.info("头尾引用为, nodes=>", {start: this.refStartNode, end: this.refEndNode});
+    if (isDev) this.logger.info("头尾引用为, nodes=>", {start: refStartNode, end: refEndNode});
     // 避免重复设置或者不设置导致的bug
-    if (this.refStartNode && this.refStartNode != protyle.protyle.toolbar!.range.startContainer) protyle.protyle.toolbar!.range.setStartBefore(this.refStartNode);
-    if (this.refEndNode && this.refEndNode != protyle.protyle.toolbar!.range.endContainer) protyle.protyle.toolbar!.range.setEndAfter(this.refEndNode);
+    if (refStartNode && refStartNode != protyle.protyle.toolbar!.range.startContainer) protyle.protyle.toolbar!.range.setStartBefore(refStartNode);
+    if (refEndNode && refEndNode != protyle.protyle.toolbar!.range.endContainer) protyle.protyle.toolbar!.range.setEndAfter(refEndNode);
     await protyle.insert(content, false, true);
     // TODO 等待前后端联动API更新再更新文档标号
     // if (isDev) this.getCursorOffsetInBlock(blockId);

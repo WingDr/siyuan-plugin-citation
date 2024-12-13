@@ -121,8 +121,9 @@
   let multiCiteSuffix: string = $state()!;
   let citeName: string = $state()!;
   // 数据库相关设定变量
-  let attrViewBlock: string = $state();
-  let attrViewTemplate: string = $state();
+  let attrViewBlock: string = $state()!;
+  let attrViewTemplate: string = $state()!;
+  let attrViewSuggest: string = $state("");
   // Zotero模板设定变量
   let zoteroLinkTitleTemplate: string = $state()!;
   let zoteroTagTemplate: string = $state()!;
@@ -176,13 +177,7 @@
       text: (plugin.i18n.settingTab as any).templates.userData.title,
       name: "citation-setting-template-user-data",
       icon: "",
-    },
-    // {
-    //   key: 4,
-    //   text: (plugin.i18n.settingTab as any).templates.attrView.title,
-    //   name: "citation-setting-template-attr-view",
-    //   icon: "",
-    // },
+    }
   ];
   let debug_bridge_tab_focus_key = 1;
   let debug_bridge_tabs = [
@@ -288,6 +283,11 @@
     dbSearchDialogType = plugin.data[STORAGE_NAME]?.dbSearchDialogType ?? defaultSettingData.dbSearchDialogType;
     // 默认shortAuthor长度
     shortAuthorLimit = plugin.data[STORAGE_NAME]?.shortAuthorLimit ?? defaultSettingData.shortAuthorLimit;
+    // 默认数据库块id
+    attrViewBlock = plugin.data[STORAGE_NAME]?.attrViewBlock ?? defaultSettingData.attrViewBlock;
+    getAttrViewSuggests(attrViewBlock);
+    // 默认数据库模板
+    attrViewTemplate = plugin.data[STORAGE_NAME]?.attrViewTemplate ?? defaultSettingData.attrViewTemplate;
     // 默认多个引用的前缀、后缀、连接符
     multiCitePrefix = plugin.data[STORAGE_NAME]?.multiCitePrefix ?? defaultSettingData.multiCitePrefix;
     multiCiteConnector = plugin.data[STORAGE_NAME]?.multiCiteConnector ?? defaultSettingData.multiCiteConnector;
@@ -356,7 +356,9 @@
       shortAuthorLimit,
       multiCitePrefix,
       multiCiteConnector,
-      multiCiteSuffix
+      multiCiteSuffix,
+      attrViewBlock,
+      attrViewTemplate
     };
     if (settingData.database === "Zotero")
       settingData.database = "Zotero (better-bibtex)";
@@ -437,6 +439,20 @@
     linkTemplatesGroup = [...linkTemplatesGroup.slice(0, id), ...linkTemplatesGroup.slice(id+1)]
   }
   let isDebugBridge = $derived(_checkDebugBridge(database));
+
+  async function getAttrViewSuggests(attrViewBlock: string) {
+    let res = await plugin.kernelApi.getBlock(attrViewBlock);
+    const content = (res.data as any[])[0].markdown as string;
+    const avIdReg = /.*data-av-id=\"(.*?)\".*/;
+    const avID = content.match(avIdReg)![1];
+    res = await plugin.kernelApi.getAttributeView(avID);
+    const av = (res.data as any).av;
+    console.log(av);
+    if (!av) attrViewSuggest = "";
+    else attrViewSuggest = av.keyValues.map((item: { key: { id: string; name: string; type: string; }; }) => {
+      return `id: ${item.key.id}, name: ${item.key.name}, type: ${item.key.type}`
+    }).join("<br>");
+  }
 </script>
 
 <Panels panels={displayPanels} focus={panel_focus_key} >
@@ -1068,6 +1084,58 @@
                 />
                   {/snippet}
             </Item>
+            <!-- 数据库块id -->
+            <Item
+            block={true}
+            title={(plugin.i18n.settingTab as any).templates.userData.attrViewBlockInput}
+            text={(plugin.i18n.settingTab as any).templates.userData.attrViewBlockDescription}
+          >
+            {#snippet input()}
+                  <Input
+                
+                block={true}
+                normal={true}
+                type={ItemType.text}
+                settingKey="Text"
+                settingValue={attrViewBlock}
+                placeholder="Input the attribute view block id"
+                onchanged={async (event) => {
+                  if (isDev)
+                    logger.info(
+                    `Input changed: ${event.detail.key} = ${event.detail.value}`
+                  );
+                  attrViewBlock = event.detail.value; 
+                  getAttrViewSuggests(attrViewBlock);
+                }}
+              />
+                {/snippet}
+          </Item>
+          <!-- 数据库模板 -->
+          <Item
+          block={true}
+          title={(plugin.i18n.settingTab as any).templates.userData.attrViewTemplateInput}
+          text={(plugin.i18n.settingTab as any).templates.userData.attrViewTemplateDescription + attrViewSuggest}
+        >
+          {#snippet input()}
+                <Input
+              
+              block={true}
+              normal={true}
+              rows={10}
+              type={ItemType.textarea}
+              settingKey="Textarea"
+              settingValue={attrViewTemplate}
+              placeholder="Input the literature note template"
+              onchanged={(event) => {
+                if (isDev)
+                  logger.info(
+                  `Input changed: ${event.detail.key} = ${event.detail.value}`
+                  );
+                attrViewTemplate = event.detail.value;
+              }}
+            />
+              {/snippet}
+        </Item>
           </div>
                   {/snippet}
         </Tabs>

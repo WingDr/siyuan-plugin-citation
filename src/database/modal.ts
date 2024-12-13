@@ -415,12 +415,12 @@ export class ZoteroDBModal extends DataModal {
         this.searchDialog = new SearchDialog(this.plugin);
         const selectedList = this.selectedList.map(key => {
           const item = searchItems.filter(item => item.key == key)[0];
-          return {
+          return item ? {
             key,
             author: item.author[0] ? item.author[0].family! : item.title!,
             year: "" + item.year
-          };
-        });
+          } : {key: "", author: "", year: ""};
+        }).filter(item => item.key != "");
         this.searchDialog.showSearching(
           this.search.bind(this), 
           onSelection,

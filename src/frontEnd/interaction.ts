@@ -82,7 +82,9 @@ export class InteractionManager {
         </div>`,
         id: "add-citation",
         callback: async (protyle: Protyle) => {
-          this.plugin.database.setSelected(this.plugin.reference.getAllNeighborReference(protyle.protyle));
+          const res = this.plugin.reference.getAllNeighborReference(protyle.protyle);
+          this.plugin.database.setSelected(res.keyList);
+          this.plugin.database.setRefNode(res.refStartNode, res.refEndNode);
           return this.plugin.database.insertCiteLink(protyle);
         }
       },
@@ -137,7 +139,9 @@ export class InteractionManager {
         hotkey: "⌥⇧A",
         editorCallback: (p) => {
           const protyle = p.getInstance() as Protyle;
-          this.plugin.database.setSelected(this.plugin.reference.getAllNeighborReference(protyle.protyle));
+          const res = this.plugin.reference.getAllNeighborReference(protyle.protyle);
+          this.plugin.database.setSelected(res.keyList);
+          this.plugin.database.setRefNode(res.refStartNode, res.refEndNode);
           this.plugin.database.insertCiteLink(protyle);
         },
         callback: () => { return this.plugin.database.copyCiteLink(); }

@@ -78,14 +78,13 @@
         "noteTempTexareaDescription": "设置在文献库中储存的文献文档的内容模板"
       },
       "userData": {
-        "title": "用户数据",
+        "title": "数据",
         "titleUserDataInput": "自定义用户数据标题",
-        "titleUserDataInputDescription": "默认是 User Data，可以自定义"
-      },
-      "attrView": {
-        "title": "数据库",
-        "attrViewBlockIDTitle": "数据库块id",
-        "attrViewBlockIDDescription": "需要更新的数据库块id"
+        "titleUserDataInputDescription": "默认是 User Data，可以自定义",
+        "attrViewBlockInput": "数据库块id",
+        "attrViewBlockDescription": "需要更新的数据库所在块id",
+        "attrViewTemplateInput": "数据库属性模板",
+        "attrViewTemplateDescription": "在引用时将文献内容文档添加进指定数据库，并按照该模板对数据库属性进行幅值，以下将动态展示数据库块的id和列名称的对应关系：<br>"
       }
     },
     "debug_bridge": {
