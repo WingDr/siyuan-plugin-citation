@@ -19,6 +19,7 @@
   "addSelectedItems": "Cite Selected Literature in Zotero",
   "refreshLiteratureNotesContents": "Refresh all literature notes",
   "refreshSingleLiteratureNote": "Refresh literature note",
+  "test": "test",
   "settingTab": {
     "settingTabTitle": "Plugin Version: ${version}",
     "settingTabDescription": "If you have any good ideas or find bugs, please feel free to submit an <a href=\"${issuesURL}\"><b>issue</b></a> on GitHub or email me at <a href=\"mailto:${e-mail}\"><b>my email</b></a>.",

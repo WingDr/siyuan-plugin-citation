@@ -91,7 +91,7 @@ export class EventTrigger {
       });
       await Promise.all(pList);
     }
-    if (isDev) this.logger.info("事件执行完毕");
+    // if (isDev) this.logger.info("事件执行完毕");
     this.onProcessing = false;
   }
 

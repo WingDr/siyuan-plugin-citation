@@ -39,7 +39,7 @@ export class Cite {
     }
     const entry = await this.plugin.database.getContentByKey(key);
     if (!entry) {
-      if (isDev) this.logger.error("找不到文献数据");
+      if (isDev) this.logger.error("找不到文献数据", {key, blockID: this.plugin.literaturePool.get(key)});
       this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);
       return "";
     }
@@ -59,7 +59,7 @@ export class Cite {
     if (!(customCiteText && useDynamicRefLink)) return "";
     const entry = await this.plugin.database.getContentByKey(key);
     if (!entry) {
-      if (isDev) this.logger.error("找不到文献数据");
+      if (isDev) this.logger.error("找不到文献数据", {key, blockID: this.plugin.literaturePool.get(key)});
       this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);
       return "";
     }

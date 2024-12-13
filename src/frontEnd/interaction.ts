@@ -176,6 +176,12 @@ export class InteractionManager {
           return this.plugin.reference.refreshLiteratureNoteContents();
         }
       },
+      // {
+      //   langKey: "test",
+      //   hotkey: "",
+      //   callback: async () => {
+      //   }
+      // },
       {
         supportDatabase: ["Juris-M (debug-bridge)", "Zotero (debug-bridge)"],
         langKey: "addSelectedItems",
@@ -302,7 +308,7 @@ export class InteractionManager {
 
   private async hookPaste(event: CustomEvent) {
     if (isDev) this.logger.info("触发粘贴事件：ev=>", event);
-    if (["Zotero (debug-bridge)", "Juris-M (debug-bridge)"].indexOf(this.plugin.database.type) == -1) {
+    if (["Zotero (debug-bridge)", "Juris-M (debug-bridge)"].indexOf(this.plugin.database.type!) == -1) {
       // 不支持除使用debug-bridge以外的方法（因为要从itemkey开始查询）
       if (isDev) this.logger.info("数据库格式不支持，type=>",{type: this.plugin.database.type});
       return null;
@@ -376,7 +382,7 @@ export class InteractionManager {
 
   private async openURLPlugin(e: CustomEvent) {
     if (isDev) this.logger.info("从外部打开思源链接：", e);
-    if (["Zotero (debug-bridge)", "Juris-M (debug-bridge)"].indexOf(this.plugin.database.type) == -1) {
+    if (["Zotero (debug-bridge)", "Juris-M (debug-bridge)"].indexOf(this.plugin.database.type!) == -1) {
       // 不支持除使用debug-bridge以外的方法（因为要从itemkey开始查询）
       if (isDev) this.logger.info("数据库格式不支持，type=>",{type: this.plugin.database.type});
       return null;

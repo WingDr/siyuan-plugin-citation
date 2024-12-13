@@ -155,6 +155,7 @@ export class Database {
       linkTempGroup.map((tmp: { name: string | undefined; }) => {
         menu.addItem({
           label: tmp.name,
+          icon: "iconRef",
           click: async () => {
             const content = await this.plugin.reference.processReferenceContents(keys, fileId, tmp.name);
             this.plugin.reference.insertContent(this.protyle, content.join(""));

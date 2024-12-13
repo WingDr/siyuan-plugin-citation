@@ -19,6 +19,7 @@
   "addSelectedItems": "引用Zotero中选中的文献",
   "refreshSingleLiteratureNote": "刷新文献内容",
   "refreshLiteratureNotesContents": "刷新所有文献内容",
+  "test": "测试",
   "settingTab": {
     "settingTabTitle": "插件版本：${version}",
     "settingTabDescription": "如果有好的想法或者发现了bug，欢迎到github上提<a href=\"${issuesURL}\"><b>issue</b></a>或者发邮件到我的<a href=\"mailto:${e-mail}\"><b>邮箱</b></a>",
@@ -80,6 +81,11 @@
         "title": "用户数据",
         "titleUserDataInput": "自定义用户数据标题",
         "titleUserDataInputDescription": "默认是 User Data，可以自定义"
+      },
+      "attrView": {
+        "title": "数据库",
+        "attrViewBlockIDTitle": "数据库块id",
+        "attrViewBlockIDDescription": "需要更新的数据库块id"
       }
     },
     "debug_bridge": {

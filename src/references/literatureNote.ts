@@ -54,6 +54,7 @@ export class LiteratureNote {
         this.plugin.literaturePool.set({id: noteData.rootId, key: key});
         this._insertComplexContents(noteData.rootId, noteData.userDataId, `[${userDataTitle}](siyuan://blocks/${noteData.userDataId})\n\n`, entry, []);
         this.updateDataSourceItem(key, entry);
+        this._updateAttrView(key, entry);
         return;
       }
     }
@@ -111,6 +112,72 @@ export class LiteratureNote {
       else if (isDev) this.logger.info("没有数据源数据需要更新");
     }
 
+    private async _updateAttrView(key: string, entry: any) {
+      const attrViewBlock = "20241015103632-o5ez4a0";
+      const attrViewTemplate = `
+      [{
+        "keyID": "20241213145643-93lsu79",
+        "value": {
+          "number": {
+                "content": {{ year ? year + ".0" : 0 }},
+                "isNotEmpty": {{ year ? "true" : "false"}}
+          }
+        }
+      },
+      {
+        "keyID": "20241213154218-0xmwul5",
+        "value": {
+          "text": {"content": "{{ authorString }}"}
+        }
+      },
+      {
+        "keyID": "20241213154247-n49kxja",
+        "value": {
+          "mSelect": [{"content": "{{ containerTitle }}"}]
+        }
+      },
+      {
+        "keyID": "20241213154804-8m6pn1p",
+        "value": {
+          "url": {"content": "{{ zoteroSelectURI }}"}
+        }
+      },
+      {
+        "keyID": "20241213154948-lsl87m9",
+        "value": {
+          "mSelect": {{ tags ? "[" + tags.split(", ").map(tag => \`{ "content": "\${tag}" }\`).join(",") + "]" : "[]" }}
+        }
+      }
+      ]
+      `;
+      const blockID = this.plugin.literaturePool.get(key);
+      let res = await this.plugin.kernelApi.getBlock(attrViewBlock);
+      const content = (res.data as any[])[0].markdown as string;
+      const avIdReg = /.*data-av-id=\"(.*?)\".*/;
+      const avID = content.match(avIdReg)![1];
+      res = await this.plugin.kernelApi.getAttributeView(avID);
+      const av = (res.data as any).av;
+      console.log(av);
+      // 检查块是否在数据库中
+      res = await this.plugin.kernelApi.getAttributeViewKeys(blockID);
+      if (isDev) this.logger.info("获取到块添加的数据库", res.data);
+      const findItem = (res.data as any[]).find(item => item.avID === avID);
+      if (!findItem || !findItem.keyValues) {
+        if (isDev) this.logger.info("数据库中不存在块，将块插入数据库", {avID, blockID});
+        res = await this.plugin.kernelApi.addAttributeViewBlocks(avID, [{
+          id: blockID,
+          isDetached: false
+        }]);
+      }
+      const dataString = generateFromTemplate(attrViewTemplate, entry);
+      if (isDev) this.logger.info("根据模板生成属性=>", {dataString});
+      const data = JSON.parse(dataString);
+      for (const item of data) {
+        if (isDev) this.logger.info("插入数据库属性", item);
+        res = await this.plugin.kernelApi.setAttributeViewBlockAttr(avID, item.keyID, blockID, item.value)
+      }
+    }
+
     private async _processExistedLiteratureNote(literatureId: string, key: string, entry: any, noConfirmUserData=this.plugin.data[STORAGE_NAME].deleteUserDataWithoutConfirm) {
       // 文件存在就更新文件内容
       let deleteList: string[] = [];
@@ -139,6 +206,7 @@ export class LiteratureNote {
             userDataLink = `[${userDataTitle}](siyuan://blocks/${userDataId})\n\n`;
             this._insertComplexContents(literatureId, userDataId, userDataLink, entry, deleteList);
             this.updateDataSourceItem(key, entry);
+            this._updateAttrView(key, entry);
             return;
           });
           else {
@@ -158,6 +226,7 @@ export class LiteratureNote {
       userDataLink = `[${userDataTitle}](siyuan://blocks/${userDataId})\n\n`;
       this._insertComplexContents(literatureId, userDataId, userDataLink, entry, deleteList);
       this.updateDataSourceItem(key, entry);
+      this._updateAttrView(key, entry);
     }
 
     private async _detectUserData( literatureId: string, dataIds: string[], key: string ): Promise<{

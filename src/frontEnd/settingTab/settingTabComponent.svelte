@@ -120,6 +120,9 @@
   let multiCiteConnector: string = $state()!;
   let multiCiteSuffix: string = $state()!;
   let citeName: string = $state()!;
+  // 数据库相关设定变量
+  let attrViewBlock: string = $state();
+  let attrViewTemplate: string = $state();
   // Zotero模板设定变量
   let zoteroLinkTitleTemplate: string = $state()!;
   let zoteroTagTemplate: string = $state()!;
@@ -174,6 +177,12 @@
       name: "citation-setting-template-user-data",
       icon: "",
     },
+    // {
+    //   key: 4,
+    //   text: (plugin.i18n.settingTab as any).templates.attrView.title,
+    //   name: "citation-setting-template-attr-view",
+    //   icon: "",
+    // },
   ];
   let debug_bridge_tab_focus_key = 1;
   let debug_bridge_tabs = [

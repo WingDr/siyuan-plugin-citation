@@ -387,6 +387,33 @@ class KernelApi extends BaseApi {
     return await this.siyuanRequest("/api/query/sql", params);
   }
 
+  public async getAttributeView(avID: string) {
+    return await this.siyuanRequest("/api/av/getAttributeView", {id: avID});
+  }
+
+  public async getAttributeViewKeys(id: string) {
+    return await this.siyuanRequest("api/av/getAttributeViewKeys", {id});
+  }
+
+  public async addAttributeViewBlocks(avID: string, srcs: {
+    id: string,
+    isDetached: boolean
+  }[]) {
+    return await this.siyuanRequest("/api/av/addAttributeViewBlocks", {
+      avID,
+      srcs
+    })
+  }
+
+  public async setAttributeViewBlockAttr(avID: string, keyID: string, blockID: string,value:any ) {
+    return await this.siyuanRequest("/api/av/setAttributeViewBlockAttr", {
+      avID,
+      keyID,
+      rowID: blockID,
+      value
+    })
+  }
+
   public async setExport(options: object) {
     return await this.siyuanRequest("/api/setting/setExport", options);
 

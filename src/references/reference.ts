@@ -201,8 +201,12 @@ export class Reference {
       const entry = await this.plugin.database.getContentByKey(key);
       if (isDev) this.logger.info("从database中获得文献内容 =>", entry);
       if (!entry) {
-        if (isDev) this.logger.error("找不到文献数据");
+        if (isDev) this.logger.error("找不到文献数据", {key, blockID: this.plugin.literaturePool.get(key)});
         this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);
+        // 在zotero里对应不到了，把文档名改成unlinked
+        const literatureId = this.plugin.literaturePool.get(key);
+        const res = await this.plugin.kernelApi.getBlock(literatureId);
+        await this.plugin.kernelApi.renameDoc(notebookId, (res.data as any[])[0].path , "unlinked");
         return null;
       }
       const noteTitle = generateFromTemplate(titleTemplate, entry);
@@ -221,8 +225,7 @@ export class Reference {
       if (literatureKey != entry.key) {
         if (isDev) this.logger.info("给文档刷新key，detail=>", {id: literatureId, name: entry.key});
         await this.plugin.kernelApi.setBlockKey(literatureId, entry.key);
-      }
-      if (isDev) this.logger.info("文档无需刷新key，detail=>", {id: literatureId, name: entry.key});
+      } else if (isDev) this.logger.info("文档无需刷新key，detail=>", {id: literatureId, name: entry.key});
     });
     return await Promise.all(pList).then(async () => {
       if (isDev) this.logger.info("所有文件标题已更新");
@@ -253,7 +256,7 @@ export class Reference {
     const entry = await this.plugin.database.getContentByKey(key);
     if (isDev) this.logger.info("从database中获得文献内容 =>", entry);
     if (!entry) {
-      if (isDev) this.logger.error("找不到文献数据");
+      if (isDev) this.logger.error("找不到文献数据", {key, blockID: this.plugin.literaturePool.get(key)});
       this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);
       return null;
     }
@@ -316,7 +319,7 @@ export class Reference {
       const entry = await this.plugin.database.getContentByKey(key);
       if (isDev) this.logger.info("从database中获得文献内容 =>", entry);
       if (!entry || !entry.key) {
-        if (isDev) this.logger.error("找不到文献数据");
+        if (isDev) this.logger.error("找不到文献数据", {key, blockID: this.plugin.literaturePool.get(key)});
         if (errorReminder) this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);
         return null;
       }
