@@ -3,7 +3,8 @@ import {
     STORAGE_NAME, 
     isDev, 
     refRegDynamic, 
-    refRegStatic 
+    refRegStatic, 
+    workspaceDir
 } from "../utils/constants";
 import SiYuanPluginCitation from "../index";
 import { type ILogger, createLogger } from "../utils/simple-logger";
@@ -46,15 +47,24 @@ export class LiteratureNote {
         let noteTitle = generateFromTemplate(titleTemplate, entry);
         noteTitle = noteTitle.replace(DISALLOWED_FILENAME_CHARACTERS_RE, "_");
         if (isDev) this.logger.info("生成文件标题 =>", noteTitle);
-        const noteData = await this._createLiteratureNote(noteTitle);
-        // 首先将文献的基本内容塞到用户文档的自定义属性中
+        // const noteData = await this._createLiteratureNote(noteTitle);
+        // 创建新文档
+        const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
+        const refPath = this.plugin.data[STORAGE_NAME].referencePath as string;
+        const res = await this.plugin.kernelApi.createDocWithMd(notebookId, refPath + `/${noteTitle}`, "");
+        const rootId = String(res.data);
+        if (isDev) this.logger.info("创建文档，ID =>", rootId);
+        const userDataId = await this._updateEmptyNote(rootId);
+        const noteData = { rootId, userDataId };
+        // 将文献的基本内容塞到用户文档的自定义属性中
         await this.plugin.kernelApi.setBlockKey(noteData.rootId, key);
         this.plugin.kernelApi.setBlockEntry(noteData.rootId, JSON.stringify(cleanEmptyKey(Object.assign({}, entry))));
         // 新建文件之后也要更新对应字典
         this.plugin.literaturePool.set({id: noteData.rootId, key: key});
-        this._insertComplexContents(noteData.rootId, noteData.userDataId, `[${userDataTitle}](siyuan://blocks/${noteData.userDataId})\n\n`, entry, []);
-        this.updateDataSourceItem(key, entry);
+        this._updateDataSourceItem(key, entry);
         this._updateAttrView(key, entry);
+        // 对文档本身进行更新
+        this._updateComplexContents(noteData.rootId, noteData.userDataId, `[${userDataTitle}](siyuan://blocks/${noteData.userDataId})\n\n`, entry, []);
         return;
       }
     }
@@ -78,7 +88,7 @@ export class LiteratureNote {
       return `![img](${assetPath})`;
     }
 
-    private async updateDataSourceItem(key: string, entry: any) {
+    private async _updateDataSourceItem(key: string, entry: any) {
       const fileID = this.plugin.literaturePool.get(key);
       const itemAttrs:Record<string, any> = {};
       // 获取反链标题
@@ -157,24 +167,29 @@ export class LiteratureNote {
       let userDataId = "";
       let userDataLink = "";
       if (dataIds.length) {
-        const userDataInfo = await this._detectUserData(literatureId, dataIds, key);
+        // 查找用户数据片段
+        const userDataInfo = await this._detectUserData(literatureId, dataIds, key, userDataTitle);
         deleteList = userDataInfo.deleteList;
         userDataId = userDataInfo.userDataId;
         userDataLink = userDataInfo.userDataLink;
         const hasUserData = userDataInfo.hasUserData;
+        if (isDev) this.logger.info("获得用户片段更新信息=>", userDataInfo);
         if (!hasUserData) {
+          // 没有查找到用户数据片段时进行更新
           if (!noConfirmUserData) return confirm("⚠️", (this.plugin.i18n.confirms as any).updateWithoutUserData.replaceAll("${title}", entry.title), async () => {
+            this._updateDataSourceItem(key, entry);
+            this._updateAttrView(key, entry);
             // 不存在用户数据区域，整个更新
             deleteList = dataIds;
             userDataId = await this._updateEmptyNote(literatureId);
             // if (!userDataLink.length) userDataLink = `((${userDataId} '${userDataTitle}'))\n\n`;
             userDataLink = `[${userDataTitle}](siyuan://blocks/${userDataId})\n\n`;
-            this._insertComplexContents(literatureId, userDataId, userDataLink, entry, deleteList);
-            this.updateDataSourceItem(key, entry);
-            this._updateAttrView(key, entry);
+            this._updateComplexContents(literatureId, userDataId, userDataLink, entry, deleteList);
             return;
           });
           else {
+            this._updateDataSourceItem(key, entry);
+            this._updateAttrView(key, entry);
             deleteList = dataIds;
             userDataId = await this._updateEmptyNote(literatureId);
           }
@@ -189,24 +204,57 @@ export class LiteratureNote {
       // 插入前置片段
       // if (!userDataLink.length) userDataLink = `((${userDataId} '${userDataTitle}'))\n\n`;
       userDataLink = `[${userDataTitle}](siyuan://blocks/${userDataId})\n\n`;
-      this._insertComplexContents(literatureId, userDataId, userDataLink, entry, deleteList);
-      this.updateDataSourceItem(key, entry);
+      this._updateComplexContents(literatureId, userDataId, userDataLink, entry, deleteList);
+      this._updateDataSourceItem(key, entry);
       this._updateAttrView(key, entry);
     }
 
-    private async _detectUserData( literatureId: string, dataIds: string[], key: string ): Promise<{
+    private async _detectUserData( literatureId: string, dataIds: string[], key: string, userDataTitle: string ): Promise<{
       deleteList: string[], userDataId: string, userDataLink: string, hasUserData: boolean
     }> {
+      const useWholeDocAsUserData = this.plugin.data[STORAGE_NAME].useWholeDocAsUserData as boolean;
       let userDataId = "";
       let userDataLink = "";
       // 首先判断是否有新式的用户数据情况
       let res = await this.plugin.kernelApi.getLiteratureUserData(literatureId);
-      if (res.data && (res.data as any[]).length) return {
-        deleteList: dataIds.slice(0, dataIds.indexOf((res.data as any[])[0].block_id)),
-        userDataId: (res.data as any[])[0].block_id as string,
-        userDataLink: "",
-        hasUserData: true
-      };
+      if (res.data && (res.data as any[]).length) {
+        if ((res.data as any[])[0].block_id != literatureId ) {
+          // 说明用户数据片段在文档里，并且设置和情况对的上，照常更新
+          if (!useWholeDocAsUserData) return {
+            deleteList: dataIds.slice(0, dataIds.indexOf((res.data as any[])[0].block_id)),
+            userDataId: (res.data as any[])[0].block_id as string,
+            userDataLink: "",
+            hasUserData: true
+          };
+          else {
+            // 说明用户数据在文档里，但是想要转换到新的情况，主要是把deleteList扩充，然后给文档附上属性
+            await this.plugin.kernelApi.setBlockAttr(literatureId, {"custom-literature-block-type": "user data"});
+            return {
+              deleteList: dataIds.slice(0, dataIds.indexOf((res.data as any[])[0].block_id)+1),
+              userDataId: literatureId,
+              userDataLink: "",
+              hasUserData: true
+            };
+          }
+        } else {
+          // 说明用户数据片段就是文档，而且情况对的上，就完全不更新就行
+          if (useWholeDocAsUserData) return {
+            deleteList: [], userDataId: literatureId, userDataLink: "", hasUserData: true
+          };
+          else {
+            // 说明用户数据就是文档，但是想转换成传统情况
+            await this.plugin.kernelApi.setBlockAttr(literatureId, {"custom-literature-block-type": ""}); // 将文档的属性值复位
+            res = await this.plugin.kernelApi.prependBlock(literatureId, "markdown", `# ${userDataTitle}\n{: custom-literature-block-type="user data"}`);
+            return {
+              deleteList: [],
+              userDataId: (res.data as any[])[0].doOperations[0].id,
+              userDataLink: "",
+              hasUserData: true
+            }
+          }
+        }
+        
+      }
       // 否则根据旧版规则查找第一个块的内容中是否包含用户自定义片段
       res = await this.plugin.kernelApi.getBlock(dataIds[0]);
       const dyMatch = ((res.data as any[])[0].markdown as string).match(refRegDynamic);
@@ -256,19 +304,6 @@ export class LiteratureNote {
       }
     }
     
-    private async _createLiteratureNote(noteTitle: string): Promise<{rootId: string, userDataId: string}> {
-      const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
-      const refPath = this.plugin.data[STORAGE_NAME].referencePath as string;
-      const res = await this.plugin.kernelApi.createDocWithMd(notebookId, refPath + `/${noteTitle}`, "");
-      const rootId = String(res.data);
-      if (isDev) this.logger.info("创建文档，ID =>", rootId);
-      const userDataId = await this._updateEmptyNote(rootId);
-      return {
-        rootId,
-        userDataId
-      };
-    }
-    
     private async _deleteBlocks(blockIds: string[]) {
       const p = blockIds.map(blockId => {
         return this.plugin.kernelApi.deleteBlock(blockId);
@@ -276,7 +311,11 @@ export class LiteratureNote {
       return Promise.all(p);
     }
   
-    private async _insertComplexContents(literatureId: string, userDataId: string, userDataLink: string, entry: any, deleteList: string[]) {
+    private async _updateComplexContents(literatureId: string, userDataId: string, userDataLink: string, entry: any, deleteList: string[]) {
+      // 通用操作，先把需要删掉的都删掉
+      if (deleteList.length) await this.plugin.networkManager.sendNetworkMission([deleteList], this._deleteBlocks.bind(this));
+      // 首先判断是否将整个文档用作用户数据，即literatureId和userDataId相同
+      if (userDataId == literatureId) return;
       const noteTemplate = this.plugin.data[STORAGE_NAME].noteTemplate as string;
       const note = entry.note;
       entry.note = entry.note?.map((n: { prefix: string; index: any; }) => {
@@ -294,9 +333,8 @@ export class LiteratureNote {
       });
       entry.annotations = await Promise.all(annoPList).then(res => res.join("\n\n"));
       const literatureNote = generateFromTemplate(noteTemplate, entry);
-      if (deleteList.length) await this.plugin.networkManager.sendNetworkMission([deleteList], this._deleteBlocks.bind(this));
       if (isDev) this.logger.info("向literature note发起插入请求, content=>", {literatureNote});
-      this.plugin.kernelApi.prependBlock(literatureId, userDataLink + literatureNote);
+      this.plugin.kernelApi.prependBlock(literatureId, "markdown", userDataLink + literatureNote);
       note.forEach( async (n: { content: string; index: any; }) => {
         const processor = new NoteProcessor(this.plugin);
         n.content = await processor.processNote(n.content as string);
@@ -388,10 +426,27 @@ export class LiteratureNote {
     
     private async _updateEmptyNote(rootId: string): Promise<string> {
       const userDataTitle = this.plugin.data[STORAGE_NAME].userDataTitle as string;
-      await this.plugin.kernelApi.updateBlockContent(rootId, "markdown", `# ${userDataTitle}\n{: custom-literature-block-type="user data"}`);
-      const res = await this.plugin.kernelApi.getChidBlocks(rootId);
-      const userDataId = (res.data as any[])[0].id as string;
+      const useWholeDocAsUserData = this.plugin.data[STORAGE_NAME].useWholeDocAsUserData as boolean;
+      const userDataTemplatePath = this.plugin.data[STORAGE_NAME].userDataTemplatePath as string;
+      let userDataId = "";
+      if (useWholeDocAsUserData) {
+        if (isDev) this.logger.info("使用整个文档作为用户数据");
+        // 对整个文档附加custom-literature-block-type属性
+        await this.plugin.kernelApi.setBlockAttr(rootId, {
+          "custom-literature-block-type": "user data"
+        });
+        userDataId = rootId;
+      } else {
+        await this.plugin.kernelApi.updateBlockContent(rootId, "markdown", `# ${userDataTitle}\n{: custom-literature-block-type="user data"}`);
+        const res = await this.plugin.kernelApi.getChidBlocks(rootId);
+        userDataId = (res.data as any[])[0].id as string;
+      }
       if (isDev) this.logger.info("获取用户区域标题，ID =>", userDataId);
+      // 在用户数据中调用模板渲染
+      const absTemplatePath = workspaceDir + userDataTemplatePath.replaceAll("/", "\\")
+      if (isDev) this.logger.info("获取到模板绝对路径：" + absTemplatePath);
+      const res = await this.plugin.kernelApi.renderTemplate(rootId, absTemplatePath);
+      this.plugin.kernelApi.appendBlock(rootId, "dom", (res.data as any).content)
       return userDataId;
     }
 

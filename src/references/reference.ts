@@ -296,6 +296,7 @@ export class Reference {
     // 避免重复设置或者不设置导致的bug
     if (refStartNode && refStartNode != protyle.protyle.toolbar!.range.startContainer) protyle.protyle.toolbar!.range.setStartBefore(refStartNode);
     if (refEndNode && refEndNode != protyle.protyle.toolbar!.range.endContainer) protyle.protyle.toolbar!.range.setEndAfter(refEndNode);
+    if (isDev) this.logger.info("替换选区为, range=>", {range: protyle.protyle.toolbar!.range});
     await protyle.insert(content, false, true);
     // TODO 等待前后端联动API更新再更新文档标号
     // if (isDev) this.getCursorOffsetInBlock(blockId);

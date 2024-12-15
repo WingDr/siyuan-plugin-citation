@@ -56,6 +56,8 @@ export const defaultDBPassword = "CTT";
 export const defaultUserDataTile = "User Data";
 export const defaultAttrViewBlock = "";
 export const defaultAttrViewTemplate = "";
+export const defaultUserDataTemplatePath = "";
+export const defaultUseWholeDocAsUserData = false;
 
 export const defaultSettingData = {
     referenceNotebook: "",
@@ -81,5 +83,7 @@ export const defaultSettingData = {
     multiCiteSuffix: "",
     linkTemplatesGroup: [],
     attrViewBlock: defaultAttrViewBlock,
-    attrViewTemplate: defaultAttrViewTemplate
+    attrViewTemplate: defaultAttrViewTemplate,
+    userDataTemplatePath: defaultUserDataTemplatePath,
+    useWholeDocAsUserData: defaultUseWholeDocAsUserData
 };

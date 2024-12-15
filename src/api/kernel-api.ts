@@ -301,13 +301,22 @@ class KernelApi extends BaseApi {
     return await this.siyuanRequest("/api/query/sql", params);
   }
 
-  public async prependBlock(blockId: string, md: string) {
+  public async prependBlock(blockId: string, type: "markdown" | "dom", data: string) {
     const params = {
-      "data": md,
-      "dataType": "markdown",
+      "data": data,
+      "dataType": type,
       "parentID": blockId
     };
     return await this.siyuanRequest("/api/block/prependBlock", params);
+  }
+
+  public async appendBlock(blockId: string, type: "markdown" | "dom", data: string) {
+    const params = {
+      "data": data,
+      "dataType": type,
+      "parentID": blockId
+    };
+    return await this.siyuanRequest("/api/block/appendBlock", params);
   }
 
   public async updateCitedBlock(blockId: string, md: string): Promise<SiyuanData> {
@@ -424,6 +433,13 @@ class KernelApi extends BaseApi {
       "id": blockID
     };
     return await this.siyuanRequest("/api/export/exportMdContent", params);
+  }
+
+  public async renderTemplate(id: string, absPath: string) {
+    const params = {
+      id, path: absPath
+    }
+    return await this.siyuanRequest("/api/template/render", params);
   }
 }
 

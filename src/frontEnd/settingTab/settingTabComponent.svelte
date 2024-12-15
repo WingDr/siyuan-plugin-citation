@@ -98,7 +98,6 @@
   let deleteUserDataWithoutConfirm: boolean = $state()!;
   // 思源模板设定变量
   let titleTemplate: string = $state()!;
-  let userDataTitle: string = $state()!;
   let noteTemplate: string = $state()!;
   let linkTemplate: string = $state()!;
   let customCiteText: boolean = $state()!;
@@ -120,6 +119,10 @@
   let multiCiteConnector: string = $state()!;
   let multiCiteSuffix: string = $state()!;
   let citeName: string = $state()!;
+  // 用户数据相关设定
+  let userDataTitle: string = $state()!;
+  let userDataTemplatePath: string = $state()!;
+  let useWholeDocAsUserData: string = $state()!;
   // 数据库相关设定变量
   let attrViewBlock: string = $state()!;
   let attrViewTemplate: string = $state()!;
@@ -263,6 +266,10 @@
     titleTemplate = plugin.data[STORAGE_NAME]?.titleTemplate ?? defaultSettingData.titleTemplate;
     // 默认用户数据标题
     userDataTitle = plugin.data[STORAGE_NAME]?.userDataTitle ?? defaultSettingData.userDataTitle;
+    // 默认用户数据模板路径
+    userDataTemplatePath = plugin.data[STORAGE_NAME]?.userDataTemplatePath ?? defaultSettingData.userDataTemplatePath;
+    // 默认是否使用整个文档作为用户数据
+    useWholeDocAsUserData = plugin.data[STORAGE_NAME]?.useWholeDocAsUserData ?? defaultSettingData.useWholeDocAsUserData;
     // 默认文献内容模板
     noteTemplate = plugin.data[STORAGE_NAME]?.noteTemplate ?? defaultSettingData.noteTemplate;
     // 默认不开启自定义引用
@@ -358,7 +365,9 @@
       multiCiteConnector,
       multiCiteSuffix,
       attrViewBlock,
-      attrViewTemplate
+      attrViewTemplate,
+      useWholeDocAsUserData,
+      userDataTemplatePath
     };
     if (settingData.database === "Zotero")
       settingData.database = "Zotero (better-bibtex)";
@@ -694,7 +703,7 @@
     <Panel display={panels[1].key === panel_focus}>
       <Tabs focus={template_tab_focus_key} tabs={template_tabs} >
         {#snippet children({ focus })}
-            <!-- 标签页 1 内容 -->
+          <!-- 标签页 1 内容 -->
           <div data-type={template_tabs[0].name} class:fn__none={template_tabs[0].key !== focus}>
             <!-- 多个配置的卡片 -->
             <Group title={(plugin.i18n.settingTab as any).templates.citeLink.citeTypeCardTitle}>
@@ -980,112 +989,159 @@
             {/if}
           </div>
 
-          <!-- 标签页 2 内容 -->
-          <div data-type={template_tabs[1].name} class:fn__none={template_tabs[1].key !== focus}>
-            <!-- 文档标题模板 -->
-            <Item
-              block={true}
-              title={(plugin.i18n.settingTab as any).templates.literatureNote.titleTemplateInputTitle}
-              text={(plugin.i18n.settingTab as any).templates.literatureNote.titleTemplateInputDescription}
-            >
-              {#snippet input()}
-                    <Input
-                  
-                  block={true}
-                  normal={true}
-                  type={ItemType.text}
-                  settingKey="Text"
-                  settingValue={titleTemplate}
-                  placeholder="Input the title template"
-                  onchanged={(event) => {
-                    if (isDev)
-                      logger.info(
-                        `Input changed: ${event.detail.key} = ${event.detail.value}`
-                      );
-                    titleTemplate = event.detail.value;
-                  }}
-                />
-                  {/snippet}
-            </Item>
-            <!-- 刷新全部文档标题 -->
-            <Item
-              block={false}
-              title={(plugin.i18n.settingTab as any).templates.literatureNote.refreshLiteratureNoteBtnTitle}
-              text={(plugin.i18n.settingTab as any).templates.literatureNote.refreshLiteratureNoteBtnDesciption}
-            >
-              {#snippet input()}
-                    <Input
-                  
-                  block={false}
-                  normal={true}
-                  type={ItemType.button}
-                  settingKey="Button"
-                  settingValue={(plugin.i18n.settingTab as any).templates.literatureNote.refreshLiteratureNoteBtnText}
-                  onclicked={() => {
-                    if (isDev) logger.info("Button clicked");
-                    refreshLiteratureNoteTitle(titleTemplate);
-                    // dispatcher("refresh literature note title", { titleTemplate });
-                  }}
-                />
-                  {/snippet}
-            </Item>
-            <!-- 文献内容模板 -->
-            <Item
-              block={true}
-              title={(plugin.i18n.settingTab as any).templates.literatureNote.noteTempTexareaTitle}
-              text={(plugin.i18n.settingTab as any).templates.literatureNote.noteTempTexareaDescription}
-            >
-              {#snippet input()}
-                    <Input
-                  
-                  block={true}
-                  normal={true}
-                  rows={10}
-                  type={ItemType.textarea}
-                  settingKey="Textarea"
-                  settingValue={noteTemplate}
-                  placeholder="Input the literature note template"
-                  onchanged={(event) => {
-                    if (isDev)
-                      logger.info(
-                      `Input changed: ${event.detail.key} = ${event.detail.value}`
-                      );
-                    noteTemplate = event.detail.value;
-                  }}
-                />
-                  {/snippet}
-            </Item>
-          </div>
-
-          <!-- 标签页 3 内容 -->
-          <div data-type={template_tabs[2].name} class:fn__none={template_tabs[2].key !== focus}>
-            <!-- 自定义用户数据标题 -->
-            <Item
-              block={true}
-              title={(plugin.i18n.settingTab as any).templates.userData.titleUserDataInput}
-              text={(plugin.i18n.settingTab as any).templates.userData.titleUserDataInputDescription}
-            >
-              {#snippet input()}
-                    <Input
-                  
-                  block={true}
-                  normal={true}
-                  type={ItemType.text}
-                  settingKey="Text"
-                  settingValue={userDataTitle}
-                  placeholder="Input the 'User Data' title"
-                  onchanged={(event) => {
-                    if (isDev)
-                      logger.info(
+        <!-- 标签页 2 内容 -->
+        <div data-type={template_tabs[1].name} class:fn__none={template_tabs[1].key !== focus}>
+          <!-- 文档标题模板 -->
+          <Item
+            block={true}
+            title={(plugin.i18n.settingTab as any).templates.literatureNote.titleTemplateInputTitle}
+            text={(plugin.i18n.settingTab as any).templates.literatureNote.titleTemplateInputDescription}
+          >
+            {#snippet input()}
+                  <Input
+                
+                block={true}
+                normal={true}
+                type={ItemType.text}
+                settingKey="Text"
+                settingValue={titleTemplate}
+                placeholder="Input the title template"
+                onchanged={(event) => {
+                  if (isDev)
+                    logger.info(
                       `Input changed: ${event.detail.key} = ${event.detail.value}`
                     );
-                    userDataTitle = event.detail.value; 
-                  }}
-                />
-                  {/snippet}
-            </Item>
-            <!-- 数据库块id -->
-            <Item
+                  titleTemplate = event.detail.value;
+                }}
+              />
+                {/snippet}
+          </Item>
+          <!-- 刷新全部文档标题 -->
+          <Item
+            block={false}
+            title={(plugin.i18n.settingTab as any).templates.literatureNote.refreshLiteratureNoteBtnTitle}
+            text={(plugin.i18n.settingTab as any).templates.literatureNote.refreshLiteratureNoteBtnDesciption}
+          >
+            {#snippet input()}
+                  <Input
+                
+                block={false}
+                normal={true}
+                type={ItemType.button}
+                settingKey="Button"
+                settingValue={(plugin.i18n.settingTab as any).templates.literatureNote.refreshLiteratureNoteBtnText}
+                onclicked={() => {
+                  if (isDev) logger.info("Button clicked");
+                  refreshLiteratureNoteTitle(titleTemplate);
+                  // dispatcher("refresh literature note title", { titleTemplate });
+                }}
+              />
+                {/snippet}
+          </Item>
+          <!-- 文献内容模板 -->
+          <Item
+            block={true}
+            title={(plugin.i18n.settingTab as any).templates.literatureNote.noteTempTexareaTitle}
+            text={(plugin.i18n.settingTab as any).templates.literatureNote.noteTempTexareaDescription}
+          >
+            {#snippet input()}
+                  <Input
+                
+                block={true}
+                normal={true}
+                rows={10}
+                type={ItemType.textarea}
+                settingKey="Textarea"
+                settingValue={noteTemplate}
+                placeholder="Input the literature note template"
+                onchanged={(event) => {
+                  if (isDev)
+                    logger.info(
+                    `Input changed: ${event.detail.key} = ${event.detail.value}`
+                    );
+                  noteTemplate = event.detail.value;
+                }}
+              />
+                {/snippet}
+          </Item>
+        </div>
+
+        <!-- 标签页 3 内容 -->
+        <div data-type={template_tabs[2].name} class:fn__none={template_tabs[2].key !== focus}>
+          <!-- 自定义用户数据标题 -->
+          <Item
+            block={true}
+            title={(plugin.i18n.settingTab as any).templates.userData.titleUserDataInput}
+            text={(plugin.i18n.settingTab as any).templates.userData.titleUserDataInputDescription}
+          >
+            {#snippet input()}
+                  <Input
+                
+                block={true}
+                normal={true}
+                type={ItemType.text}
+                settingKey="Text"
+                settingValue={userDataTitle}
+                placeholder="Input the 'User Data' title"
+                onchanged={(event) => {
+                  if (isDev)
+                    logger.info(
+                    `Input changed: ${event.detail.key} = ${event.detail.value}`
+                  );
+                  userDataTitle = event.detail.value; 
+                }}
+              />
+                {/snippet}
+          </Item>
+          <!-- 用户数据模板路径 -->
+          <Item
+            block={true}
+            title={(plugin.i18n.settingTab as any).templates.userData.userDataTemplatePathTitle}
+            text={(plugin.i18n.settingTab as any).templates.userData.userDataTemplatePathDescription}
+          >
+            {#snippet input()}
+              <Input
+                block={true}
+                normal={true}
+                type={ItemType.text}
+                settingKey="Text"
+                settingValue={userDataTemplatePath}
+                placeholder="/data/templates/template.md"
+                onchanged={(event) => {
+                  if (isDev)
+                    logger.info(
+                    `Input changed: ${event.detail.key} = ${event.detail.value}`
+                  );
+                  userDataTemplatePath = event.detail.value;
+                }}
+              />
+            {/snippet}
+          </Item>
+          <!-- 是否使用整个文献内容文档作为用户数据 -->
+          <Item
+            block={false}
+            title={(plugin.i18n.settingTab as any).templates.userData.useWholeDocAsUserDataTitle}
+            text={(plugin.i18n.settingTab as any).templates.userData.useWholeDocAsUserDataDescription}
+          >
+            {#snippet input()}
+              <Input
+                block={false}
+                normal={true}
+                type={ItemType.checkbox}
+                settingKey="Checkbox"
+                settingValue={useWholeDocAsUserData}
+                onchanged={(event) => {
+                  if (isDev)
+                    logger.info(
+                      `Checkbox changed: ${event.detail.key} = ${event.detail.value}`
+                    );
+                  useWholeDocAsUserData = event.detail.value;
+                }}
+              />
+                {/snippet}
+          </Item>
+          <!-- 数据库块id -->
+          <Item
             block={true}
             title={(plugin.i18n.settingTab as any).templates.userData.attrViewBlockInput}
             text={(plugin.i18n.settingTab as any).templates.userData.attrViewBlockDescription}
@@ -1112,33 +1168,32 @@
           </Item>
           <!-- 数据库模板 -->
           <Item
-          block={true}
-          title={(plugin.i18n.settingTab as any).templates.userData.attrViewTemplateInput}
-          text={(plugin.i18n.settingTab as any).templates.userData.attrViewTemplateDescription + attrViewSuggest}
-        >
-          {#snippet input()}
-                <Input
-              
-              block={true}
-              normal={true}
-              rows={10}
-              type={ItemType.textarea}
-              settingKey="Textarea"
-              settingValue={attrViewTemplate}
-              placeholder="Input the literature note template"
-              onchanged={(event) => {
-                if (isDev)
-                  logger.info(
-                  `Input changed: ${event.detail.key} = ${event.detail.value}`
-                  );
-                attrViewTemplate = event.detail.value;
-              }}
-            />
-              {/snippet}
-        </Item>
-          </div>
-                  {/snippet}
-        </Tabs>
+            block={true}
+            title={(plugin.i18n.settingTab as any).templates.userData.attrViewTemplateInput}
+            text={(plugin.i18n.settingTab as any).templates.userData.attrViewTemplateDescription + attrViewSuggest}
+          >
+            {#snippet input()}
+              <Input
+                block={true}
+                normal={true}
+                rows={10}
+                type={ItemType.textarea}
+                settingKey="Textarea"
+                settingValue={attrViewTemplate}
+                placeholder="Input the literature note template"
+                onchanged={(event) => {
+                  if (isDev)
+                    logger.info(
+                    `Input changed: ${event.detail.key} = ${event.detail.value}`
+                    );
+                  attrViewTemplate = event.detail.value;
+                }}
+              />
+                {/snippet}
+          </Item>
+        </div>
+        {/snippet}
+      </Tabs>
     </Panel>
 
     <Panel display={panels[2].key === panel_focus}>
