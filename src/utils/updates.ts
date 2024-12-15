@@ -31,7 +31,7 @@ async function updateUserDataTitle(plugin: SiYuanPluginCitation) {
 
 async function updateLinkTemplatesGroup(plugin:SiYuanPluginCitation) {
   let data_change = false;
-  if (!plugin.data[STORAGE_NAME].linkTemplatesGroup.length) {
+  if (!plugin.data[STORAGE_NAME].linkTemplatesGroup?.length) {
     plugin.data[STORAGE_NAME].linkTemplatesGroup = [{
       name: "default",
       ...plugin.data[STORAGE_NAME]
