@@ -24,6 +24,7 @@ export class Reference {
   private refStartNode!: HTMLElement | null;
   private refEndNode!: HTMLElement | null;
   private refSpanList!: HTMLElement[];
+  private replaceEndNode!: boolean;
 
   constructor(plugin: SiYuanPluginCitation) {
     this.plugin = plugin;
@@ -50,6 +51,7 @@ export class Reference {
   public setEmptySelection(): void {
     this.refStartNode = null;
     this.refEndNode = null;
+    this.replaceEndNode = false;
     this.refSpanList = [];
   }
 
@@ -116,6 +118,7 @@ export class Reference {
     });
     if (isDev) this.logger.info("头尾引用为, nodes=>", {start: this.refStartNode, end: this.refEndNode});
     if (isDev) this.logger.info("所有引用, key=>", existRefList);
+    this.replaceEndNode = (refEndNode != selectedNode);
     return {
       keyList: existRefList,
       refStartNode: refStartNode,
@@ -295,7 +298,10 @@ export class Reference {
     if (isDev) this.logger.info("头尾引用为, nodes=>", {start: refStartNode, end: refEndNode});
     // 避免重复设置或者不设置导致的bug
     if (refStartNode && refStartNode != protyle.protyle.toolbar!.range.startContainer) protyle.protyle.toolbar!.range.setStartBefore(refStartNode);
-    if (refEndNode && refEndNode != protyle.protyle.toolbar!.range.endContainer) protyle.protyle.toolbar!.range.setEndAfter(refEndNode);
+    if (refEndNode && this.replaceEndNode){
+      if (isDev) this.logger.info("确认结尾节点变化，替换结尾节点");
+      protyle.protyle.toolbar!.range.setEndAfter(refEndNode);
+    } 
     if (isDev) this.logger.info("替换选区为, range=>", {range: protyle.protyle.toolbar!.range});
     await protyle.insert(content, false, true);
     // TODO 等待前后端联动API更新再更新文档标号
