@@ -49,6 +49,8 @@
       "title": "模板设置",
       "citeLink": {
         "title": "引用链接",
+        "useDefaultCiteTypeTitle": "默认使用第一种引用类型",
+        "useDefaultCiteTypeDescription": "在插入引用时直接使用第一种引用类型，不单独弹窗选择引用类型（在引用的右键菜单中可以手动切换引用类型）",
         "citeTypeCardTitle": "引用类型列表",
         "citeTypeCardSet": "设置",
         "citeTypeCardDelete": "删除",

@@ -57,6 +57,7 @@ export const defaultUserDataTile = "User Data";
 export const defaultAttrViewBlock = "";
 export const defaultAttrViewTemplate = "";
 export const defaultUserDataTemplatePath = "";
+export const defaultUseDefaultCiteType = false;
 export const defaultUseWholeDocAsUserData = false;
 
 export const defaultSettingData = {
@@ -85,5 +86,6 @@ export const defaultSettingData = {
     attrViewBlock: defaultAttrViewBlock,
     attrViewTemplate: defaultAttrViewTemplate,
     userDataTemplatePath: defaultUserDataTemplatePath,
-    useWholeDocAsUserData: defaultUseWholeDocAsUserData
+    useWholeDocAsUserData: defaultUseWholeDocAsUserData,
+    useDefaultCiteType: defaultUseDefaultCiteType
 };

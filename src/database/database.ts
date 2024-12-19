@@ -166,22 +166,28 @@ export class Database {
     if (this.plugin.isRefPathExist) {
       const menu = new Menu("cite-type-selection");
       const linkTempGroup = this.plugin.data[STORAGE_NAME].linkTemplatesGroup;
-      linkTempGroup.map((tmp: { name: string | undefined; }) => {
-        menu.addItem({
-          label: tmp.name,
-          icon: "iconRef",
-          click: async () => {
-            const content = await this.plugin.reference.processReferenceContents(keys, fileId, tmp.name);
-            this.plugin.reference.insertContent(this.protyle, content.join(""), this.refStartNode, this.refEndNode);
-          }
+      const useDefaultCiteType = this.plugin.data[STORAGE_NAME].useDefaultCiteType;
+      if (!useDefaultCiteType) {
+        linkTempGroup.map((tmp: { name: string | undefined; }) => {
+          menu.addItem({
+            label: tmp.name,
+            icon: "iconRef",
+            click: async () => {
+              const content = await this.plugin.reference.processReferenceContents(keys, fileId, tmp.name);
+              this.plugin.reference.insertContent(this.protyle, content.join(""), this.refStartNode, this.refEndNode);
+            }
+          });
         });
-      });
-      if (isDev) this.logger.info("展示引用类型选择菜单", menu);
-      const rect = this.protyle.protyle.toolbar!.range.getBoundingClientRect();
-      menu.open({
-        x: rect.left,
-        y: rect.top
-      });
+        if (isDev) this.logger.info("展示引用类型选择菜单", menu);
+        const rect = this.protyle.protyle.toolbar!.range.getBoundingClientRect();
+        menu.open({
+          x: rect.left,
+          y: rect.top
+        });
+      } else {
+        const content = await this.plugin.reference.processReferenceContents(keys, fileId, linkTempGroup[0].name);
+        this.plugin.reference.insertContent(this.protyle, content.join(""), this.refStartNode, this.refEndNode);
+      }
     }
   }
 

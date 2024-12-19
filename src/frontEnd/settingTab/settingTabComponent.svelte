@@ -119,6 +119,7 @@
   let multiCiteConnector: string = $state()!;
   let multiCiteSuffix: string = $state()!;
   let citeName: string = $state()!;
+  let useDefaultCiteType: boolean = $state()!;
   // 用户数据相关设定
   let userDataTitle: string = $state()!;
   let userDataTemplatePath: string = $state()!;
@@ -299,6 +300,8 @@
     multiCitePrefix = plugin.data[STORAGE_NAME]?.multiCitePrefix ?? defaultSettingData.multiCitePrefix;
     multiCiteConnector = plugin.data[STORAGE_NAME]?.multiCiteConnector ?? defaultSettingData.multiCiteConnector;
     multiCiteSuffix = plugin.data[STORAGE_NAME]?.multiCiteSuffix ?? defaultSettingData.multiCiteSuffix;
+    // 默认直接使用第一种引用类型
+    useDefaultCiteType = plugin.data[STORAGE_NAME]?.useDefaultCiteType ?? defaultSettingData.useDefaultCiteType;
     // 默认引用链接模板细节
     linkTemplatesGroup = plugin.data[STORAGE_NAME]?.linkTemplatesGroup ?? [{
       name: "default",
@@ -341,6 +344,7 @@
     multiCiteConnector = linkTemplatesGroup[0].multiCiteConnector;
     multiCiteSuffix = linkTemplatesGroup[0].multiCiteSuffix;
     nameTemplate = linkTemplatesGroup[0].nameTemplate;
+    const storage_group = $state.snapshot(linkTemplatesGroup);
     const settingData = {
       referenceNotebook,
       referencePath,
@@ -359,7 +363,7 @@
       zoteroTagTemplate,
       dbPassword,
       dbSearchDialogType,
-      linkTemplatesGroup,
+      linkTemplatesGroup: storage_group,
       shortAuthorLimit,
       multiCitePrefix,
       multiCiteConnector,
@@ -367,7 +371,8 @@
       attrViewBlock,
       attrViewTemplate,
       useWholeDocAsUserData,
-      userDataTemplatePath
+      userDataTemplatePath,
+      useDefaultCiteType
     };
     if (settingData.database === "Zotero")
       settingData.database = "Zotero (better-bibtex)";
@@ -599,8 +604,7 @@
         text={(plugin.i18n.settingTab as any).basic.AutoReplaceSwitchDescription}
       >
         {#snippet input()}
-            <Input
-            
+          <Input
             block={false}
             normal={true}
             type={ItemType.checkbox}
@@ -705,6 +709,29 @@
         {#snippet children({ focus })}
           <!-- 标签页 1 内容 -->
           <div data-type={template_tabs[0].name} class:fn__none={template_tabs[0].key !== focus}>
+            <!-- 是否选择不提示删除用户数据 -->
+            <Item
+              block={false}
+              title={(plugin.i18n.settingTab as any).templates.citeLink.useDefaultCiteTypeTitle}
+              text={(plugin.i18n.settingTab as any).templates.citeLink.useDefaultCiteTypeDescription}
+            >
+              {#snippet input()}
+                  <Input
+                  block={false}
+                  normal={true}
+                  type={ItemType.checkbox}
+                  settingKey="Checkbox"
+                  settingValue={useDefaultCiteType}
+                  onchanged={(event) => {
+                    if (isDev)
+                      logger.info(
+                        `Checkbox changed: ${event.detail.key} = ${event.detail.value}`
+                      );
+                      useDefaultCiteType = event.detail.value;
+                  }}
+                />
+                {/snippet}
+            </Item> 
             <!-- 多个配置的卡片 -->
             <Group title={(plugin.i18n.settingTab as any).templates.citeLink.citeTypeCardTitle}>
               {#each linkTemplatesGroup as linkItem, index }

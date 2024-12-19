@@ -398,9 +398,9 @@ export class Reference {
   }
 
   private _processMultiCitation(link: string, idx:number, full_length:number, typeSetting: any): string {
-    const prefix = typeSetting.multiCitePrefix;
-    const connector = typeSetting.multiCiteConnector;
-    const suffix = typeSetting.multiCiteSuffix;
+    const prefix = typeSetting.multiCitePrefix ?? "" ;
+    const connector = typeSetting.multiCiteConnector ?? "";
+    const suffix = typeSetting.multiCiteSuffix ?? "";
     if (full_length == 1) return prefix + link + suffix;
     else if (idx == 0) return prefix + link + connector;
     else if (idx == full_length-1) return link + suffix;
