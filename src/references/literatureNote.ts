@@ -130,9 +130,6 @@ export class LiteratureNote {
       const content = (res.data as any[])[0].markdown as string;
       const avIdReg = /.*data-av-id=\"(.*?)\".*/;
       const avID = content.match(avIdReg)![1];
-      res = await this.plugin.kernelApi.getAttributeView(avID);
-      const av = (res.data as any).av;
-      console.log(av);
       // 检查块是否在数据库中
       res = await this.plugin.kernelApi.getAttributeViewKeys(blockID);
       if (isDev) this.logger.info("获取到块添加的数据库", res.data);
