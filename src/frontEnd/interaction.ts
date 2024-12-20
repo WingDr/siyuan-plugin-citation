@@ -37,7 +37,7 @@ interface ICommandSetting {
   dockCallback?: (element: HTMLElement) => void
 }
 
-type MenuPlace = "TitleIcon" | "BlockIcon" | "BreadcrumbMore" | "BlockRef";
+type MenuPlace = "TitleIcon" | "BlockIcon" | "BreadcrumbMore" | "BlockRef" | "DocTree";
 
 interface IMenuItemSetting {
   place?: MenuPlace[],
@@ -225,6 +225,13 @@ export class InteractionManager {
         label: (this.plugin.i18n.menuItems as any).turnTo,
         generateSubMenu: this.generateChangeCiteMenu.bind(this)
       },
+      // {
+      //   place: ["DocTree"],
+      //   check: this.isLiteratureNote.bind(this),
+      //   iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconScrollHoriz"></use></svg>',
+      //   label: (this.plugin.i18n.menuItems as any).refreshSingleLiteratureNote,
+      //   clickCallback: (id) => {this.plugin.reference.refreshSingleLiteratureNote(id);}
+      // },
     ];
   }
 
@@ -302,6 +309,7 @@ export class InteractionManager {
     this.plugin.eventTrigger.addEventBusEvent("open-menu-blockref", this.customBlockRefMenu.bind(this));
     this.plugin.eventTrigger.addEventBusEvent("paste", this.hookPaste.bind(this));
     this.plugin.eventTrigger.addEventBusEvent("open-siyuan-url-plugin", this.openURLPlugin.bind(this));
+    // this.plugin.eventTrigger.addEventBusEvent("open-menu-doctree", this.customdocTreeMenu.bind(this));
     // this.plugin.eventTrigger.addEventBusEvent("open-menu-breadcrumbmore", this.customBreadcrumbMore.bind(this));
     // this.plugin.eventTrigger.addEvent("transactions", {
     //   type: "repeated",
@@ -455,6 +463,26 @@ export class InteractionManager {
     if (isDev) this.logger.info("触发eventBus：open-menu-blockref，=>", event);
 
     const place = "BlockRef" as MenuPlace;
+    // const submenu = [] as IMenuItemOption[];
+    const id  = event.detail.protyle.block.rootID;
+    this.menuItems.forEach(item => {
+      if (!item.place || item.place.indexOf(place) != -1) {
+        if (!item.check || item.check(id)) {
+          (event.detail.menu as subMenu).addItem({
+            iconHTML: item.iconHTML,
+            label: this.plugin.i18n.prefix + item.label,
+            click: () => {item.clickCallback!(event.detail);},
+            submenu: item.submenu ?? (item.generateSubMenu ? item.generateSubMenu(event.detail) : null)
+          } as IMenu);
+        }
+      }
+    });
+  }
+
+  private customdocTreeMenu(event: CustomEvent) {
+    if (isDev) this.logger.info("触发eventBus：open-menu-doctree，=>", event);
+
+    const place = "DocTree" as MenuPlace;
     // const submenu = [] as IMenuItemOption[];
     const id  = event.detail.protyle.block.rootID;
     this.menuItems.forEach(item => {
