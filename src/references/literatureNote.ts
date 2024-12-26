@@ -440,7 +440,7 @@ export class LiteratureNote {
       }
       if (isDev) this.logger.info("获取用户区域标题，ID =>", userDataId);
       // 在用户数据中调用模板渲染
-      const absTemplatePath = workspaceDir + userDataTemplatePath.replaceAll("/", "\\")
+      const absTemplatePath = workspaceDir + userDataTemplatePath
       if (isDev) this.logger.info("获取到模板绝对路径：" + absTemplatePath);
       const res = await this.plugin.kernelApi.renderTemplate(rootId, absTemplatePath);
       this.plugin.kernelApi.appendBlock(rootId, "dom", (res.data as any).content)
