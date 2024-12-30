@@ -439,11 +439,17 @@ export class LiteratureNote {
         userDataId = (res.data as any[])[0].id as string;
       }
       if (isDev) this.logger.info("获取用户区域标题，ID =>", userDataId);
-      // 在用户数据中调用模板渲染
-      const absTemplatePath = workspaceDir + userDataTemplatePath
-      if (isDev) this.logger.info("获取到模板绝对路径：" + absTemplatePath);
-      const res = await this.plugin.kernelApi.renderTemplate(rootId, absTemplatePath);
-      this.plugin.kernelApi.appendBlock(rootId, "dom", (res.data as any).content)
+      if (userDataTemplatePath.length) {
+        // 在用户数据中调用模板渲染
+        const absTemplatePath = workspaceDir + userDataTemplatePath
+        if (isDev) this.logger.info("获取到模板绝对路径：" + absTemplatePath);
+        try {
+          const res = await this.plugin.kernelApi.renderTemplate(rootId, absTemplatePath);
+          this.plugin.kernelApi.appendBlock(rootId, "dom", (res.data as any).content)
+        } catch (error) {
+          this.plugin.noticer.error((this.plugin.i18n as any).errors.userDataTemplatePathRenderError, error);
+        }
+      }
       return userDataId;
     }
 
