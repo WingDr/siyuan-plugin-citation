@@ -38,7 +38,8 @@ module.exports = (env, argv) => {
                 {from: "assets/", to: "./dist/assets/"},
                 {from: "sample-data/sample.bib", to: "./dist/sample-data/"},
                 {from: "sample-data/sample.json", to: "./dist/sample-data/"},
-                {from: "zoteroJS/", to: "./dist/zoteroJS/"}
+                {from: "zoteroJS/", to: "./dist/zoteroJS/"},
+                {from: "scripts/", to: "./dist/scripts/"}
             ],
         }));
         plugins.push(new ZipPlugin({
@@ -61,7 +62,8 @@ module.exports = (env, argv) => {
                 {from: "plugin.json", to: "./"},
                 {from: "assets/", to: "./assets/"},
                 {from: "sample-data/", to: "./sample-data/"},
-                {from: "zoteroJS/", to: "./zoteroJS/"}
+                {from: "zoteroJS/", to: "./zoteroJS/"},
+                {from: "scripts/", to: "./scripts/"}
             ]
         }));
     }
