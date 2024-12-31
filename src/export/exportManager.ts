@@ -1,6 +1,7 @@
-import { isDev } from "../utils/constants";
+import { dataDir, isDev, workspaceDir } from "../utils/constants";
 import SiYuanPluginCitation from "../index";
 import { createLogger, type ILogger } from "../utils/simple-logger";
+import FormData from "form-data"
 
 type ExportType = "markdown" | "word" | "latex" | "pdf";
 interface ExportOption {
@@ -27,16 +28,20 @@ export class ExportManager {
     this.logger = createLogger("export manager");
   }
 
-  public async export(exportIDs: string[], exportType: ExportType ) {
+  public async export(exportID: string, exportType: ExportType ) {
     switch (exportType) {
       case "markdown": {
-        return await this.exportMarkdown(exportIDs);
+        return await this.exportMarkdown(exportID);
+      }
+      case "word": {
+        return await this.exportWord(exportID);
       }
     }
 
   }
 
-  private async exportMarkdown(exportIDs: string[]) {
+  private async exportMarkdown(exportID: string) {
+    // 导出带有citekey的markdown文档
     await this.setExportConfig({
       blockRefMode: 2,
       blockEmbedMode: 0,
@@ -44,25 +49,117 @@ export class ExportManager {
       blockRefTextRight: "\}"
     } as ExportOption);
 
-    const refReg = /\[\\exportRef\{(.*?)\}\]\(siyuan:\/\/blocks\/(.*?)\)/g;
+    const refReg = /\[\\exportRef\{(.*?)\}\]\(siyuan:\/\/blocks\/(.*?)\)/;
     const citeBlockIDs = this.plugin.literaturePool.ids;
-    const pList = exportIDs.map(async blockID => {
-      const res = await this.plugin.kernelApi.exportMDContent(blockID);
-      const content = (res.data as any).content as string;
-      if (isDev) this.logger.info("获得导出内容，content=>", {content});
-      return content.replace(refReg, (match, p1, p2) => {
-        if (citeBlockIDs.indexOf(p2) != -1) {
-          return `\\cite{${this.plugin.literaturePool.get(p2)}}`;
+    let res = await this.plugin.kernelApi.getBlock(exportID);
+    const fileTitle = (res.data as any)[0].content;
+    res = await this.plugin.kernelApi.exportMDContent(exportID);
+    let content = (res.data as any).content as string;
+    if (isDev) this.logger.info("获得导出内容，content=>", {content});
+    let iter = 0;
+    while (content.match(refReg)) {
+      const match = content.match(refReg);
+      let replaceContent = "";
+      if (citeBlockIDs.indexOf(match![2]) != -1) {
+        const key = this.plugin.literaturePool.get(match![2]);
+        const entry = await this.plugin.database.getContentByKey(key);
+        if (entry.citekey) {
+          replaceContent = `[@${entry.citekey}]`;
         } else {
-          return p1;
+          replaceContent = `[@${match![1]}](zotero://select/library/items/${entry.itemKey})`
         }
-      });
-    });
-
-    const exportContents = await Promise.all(pList);
-    if (isDev) this.logger.info("获得处理后的导出内容, contents=>", exportContents);
+      } else {
+        replaceContent = match![1];
+      }
+      content = content.replace(refReg, replaceContent);
+      iter = iter + 1;
+      if (iter > 1000) break;
+    }
+    if (isDev) this.logger.info("获得处理后的导出内容, contents=>", content);
     await this.resetExportConfig();
-    return exportContents;
+    // 下载文件
+    const file  = new Blob([content]);
+    const url = window.URL.createObjectURL(file);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${fileTitle}.md`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    return content;
+  }
+
+  private async exportWord(exportID: string) {
+    // 导出带有citekey的markdown文档
+    await this.setExportConfig({
+      blockRefMode: 2,
+      blockEmbedMode: 0,
+      blockRefTextLeft: "\\exportRef{",
+      blockRefTextRight: "\}"
+    } as ExportOption);
+
+    const refReg = /\[\\exportRef\{(.*?)\}\]\(siyuan:\/\/blocks\/(.*?)\)/;
+    const citeBlockIDs = this.plugin.literaturePool.ids;
+    let res = await this.plugin.kernelApi.getBlock(exportID);
+    const fileTitle = (res.data as any)[0].content;
+    res = await this.plugin.kernelApi.exportMDContent(exportID);
+    let content = (res.data as any).content as string;
+    if (isDev) this.logger.info("获得导出内容，content=>", {content});
+    let iter = 0;
+    while (content.match(refReg)) {
+      let replaceContent = "";
+      let totalStr = ""
+      const match = content.match(refReg);
+      if (citeBlockIDs.indexOf(match![2])==-1) {
+        totalStr = match![0];
+        replaceContent = match![1];
+      }
+      else {
+        const following = this.getNeighborCites(content.slice(match!.index! + match![0].length), citeBlockIDs)
+        totalStr = following ? match![0] + following.totalStr : match![0];
+        const keys = following ? [match![2], ...following.keys] : [match![2]];
+        const links = following ? [match![1], ...following.links] : [match![1]];
+        console.log({totalStr, keys, links})
+        if (keys.length == 1) {
+          if (citeBlockIDs.indexOf(keys[0]) != -1) {
+            const key = this.plugin.literaturePool.get(match![2]);
+            const entry = await this.plugin.database.getContentByKey(key);
+            replaceContent = `[@siyuan_cite{${entry.entry.data.id}}@siyuan_name{zotero_refresh_to_update}}]`;
+          } else {
+            replaceContent = match![1];
+          }
+        } else {
+          const ids = [];
+          for (let key of keys) {
+            const itemKey = this.plugin.literaturePool.get(key);
+            const entry = await this.plugin.database.getContentByKey(itemKey);
+            ids.push(entry.entry.data.id);
+          }
+          replaceContent = `[@siyuan_cite{${ids.join(",")}}@siyuan_name{zotero_refresh_to_update}}]`;
+        }
+      }
+      content = content.replace(totalStr, replaceContent);
+      iter = iter + 1;
+      if (iter > 1000) break;
+    }
+    if (isDev) this.logger.info("获得处理后的导出内容, contents=>", {content});
+    await this.resetExportConfig();
+    const mdFile = await this.plugin.kernelApi.putFile("/temp/convert/pandoc/citation/exportTemp.md", false, new Blob([content]));
+    await this.plugin.kernelApi.pandoc("citation", [
+      "./exportTemp.md",
+      "-o", "exportTemp.docx",
+      "--lua-filter", dataDir + "/plugins/siyuan-plugin-citation/scripts/citation.lua"
+    ])
+    console.log("导出完成")
+    res = await this.plugin.kernelApi.getFile("/temp/convert/pandoc/citation/exportTemp.docx", "any") as any;
+    const file = await (new Response(((res as any).body as ReadableStream))).blob()
+    // 下载
+    const url = window.URL.createObjectURL(file);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${fileTitle}.docx`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    return content;
   }
 
   private async setExportConfig(changedOptions: ExportOption) {
@@ -78,5 +175,24 @@ export class ExportManager {
 
   private async resetExportConfig() {
     await this.plugin.kernelApi.setExport(this.userConfig);
+  }
+
+  private getNeighborCites(content: string, citeBlockIDs: string[]): null | {totalStr: string, links: string[], keys: string[]} {
+    const refReg = /\[\\exportRef\{(.*?)\}\]\(siyuan:\/\/blocks\/(.*?)\)/;
+    const match = content.match(refReg);
+    if (!match) { return null; }
+    else if (citeBlockIDs.indexOf(match[2]) != -1 && (match.index == 1 || match.index == 0)) {
+      const following = this.getNeighborCites(content.slice(match.index + match[0].length), citeBlockIDs);
+      if (!following) return {
+        totalStr: content.slice(0, match.index + match[0].length),
+        links: [match[1]],
+        keys: [match[2]]
+      }
+      else return {
+        totalStr: content.slice(0, match.index + match[0].length) + following.totalStr,
+        links: [match[1], ...following.links],
+        keys: [match[2], ...following.keys]
+      }
+    } else { return null; }
   }
 }

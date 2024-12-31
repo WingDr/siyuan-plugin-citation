@@ -45,7 +45,7 @@ export abstract class DataModal {
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public async updateDataSourceItem(key: string, content: {[attr: string]: any}) {
-    if (isDev) this.logger.info("改数据模型无法执行此方法，modal=>", this);
+    if (isDev) this.logger.info("该数据模型无法执行此方法，modal=>", this);
   }
   public async getAttachmentByItemKey(itemKey: string): Promise<any> {
     return null;

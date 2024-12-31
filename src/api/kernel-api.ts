@@ -435,6 +435,19 @@ class KernelApi extends BaseApi {
     return await this.siyuanRequest("/api/export/exportMdContent", params);
   }
 
+  public async exportResources(paths: string[], name: string) {
+    const params = {
+      paths,
+      name
+    };
+    return await this.siyuanRequest("/api/export/exportResources", params);
+  }
+
+  public async pandoc(dir: string, args: string[]) {
+    const params = {dir, args};
+    return await this.siyuanRequest("/api/convert/pandoc", params);
+  }
+
   public async renderTemplate(id: string, absPath: string) {
     const params = {
       id, path: absPath

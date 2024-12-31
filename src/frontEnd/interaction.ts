@@ -213,12 +213,12 @@ export class InteractionManager {
         label: (this.plugin.i18n.menuItems as any).refreshSingleLiteratureNote,
         clickCallback: (id) => {this.plugin.reference.refreshSingleLiteratureNote(id);}
       },
-      // {
-      //   place: ["BreadcrumbMore", "TitleIcon"],
-      //   iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconUpload"></use></svg>',
-      //   label: "导出",
-      //   clickCallback: (id) => {this.plugin.exportManager.export([id], "markdown");}
-      // },
+      {
+        place: ["BreadcrumbMore", "TitleIcon"],
+        iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconUpload"></use></svg>',
+        label: "导出",
+        clickCallback: (id) => {this.plugin.exportManager.export(id, "word");}
+      },
       {
         place: ["BlockRef"],
         iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconRefresh"></use></svg>',

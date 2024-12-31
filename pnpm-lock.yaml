@@ -14,6 +14,9 @@ importers:
       axios:
         specifier: ^1.7.9
         version: 1.7.9
+      form-data:
+        specifier: 4.0.1
+        version: 4.0.1
       fuse.js:
         specifier: ^7.0.0
         version: 7.0.0
