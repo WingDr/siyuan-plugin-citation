@@ -14,6 +14,7 @@ import { createLogger, type ILogger } from "../utils/simple-logger";
 import { type DatabaseType } from "../database/database";
 import { EventTrigger } from "../events/eventTrigger";
 import { SettingTab } from "./settingTab/settingTab";
+import { exportTypes, type ExportType } from "../export/exportManager";
 
 interface ICommandSetting {
   supportDatabase?: DatabaseType[];
@@ -217,7 +218,8 @@ export class InteractionManager {
         place: ["BreadcrumbMore", "TitleIcon"],
         iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconUpload"></use></svg>',
         label: "导出",
-        clickCallback: (id) => {this.plugin.exportManager.export(id, "word");}
+        // clickCallback: (id) => {this.plugin.exportManager.export(id, "markdown");},
+        generateSubMenu: this.generateExportMenu.bind(this)
       },
       {
         place: ["BlockRef"],
@@ -497,6 +499,20 @@ export class InteractionManager {
         }
       }
     });
+  }
+
+  private generateExportMenu(detail: any): IMenu[] {
+    const icons = ["iconMarkdown", "iconExact", "iconUpload"]
+    return exportTypes.map((type: ExportType, index:number) => {
+      return {
+        label: type,
+        icon: icons[index],
+        id: type,
+        click: () => {
+          this.plugin.exportManager.export(detail.data.id, type)
+        }
+      } as IMenu;
+    })
   }
 
   private generateChangeCiteMenu(detail: any): IMenu[] {
