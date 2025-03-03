@@ -19,7 +19,6 @@ interface ExportOption {
     "pandocBin"?: string
 }
 
-
 export class ExportManager {
   private userConfig!: {[key: string]: string};
   private logger: ILogger;
@@ -35,6 +34,9 @@ export class ExportManager {
       }
       case "word": {
         return await this.exportWord(exportID);
+      }
+      case "latex": {
+        return await this.exportLatex(exportID);
       }
     }
 
@@ -158,6 +160,79 @@ export class ExportManager {
       const a = document.createElement('a');
       a.href = url;
       a.download = `${fileTitle}.docx`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } finally {
+      await this.resetExportConfig();
+    }
+  }
+
+  private async exportLatex(exportID: string) {
+    // 导出带有citekey的markdown文档
+    await this.setExportConfig({
+      blockRefMode: 2,
+      blockEmbedMode: 0,
+      blockRefTextLeft: "\\exportRef{",
+      blockRefTextRight: "\}"
+    } as ExportOption);
+    try {
+      const refReg = /\[\\exportRef\{(.*?)\}\]\(siyuan:\/\/blocks\/(.*?)\)/;
+      const citeBlockIDs = this.plugin.literaturePool.ids;
+      let res = await this.plugin.kernelApi.getBlock(exportID);
+      const fileTitle = (res.data as any)[0].content;
+      res = await this.plugin.kernelApi.exportMDContent(exportID);
+      let content = (res.data as any).content as string;
+      if (isDev) this.logger.info("获得导出内容，content=>", {content});
+      let iter = 0;
+      while (content.match(refReg)) {
+        let replaceContent = "";
+        let totalStr = ""
+        const match = content.match(refReg);
+        if (citeBlockIDs.indexOf(match![2])==-1) {
+          totalStr = match![0];
+          replaceContent = match![1];
+        }
+        else {
+          const following = this.getNeighborCites(content.slice(match!.index! + match![0].length), citeBlockIDs)
+          totalStr = following ? match![0] + following.totalStr : match![0];
+          const keys = following ? [match![2], ...following.keys] : [match![2]];
+          const links = following ? [match![1], ...following.links] : [match![1]];
+          console.log({totalStr, keys, links})
+          if (keys.length == 1) {
+            if (citeBlockIDs.indexOf(keys[0]) != -1) {
+              const key = this.plugin.literaturePool.get(match![2]);
+              const entry = await this.plugin.database.getContentByKey(key);
+              replaceContent = `\\cite{${entry.citekey}}`;
+            } else {
+              replaceContent = match![1];
+            }
+          } else {
+            const ids = [];
+            for (let key of keys) {
+              const itemKey = this.plugin.literaturePool.get(key);
+              const entry = await this.plugin.database.getContentByKey(itemKey);
+              ids.push(entry.citekey);
+            }
+            replaceContent = `\\cite{${ids.join(",")}}`;
+          }
+        }
+        content = content.replace(totalStr, replaceContent);
+        iter = iter + 1;
+        if (iter > 1000) break;
+      }
+      if (isDev) this.logger.info("获得处理后的导出内容, contents=>", {content});
+      await this.plugin.kernelApi.putFile("/temp/convert/pandoc/citation/exportTemp.md", false, new Blob([content]));
+      await this.plugin.kernelApi.pandoc("citation", [
+        "./exportTemp.md",
+        "-o", "exportTemp.tex"
+      ])
+      res = await this.plugin.kernelApi.getFile("/temp/convert/pandoc/citation/exportTemp.tex", "any") as any;
+      const file = await (new Response(((res as any).body as ReadableStream))).blob()
+      // 下载
+      const url = window.URL.createObjectURL(file);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${fileTitle}.tex`;
       a.click();
       window.URL.revokeObjectURL(url);
     } finally {
