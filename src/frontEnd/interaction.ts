@@ -217,7 +217,7 @@ export class InteractionManager {
       {
         place: ["BreadcrumbMore", "TitleIcon"],
         iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconUpload"></use></svg>',
-        label: "导出",
+        label: (this.plugin.i18n.menuItems as any).export,
         // clickCallback: (id) => {this.plugin.exportManager.export(id, "markdown");},
         generateSubMenu: this.generateExportMenu.bind(this)
       },

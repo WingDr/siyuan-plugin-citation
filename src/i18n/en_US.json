@@ -116,7 +116,8 @@
   "menuItems": {
     "refreshCitation": "Refresh citation links",
     "refreshSingleLiteratureNote": "Refresh literature note",
-    "turnTo": "Turn to"
+    "turnTo": "Turn to",
+    "export": "Export"
   },
   "errors": {
     "notebookUnselected": "Notebook Not Selected!",
