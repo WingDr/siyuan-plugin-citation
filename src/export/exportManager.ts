@@ -224,7 +224,8 @@ export class ExportManager {
       await this.plugin.kernelApi.putFile("/temp/convert/pandoc/citation/exportTemp.md", false, new Blob([content]));
       await this.plugin.kernelApi.pandoc("citation", [
         "./exportTemp.md",
-        "-o", "exportTemp.tex"
+        "-o", "exportTemp.tex",
+        "--wrap=none"
       ])
       res = await this.plugin.kernelApi.getFile("/temp/convert/pandoc/citation/exportTemp.tex", "any") as any;
       const file = await (new Response(((res as any).body as ReadableStream))).blob()
