@@ -221,7 +221,7 @@ const defaultHeaders = {
   "Zotero-Allowed-Request": "true"
 };
 const JSHeaders = {
-  "Content-Type": "application/javascript",
+  "Content-Type": "text/plain",
   "Accept": "application/json",
   "Zotero-Allowed-Request": "true"
 };
