@@ -45,7 +45,7 @@ export class SearchDialog {
       content: `<div id="${id}" class="b3-dialog__body"/>`,
       width: this.plugin.isMobile ? "92vw" : "640px",
       height: "40vh",
-      destroyCallback(){if (component) unmount(component)}
+      // destroyCallback(){if (component) unmount(component)}
     });
 
     const component = mount(SearchDialogComponent, {
