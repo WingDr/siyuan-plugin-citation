@@ -4,13 +4,12 @@
 
 > 已经实现了基本功能的引用插件，从这里开始将思源变得更加学术
 
-**0.3.6更新：**
-1. **开放了docker和远程网页版的使用，通过在浏览器上安装[CORS Unblock 插件](https://webextension.org/listing/access-control.html)可以使用浏览器前端与zotero通信。**
-2. **转变用户数据的引用模式为思源链接，不会再占用反链，并且用户数据标识由判断开头的引用变为用户数据标题的自定义属性。**
-3. **感兴趣的用户可以自行编译尝试[dev](https://github.com/WingDr/siyuan-plugin-citation/tree/dev)分支下的代码，目前的新功能主要推送到这里，但是前端还不是很完善。**
-4. **对于下载了最新的debug-bridge插件的用户，请在zotero的**`编辑->设置->高级->编辑器`**中设置**`extensions.zotero.debug-bridge.token`**为您的密码，并更新到最新版的citation插件，即可正常使用。**
-
-**在0.1.1坂本中，本插件已经支持通过[debug-brige](https://github.com/retorquere/zotero-better-bibtex/releases?q=debug-bridge&expanded=true)插件访问Zotero的功能，相对于现在版本使用better-bibtex的方法，这种方式的访问速度更快，效率更高，并且可以实现很多额外的功能（详见[大佬的quicker动作](https://getquicker.net/User/Actions/395924-ttChen)，在思源或者zotero上的功能之后都有可能实装在该插件中），使用该功能的用户需要提前做好准备，具体的准备方法参考[Run Javascript in Zotero](https://www.yuque.com/chentaotao-cf9fr/gthfy4/clqahv57w5ugmdev)**
+**0.4.0重要更新**
+1. **修改了引用逻辑，相邻的引用应当一同编辑**
+2. **支持设定多种引用格式**
+3. **支持最新的debug-bridge-1.0，修改了通信细节（兼容旧版）**
+4. **支持导出带有zotero引用的word文档和LaTex**
+5. **支持数据库同步（但是模板比较难写，需要对思源的数据库有一定认知）**
 
 **感谢[Geo123abc](https://github.com/Geo123abc)制作的[教学视频](https://www.bilibili.com/video/BV17u411j79z/?vd_source=b4b4ca14b1a866918dcef4ca52896f03)**
 
@@ -40,7 +39,7 @@
 | 搜索面板 | Citation插件面板 | Zotero面板 | Citation插件面板 / Zotero面板 （可选） |
 | 初始化速度 | 慢 | 快 | 快 |
 | 搜索/插入速度 | 快 | 慢 | 快（Citation插件面板） |
-| 兼容Zotero 7 | - | × （暂时） | √ |
+| 兼容Zotero 7 | - | √ | √ |
 | 兼容其它文献管理软件 | ✓ | × | × |
 | 支持导入pdf标注<br>（annotations） | × | × | ✓ |
 | 支持从Zotero拖入选中/批注时自动引用 | × | ✓ | ✓ |
@@ -52,7 +51,7 @@
 | 导出带有引用的word文档 | × | × | ✓ |
 | 导出带引用的LaTex | × | × | ✓（同时要求安装better-bibtex插件） |
 
-### 对插件进行设置
+### 对插件进行基本设置
 1. 进入设置界面：点击`设置-集市-已下载-文献引用`插件开关旁边的齿轮按钮进入设置界面，也可以通过在顶栏插件按钮点击后的菜单中点击`文献引用`直接进入插件的设置界面。
 2. 选择存放[文献内容](#名词说明)的[笔记本](#名词说明)：只能下拉选择已经在文档树中打开的笔记本，如果之前设置的笔记本本次启动未打开，那么将无法使用本插件。
 3. 填写[文献库](#名词说明)路径：路径以`/`开头，例如`/References`或者`/Assets/References`，注意该路径本质上为文档所在路径，不要在最后加`/`。**注意：如果更换了文献库的路径，之前路径上的文献库将失效。此外，请确保该文档存在，因为[本插件不会自动创建文献库文档](#文献库路径不存在)**
@@ -82,13 +81,11 @@
 
 ### 如果你使用 Zotero/Juris-M (debug-bridge) 作为文献数据来源
 
-- **确保你的 Zotero 或者 Juris-M 中安装了 [debug-bridge](https://github.com/retorquere/zotero-better-bibtex/releases/download/debug-bridge/debug-bridge-6.7.79.emile.limonia.xpi) 插件，并按照 [Run Javascript in Zotero](https://www.yuque.com/chentaotao-cf9fr/gthfy4/clqahv57w5ugmdev) 教程进行配置（可以不选择“CTT”作为密码，只需要在设置面板中进行相应设置）**
+- **确保你的 Zotero 或者 Juris-M 中安装了 [debug-bridge](https://github.com/retorquere/zotero-better-bibtex/releases?q=debug-bridge&expanded=true) 插件，并按照 [Run Javascript in Zotero](https://www.yuque.com/chentaotao-cf9fr/gthfy4/clqahv57w5ugmdev) 教程进行配置（可以不选择“CTT”作为密码，只需要在设置面板中进行相应设置）**
 - 仍然推荐在Zotero中安装Better BibTex插件，以自动生成条目的citekey属性。
 - 在插件的设置面板中，数据库类型处选择`Zotero (debug-bridge)`或者`Juris-M (debug-bridge)`。
 - 在设置面板的“debug-bridge插件”栏中，输入设置时配置的密码，并选择使用SiYuan（Citation插件面板）或者Zotero面板作为搜索面板。
 - 在使用前确保你的 Zotero 或者 Juris-M 是打开的。
-
-## 我该怎么使用这个插件
 
 
 ## 目前有什么功能
@@ -148,6 +145,8 @@
 - {{libraryID}}：文献内容在Zotero中的库ID，如果使用数据文件则默认为1，未来将据此支持多个库（多个文件可重复citekey）的搜索插入，不使用Zotero则不存在
 - {{abstract}}：摘要
 - {{authorString}}：所有作者按顺序排列的字符串，不存在则为空字符串
+- {{creators}}: 作者列表，为初始数据源格式，方便用户自定义。本身是一个对象列表，可以通过`.`调用其属性，不存在则为空列表。
+- {{firstCreator}}: 第一个作者
 - {{containerTitle}}：文献所在刊物（论文集、期刊等）标题，不存在则为null
 - {{DOI}}：文献的 DOI
 - {{eprint}}：预印本
@@ -241,7 +240,7 @@
 在v0.0.8版本中，文献内容支持了用户数据区域，其标志是默认名为`User Data`的一级标题（以便思源的悬浮预览能够直接预览到所有的用户数据），在这个标题之后的部分不会随着引用更新，但是由此也对文献内容的格式产生了一些要求。现在单个文献的文献内容文档格式如下：
 
 ```markdown
-((用户数据标题ID '用户数据标题'))
+[用户数据标题](siyuan://blocks/用户数据标题块ID)
 
 模板生成内容
 
@@ -249,6 +248,8 @@
 
 用户数据内容
 ```
+
+在0.4.0版本中，增加了将全部文献内容文档设定为用户数据区域的开关，开启则不会有用户数据标题以及模板生成的内容，即全文档可自行修改。
 
 ### 可以修改什么
 
@@ -279,6 +280,10 @@
 
   ***注意！在`.bib`和`.json`文件中，每个文献的`citekey/id`必须是唯一的***
 
+## 网页/docker版使用前提
+
+在0.3.6版本后，通过在浏览器上安装[CORS Unblock 插件](https://webextension.org/listing/access-control.html)可以使用浏览器前端与zotero通信。
+
 ## 打开“自定义引用”的开关后会发生什么
 
 [引用链接模板](#对插件进行设置)将变为完全自定义引用的格式，即引用链接模板生成的内容不再为锚文本，而是将**直接插入文档**。此时，为了避免对用户自身内容的影响，插件的刷新引用功能将**不会对链接（即双括号）外的部分进行维护**。
@@ -299,8 +304,35 @@
 
 **注意**：该功能**不会**导致`.bib`和`.json`文件被删除！
 
-## 扩展：使用数据库统计当前文档中引用的所有文献
+## 使用数据库统计文献信息
 
+从0.4.0版本开始，文献引用插件支持在引用的同时更新数据库，并按一定模板规则更新数据库数据。如果要开启该功能，需要在设置面板中进行一定的配置。
+1. 在`数据库块id`中填入想要更新的数据库所在块的id。
+2. 此时`数据库属性模板`的说明中将会显示如下的数据库列详细信息，然后以json格式填写数据库属性模板。注意这里根据模板生成的json格式数据会直接作为`/api/av/setAttributeViewBlockAttr`这个api的传入参数，所以数据库没有更新可能是因为json内部一些数据的格式错误导致的。
+
+![](./assets/database.png)
+
+## 扩展：从zotero反过来索引到思源中的文献内容文档
+
+**注意：该功能仅适用于使用debug-bridge插件的模式中，因为传输的数据是itemKey，其他模式获取不到**
+
+参考[这个论坛中的方法](https://forums.zotero.org/discussion/37129/adding-search-engines)，在`engine.json`中添加下面这项：
+```json
+{
+  "_name": "SiYuan",
+  "_alias": "SiYuan",
+  "_description": "Open Ref in SiYuan",
+  "_icon": "https://b3log.org/siyuan/favicon.ico",
+  "_hidden": false,
+  "_urlTemplate": "siyuan://plugins/siyuan-plugin-citation/open-ref?key={z:key}",
+  "_urlParams": [],
+  "_urlNamespaces": {
+    "z": "http://www.zotero.org/namespaces/openSearch#",
+    "": "http://a9.com/-/spec/opensearch/1.1/"
+  },
+  "_iconSourceURI": "https://b3log.org/siyuan/favicon.ico"
+}
+```
 
 ## 常见错误类型
 

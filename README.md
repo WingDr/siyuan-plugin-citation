@@ -4,14 +4,12 @@
 
 > A citation plugin that implements basic functionality, hoping to make your SiYuan more academically oriented.
 
-**Update 0.3.6:**
-
-1. **Opened up the usage of Docker and remote web version. By installing the** **[CORS Unblock plugin](https://webextension.org/listing/access-control.html)** **on your browser, you can communicate with Zotero through the browser frontend.**
-2. **Changed the reference mode of user data to use Zotero links, which will no longer occupy reverse links. Also, the user data identifier has been changed from citation starting with &quot;judgment&quot; to a custom attribute using the user data title.**
-3. **Interested users can compile and try the code under the [dev](https://github.com/WingDr/siyuan-plugin-citation/tree/dev) branch by themselves. The new features are mainly pushed here, but the frontend is not yet fully developed.**
-4. **For users who have downloaded the latest debug-bridge plugin, please go to Zotero's `Edit -> Preferences -> Advanced -> Editor` and set `extensions.zotero.debug-bridge.token` to your password, and update to the latest version of the citation plugin to use it properly.**
-
-**Starting from version 0.1.1, this plugin now supports accessing Zotero using the [debug-bridge](https://github.com/retorquere/zotero-better-bibtex/releases?q=debug-bridge&expanded=true) plugin. Compared to the current method of using better-bibtex, this approach provides faster access and higher efficiency. Additionally, it enables many extra functionalities (for more details, see the [ttChen's Quicker Actions](https://getquicker.net/User/Actions/395924-ttChen), which might be integrated into this plugin for both Siyuan and Zotero functionalities). Users who wish to utilize this feature should prepare in advance by following the specific steps outlined in [Run Javascript in Zotero](https://www.yuque.com/chentaotao-cf9fr/gthfy4/clqahv57w5ugmdev).**
+**Important Updates in 0.4.0**
+1. **Modified citation logic: adjacent citations should be edited together**
+2. **Support for multiple citation styles**
+3. **Compatibility with latest debug-bridge-1.0, updated communication details (backward compatible)**
+4. **Support exporting Word documents and LaTeX with Zotero citations**
+5. **Database synchronization support (template creation requires understanding of SiYuan's database)**
 
 **Special thanks to [Geo123abc](https://github.com/Geo123abc) for creating the [tutorial video](https://www.bilibili.com/video/BV17u411j79z/?vd_source=b4b4ca14b1a866918dcef4ca52896f03).**
 
@@ -41,14 +39,15 @@ Currently, you can use three different sources for literature data: Data Files (
 | Search Panel | Citation plugin panel | Zotero panel | Citation plugin panel / Zotero panel (optional) |
 | Initialization Speed | Slow | Fast | Fast |
 | Search/Insert Speed | Fast | Slow | Fast (Citation plugin panel) |
-| Compatible with Zotero 7 | - | × (temporarily) | √ |
+| Compatible with Zotero 7 | - | √ | √ |
 | Compatible with Other Reference Managers | ✓ | × | × |
 | Supports Importing PDF Annotations | × | × | ✓ |
 | Support for Automatic Referencing from Zotero Drag-and-Drop | × | ✓ | ✓ |
 | Supports Inserting Multiple Literature at Once via Search Panel | × | ✓ | × (Citation plugin panel)<br>✓ (Zotero panel) |
 | Insert Zotero Selected Items | × | × | ✓ |
 | Insert Custom Tags into Zotero Items | × | × | ✓ |
-| Generate Word Document with Citations (future version) | × | ✓ | ✓ |
+| Export to Word with Citations | × | × | ✓ |
+| Export to LaTeX with Citations | × | × | ✓ (requires better-bibtex) |
 
 ### Configure the Plugin
 
@@ -82,13 +81,11 @@ Currently, you can use three different sources for literature data: Data Files (
 
 ### If You Use Zotero/Juris-M (debug-bridge) as Literature Data Source
 
-- **Make sure you have installed the [debug-bridge](https://github.com/retorquere/zotero-better-bibtex/releases/download/debug-bridge/debug-bridge-6.7.79.emile.limonia.xpi) plugin in Zotero or Juris-M, and follow the [Run Javascript in Zotero](https://www.yuque.com/chentaotao-cf9fr/gthfy4/clqahv57w5ugmdev) tutorial for configuration (you can choose not to use "CTT" as the password and set it in the settings panel accordingly).**
+- **Make sure you have installed the [debug-bridge](https://github.com/retorquere/zotero-better-bibtex/releases?q=debug-bridge&expanded=true) plugin in Zotero or Juris-M, and follow the [Run Javascript in Zotero](https://www.yuque.com/chentaotao-cf9fr/gthfy4/clqahv57w5ugmdev) tutorial for configuration (you can choose not to use "CTT" as the password and set it in the settings panel accordingly).**
 - It is still recommended to install the Better BibTeX plugin in Zotero to automatically generate the citekey attribute for items.
 - In the plugin's settings panel, select `Zotero (debug-bridge)` or `Juris-M (debug-bridge)` as the database type.
 - In the "debug-bridge plugin" section of the settings panel, enter the password you set during configuration and select SiYuan (Citation plugin panel) or the Zotero panel as the search panel.
 - Ensure that your Zotero or Juris-M is open before using the plugin.
-
-## How to Use This Plugin
 
 ## Current Features
 
@@ -111,9 +108,16 @@ Currently, you can use three different sources for literature data: Data Files (
   - Insert Literature Note: Open the literature search panel, select the literature, and insert its note at the current cursor position. If not called by a shortcut key or the cursor is not focused in the editor, it will be copied to the clipboard instead.
   - Cite Zotero Selected Items: Same function as in the Slash Menu. If not called by a shortcut key or the cursor is not focused in the editor, it will be copied to the clipboard instead.
   - Refresh All Literature Notes: Refresh the content of all literature note documents in the library. It's recommended to wait for a while before proceeding with the next action.
-- Document's upper-right "More" menu:
-  - Refresh Citation: Use the current [citation link template](#configuring-the-plugin) to refresh all [citation links](#glossary) in the current document (**in the [literature library](#glossary) set to store [literature content](#glossary)**). When the citation link template changes, you can use this function to refresh all citation links in the document.
-  - Refresh Literature Note (Only if the document is in the literature library and loaded): Refresh the content of the current document, which is equivalent to referencing the same literature again without copying the citation link.
+- Document Title Block Menu:
+  - `Refresh Citations`: Update all citation links in document using current template
+  - `Refresh Literature Note` (only for library documents): Refresh current document's content
+  - `Export`: Export documents with citations to:
+    - Markdown with Zotero citations (requires BBT)
+    - Word with citations
+    - LaTeX with citations (requires BBT)
+- Citation Link Right-Click Menu:
+  - `Change Citation Style`: Convert selected citation(s) to specified style
+
 
 ![ ](./assets/protyleslash.png)
 
@@ -144,6 +148,8 @@ In the templates for literature content and citations, the following variables c
 - {{libraryID}}: Library ID of the literature content in Zotero, defaults to 1 if using data files, and will support multiple libraries (multiple files with duplicate citekeys) in the future, does not exist if not using Zotero.
 - {{abstract}}: Abstract.
 - {{authorString}}: String of all authors sorted in order, empty string if not present.
+- {{creators}}: Raw creator list (array of objects)
+- {{firstCreator}}: First author
 - {{containerTitle}}: Title of the publication (journal, conference proceedings, etc.) where the literature is located, null if not present.
 - {{DOI}}: DOI of the literature.
 - {{eprint}}: Eprint.
@@ -237,7 +243,7 @@ The following template has the same effect as the previous one:
 In version v0.0.8, the literature note now supports a user data section, indicated by a top-level heading named "User Data" by default (this allows the floating preview in Obsidian to directly preview all user data). The content after this heading will not be updated with citations, but it also imposes some formatting requirements on the literature note. The format of an individual literature note document is as follows:
 
 ```markdown
-((User Data Title ID 'User Data Title'))
+[User Data Title](siyuan://blocks/User Data Block ID)
 
 Template-generated content
 
@@ -275,6 +281,10 @@ User data content
 
   ***Note: In the .bib and .json files, each literature's citekey/id must be unique.***
 
+## Prerequisites for Web/Docker Version  
+
+Starting from version 0.3.6, the web and Docker versions can communicate with Zotero by installing the **[CORS Unblock extension](https://webextension.org/listing/access-control.html)** in your browser. This enables frontend-browser communication with Zotero.
+
 ## What Happens If I Enable the "Customize Citation Link" Switch?
 
 The [citation link template](#configure-the-plugin) will be fully customized, meaning that the template will no longer generate anchor text, but will be **directly inserted into the document**. In this case, to avoid affecting your own content, the refresh citation feature of the plugin will **not maintain the non-link parts (outside the double brackets)**.
@@ -294,6 +304,37 @@ If dynamic anchor text for citation links is used, the document ID of the litera
 Clicking the "Delete Data" button will delete all the data saved in the settings panel and restore it to the initial values set by the plugin author.
 
 **Note**: This feature **does not** delete the .bib and .json files!
+
+## Using Databases for Literature Statistics
+
+Starting from version 0.4.0, the Citation plugin supports updating databases during citation operations according to specified template rules. To enable this functionality, configure the following settings in the settings panel:
+
+1. Enter the **Database Block ID** where the database you want to update is placed.
+2. The "Database Attribute Template" description will display detailed column information as shown below. Fill in the template using JSON format. Note that the JSON-formatted data generated by this template will be passed directly to the `/api/av/setAttributeViewBlockAttr` API. If the database fails to update, it may be due to formatting errors in the JSON data.
+
+![](./assets/database.png)
+
+## Extension: Indexing Literature documents in SiYuan from Zotero
+
+**Note: This feature is only available in debug-bridge plugin mode, as the transmitted data is itemKey, which cannot be obtained in other modes**
+
+Refer to the method in [this forum](https://forums.zotero.org/discussion/37129/adding-search-engines), add the following to `engine.json`:
+```json
+{
+  "_name": "SiYuan",
+  "_alias": "SiYuan",
+  "_description": "Open Ref in SiYuan",
+  "_icon": "https://b3log.org/siyuan/favicon.ico",
+  "_hidden": false,
+  "_urlTemplate": "siyuan://plugins/siyuan-plugin-citation/open-ref?key={z:key}",
+  "_urlParams": [],
+  "_urlNamespaces": {
+    "z": "http://www.zotero.org/namespaces/openSearch#",
+    "": "http://a9.com/-/spec/opensearch/1.1/"
+  },
+  "_iconSourceURI": "https://b3log.org/siyuan/favicon.ico"
+}
+```
 
 ## Common Error Types
 
