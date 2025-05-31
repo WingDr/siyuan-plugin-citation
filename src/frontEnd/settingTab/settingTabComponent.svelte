@@ -99,6 +99,7 @@
   // 思源模板设定变量
   let titleTemplate: string = $state()!;
   let noteTemplate: string = $state()!;
+  let moveImgToAssets: boolean = $state()!;
   let linkTemplate: string = $state()!;
   let customCiteText: boolean = $state()!;
   let useDynamicRefLink: boolean = $state()!;
@@ -273,6 +274,8 @@
     useWholeDocAsUserData = plugin.data[STORAGE_NAME]?.useWholeDocAsUserData ?? defaultSettingData.useWholeDocAsUserData;
     // 默认文献内容模板
     noteTemplate = plugin.data[STORAGE_NAME]?.noteTemplate ?? defaultSettingData.noteTemplate;
+    // 默认开启将图片转移到Assets
+    moveImgToAssets = plugin.data[STORAGE_NAME]?.moveImgToAssets ?? defaultSettingData.moveImgToAssets;
     // 默认不开启自定义引用
     customCiteText = plugin.data[STORAGE_NAME]?.customCiteText ?? defaultSettingData.customCiteText;
     // 默认使用静态锚文本（不使用动态锚文本）
@@ -352,6 +355,7 @@
       titleTemplate,
       userDataTitle,
       noteTemplate,
+      moveImgToAssets,
       linkTemplate,
       nameTemplate,
       customCiteText,
@@ -709,7 +713,7 @@
         {#snippet children({ focus })}
           <!-- 标签页 1 内容 -->
           <div data-type={template_tabs[0].name} class:fn__none={template_tabs[0].key !== focus}>
-            <!-- 是否选择不提示删除用户数据 -->
+            <!-- 是否选择默认使用第一种引用类型 -->
             <Item
               block={false}
               title={(plugin.i18n.settingTab as any).templates.citeLink.useDefaultCiteTypeTitle}
@@ -1065,6 +1069,29 @@
               />
                 {/snippet}
           </Item>
+          <!-- 是否选择移动图片到Assets -->
+          <Item
+            block={false}
+            title={(plugin.i18n.settingTab as any).templates.literatureNote.moveImgToAssetsTitle}
+            text={(plugin.i18n.settingTab as any).templates.literatureNote.moveImgToAssetsDescription}
+          >
+            {#snippet input()}
+                <Input
+                block={false}
+                normal={true}
+                type={ItemType.checkbox}
+                settingKey="Checkbox"
+                settingValue={moveImgToAssets}
+                onchanged={(event) => {
+                  if (isDev)
+                    logger.info(
+                      `Checkbox changed: ${event.detail.key} = ${event.detail.value}`
+                    );
+                    moveImgToAssets = event.detail.value;
+                }}
+              />
+              {/snippet}
+          </Item> 
           <!-- 文献内容模板 -->
           <Item
             block={true}

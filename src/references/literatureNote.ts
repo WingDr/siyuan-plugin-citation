@@ -397,7 +397,12 @@ export class LiteratureNote {
       switch (type) {
         case "image": {
           if (!["browser-desktop", "browser-mobile", "mobile"].includes(getFrontend())) {
-            quoteContent = await this.moveImgToAssets(detail.imagePath, detail);
+            if (this.plugin.data[STORAGE_NAME].moveImgToAssets) {
+              // 如果开启了移动图片到assets目录，则移动图片
+              quoteContent = await this.moveImgToAssets(detail.imagePath, detail);
+            } else {
+              quoteContent = `Image`;
+            }
           }
           break;
         }
@@ -412,7 +417,12 @@ export class LiteratureNote {
         }
         case "ink": {
           if (!["browser-desktop", "browser-mobile", "mobile"].includes(getFrontend())) {
-            quoteContent = await this.moveImgToAssets(detail.imagePath, detail);
+            if (this.plugin.data[STORAGE_NAME].moveImgToAssets) {
+              // 如果开启了移动图片到assets目录，则移动图片
+              quoteContent = await this.moveImgToAssets(detail.imagePath, detail);
+            } else {
+              quoteContent = `Image`;
+            }
           }
           break;
         }

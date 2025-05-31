@@ -67,6 +67,7 @@ export const defaultSettingData = {
     titleTemplate: defaultTitleTemplate,
     userDataTitle: defaultUserDataTile,
     noteTemplate: defaultNoteTemplate,
+    moveImgToAssets: true,
     linkTemplate: defaultLinkTemplate,
     nameTemplate: "",
     customCiteText: false,

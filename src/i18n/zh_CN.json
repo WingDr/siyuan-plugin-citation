@@ -76,6 +76,8 @@
         "refreshLiteratureNoteBtnTitle": "刷新所有文献内容文档标题",
         "refreshLiteratureNoteBtnDesciption": "刷新文献库中所有文档的标题，同时也会更新文档的命名（切换索引变量或者更新版本之后）",
         "refreshLiteratureNoteBtnText": "刷新",
+        "moveImgToAssetsTitle": "移动图片到思源工作空间",
+        "moveImgToAssetsDescription": "在导入图片类型的批注时，将图片移动到思源工作空间的Assets目录下，否则无法显示图片",
         "noteTempTexareaTitle": "文献内容模板",
         "noteTempTexareaDescription": "设置在文献库中储存的文献文档的内容模板"
       },

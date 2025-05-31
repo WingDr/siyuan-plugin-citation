@@ -76,6 +76,8 @@
         "refreshLiteratureNoteBtnTitle": "Refresh All Literature Note Titles",
         "refreshLiteratureNoteBtnDesciption": "Refresh the titles of all documents in the literature library. It will also update the document names (after switching index variables or updating versions).",
         "refreshLiteratureNoteBtnText": "Refresh",
+        "moveImgToAssetsTitle": "Move Images to Siyuan Workspace",
+        "moveImgToAssetsDescription": "When importing image-type annotations, move the images to the Assets directory under the Siyuan workspace, otherwise the images cannot be displayed.",
         "noteTempTexareaTitle": "Literature Note Template",
         "noteTempTexareaDescription": "Set the content template for storing literature documents in the literature library."
       },
