@@ -358,21 +358,9 @@ It is welcomed to raise an [issue](https://github.com/WingDr/siyuan-plugin-citat
 
 ## TODO
 
-- [x] Integration with Zotero (Long-term)
-- [x] Support user-customized area in literature note (Probably in the next version)
-- [ ] Support copying markdown text with citations (Probably in the next version)
-- [ ] Support direct access to zotero.sqlite, refer to [obsidian-zotero](https://github.com/PKM-er/obsidian-zotero) (Long-term and difficult)
-- [ ] Export support for Word (Long-term)
-- [ ] Export support for LaTeX (Long-term)
-- [ ] Support citation of formulas and automatic numbering (Long-term)
-- [ ] Support adding LaTeX definition blocks such as Remark, Lemma (Long-term)
-- [x] UI beautification (Mind-boggling)
-- [ ] Function optimization:
-  - [ ] More lenient template/path format restrictions (Please provide more feedback through issue reports)
-  - [x] Better template handling (Difficult to implement)
-  - [x] Remove invalid functions from the command panel (Waiting for updates from the SiYuan team)
-  - [ ] Support using indexes in citation links (Waiting for updates from the SiYuan team)
-  - [ ] Adaptation for mobile devices (Anyone willing to test?)
+- [ ] Support citation of formulas
+- [ ] Support adding LaTeX definition blocks such as Remark, Lemma 
+  - [ ] Adaptation for mobile devices
 
 ## Developers
 

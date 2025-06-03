@@ -356,21 +356,9 @@
 
 ## TODO
 
-- [x] Zotero 集成 `长期`
-- [x] 支持文献内容中的用户自定义片段 `大概下个版本`
-- [ ] 支持复制出带有引用的markdown文本 `大概下个版本`
-- [ ] 支持直接访问zotero.sqlite， 参考[obsidian-zotero](https://github.com/PKM-er/obsidian-zotero) `长期（真的很难）`
-- [ ] 导出支持Word `长期`
-- [ ] 导出支持 LATEX `长期`
-- [ ] 支持公式引用和自动编号 `长期`
-- [ ] 支持添加 Remark, Lemma 等 LATEX 定义块 `长期`
-- [x] 美化界面 `脑子要炸`
-- [ ] 功能优化：
-  - [ ] 更宽松的模板/路径格式限制 `多给我提issue`
-  - [x] 更好的 Template 处理 `好难写`
-  - [x] 命令面板中去掉无效功能 `等V姐更新`
-  - [ ] 支持 citation link 中使用 index `等V姐更新`
-  - [ ] 适配移动端 `有没有大哥先试试`
+- [ ] 支持添加 Remark, Lemma 等 LATEX 定义块
+- [ ] 支公式引用
+- [ ] 适配移动端
 
 ## 开发者
 
