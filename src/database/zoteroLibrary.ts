@@ -282,6 +282,9 @@ export class EntryZoteroAdapter extends Entry {
       const name = author[i].lastName ? author[i].lastName: author[i].name;
       if (i == 0) {
         shortAuthor += name ?? "";
+        if (limit < author.length) {
+          shortAuthor +=  shortAuthor.length ? " et al." : "";
+        }
       } else if (i == limit - 1) {
         shortAuthor += name ? " and " + name : "";
         if (limit < author.length) {

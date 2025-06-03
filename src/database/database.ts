@@ -1,7 +1,8 @@
 import { Protyle, Menu } from "siyuan";
 import SiYuanPluginCitation from "../index";
 import{
-  loadLocalRef
+  loadLocalRef,
+  sleep
 } from "../utils/util";
 import { isDev, databaseType, STORAGE_NAME } from "../utils/constants";
 import { createLogger, type ILogger } from "../utils/simple-logger";
@@ -129,8 +130,8 @@ export class Database {
     this.refEndNode = refEndNode;
   }
 
-  public async getContentByKey(key: string) {
-    const content = await this.dataModal.getContentFromKey(key);
+  public async getContentByKey(key: string, shortAuthorLimit: number = 2) {
+    const content = await this.dataModal.getContentFromKey(key, shortAuthorLimit);
     return content;
   }
 
@@ -180,6 +181,7 @@ export class Database {
         });
         if (isDev) this.logger.info("展示引用类型选择菜单", menu);
         const rect = this.protyle.protyle.toolbar!.range.getBoundingClientRect();
+        await sleep(500);
         menu.open({
           x: rect.left,
           y: rect.top

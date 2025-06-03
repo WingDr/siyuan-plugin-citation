@@ -35,7 +35,7 @@ export abstract class DataModal {
   public selectedList!: string[];
   public onSelection!: (keys: string[]) => void;
   public abstract buildModal():any;
-  public abstract getContentFromKey(key: string):any;
+  public abstract getContentFromKey(key: string, shortAuthorLimit?: number):any;
   public abstract getCollectedNotesFromKey(key: string):any;
   public abstract showSearching(protyle:Protyle | null, onSelection: (keys: string[]) => void): void;
   public abstract getTotalKeys(): string[];
@@ -119,7 +119,7 @@ export class FilesModal extends DataModal {
     this.searchDialog.showSearching(this.search.bind(this), onSelection);
   }
 
-  public getContentFromKey (key: string) {
+  public getContentFromKey(key: string, shortAuthorLimit: number) {
     const [, citekey] = processKey(key);
     if (!this.library) return null;
     const entry = this.library.getTemplateVariablesForCitekey(citekey);
@@ -270,7 +270,7 @@ export class ZoteroModal extends DataModal {
     }
   }
 
-  public async getContentFromKey (key: string) {
+  public async getContentFromKey (key: string, shortAuthorLimit: number = 2) {
     if (await this.checkZoteroRunning()) {
       const [libraryID, citekey] = processKey(key);
       if (isDev) this.logger.info(`请求${this.type}导出数据, reqOpt=>`, {citekey: citekey, libraryID: libraryID});
@@ -285,7 +285,7 @@ export class ZoteroModal extends DataModal {
         })
       });
       if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, JSON.parse(res.data.result));
-      const zoteroEntry = new EntryZoteroAdapter(JSON.parse(res.data.result).items[0] as EntryDataZotero);
+      const zoteroEntry = new EntryZoteroAdapter(JSON.parse(res.data.result).items[0] as EntryDataZotero, false, shortAuthorLimit);
       const entry = getTemplateVariablesForZoteroEntry(zoteroEntry);
       if (entry.files) entry.files = entry.files.join("\n");
       if (isDev) this.logger.info("文献内容 =>", entry);
@@ -444,13 +444,13 @@ export class ZoteroDBModal extends DataModal {
     }
   }
 
-  public async getContentFromKey (key: string) {
+  public async getContentFromKey (key: string, shortAuthorLimit: number = 2) {
     const itemKey = await this.checkBeforeRunning(key);
     if (itemKey) {
       const res = await this.getItemByItemKey(...processKey(itemKey));
       if (isDev) this.logger.info(`请求${this.type}数据返回, resJson=>`, res);
       if (("ready" in res && !res.ready) || !res.itemExist) return null;
-      const zoteroEntry = new EntryZoteroAdapter(res as EntryDataZotero, this.useItemKey);
+      const zoteroEntry = new EntryZoteroAdapter(res as EntryDataZotero, this.useItemKey, shortAuthorLimit);
       const entry = getTemplateVariablesForZoteroEntry(zoteroEntry);
       if (entry.files) entry.files = entry.files.join("\n");
       if (isDev) this.logger.info("文献内容 =>", entry);

@@ -22,6 +22,7 @@ export class Cite {
   public async generateCiteLink(key: string, index: number, typeSetting: any, onlyLink=false) {
     const linkTemplate = typeSetting.linkTemplate as string;
     const useDynamicRefLink = typeSetting.useDynamicRefLink as boolean;
+    const shortAuthorLimit = typeSetting.shortAuthorLimit as number;
     let template = "";
     if (onlyLink) {
       const linkReg = useDynamicRefLink ? refRegDynamic : refRegStatic;
@@ -37,7 +38,7 @@ export class Cite {
     } else {
       template = linkTemplate;
     }
-    const entry = await this.plugin.database.getContentByKey(key);
+    const entry = await this.plugin.database.getContentByKey(key, shortAuthorLimit);
     if (!entry) {
       if (isDev) this.logger.error("找不到文献数据", {key, blockID: this.plugin.literaturePool.get(key)});
       this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);

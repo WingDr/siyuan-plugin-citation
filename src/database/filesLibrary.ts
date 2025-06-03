@@ -351,6 +351,9 @@ export class EntryCSLAdapter extends Entry {
       const name = author[i].family;
       if (i == 0) {
         shortAuthor += name ?? "";
+        if (limit < author.length) {
+          shortAuthor +=  shortAuthor.length ? " et al." : "";
+        }
       } else if (i == limit - 1) {
         shortAuthor += name ? " and " + name : "";
         if (limit < author.length) {
@@ -578,6 +581,9 @@ export class EntryBibLaTeXAdapter extends Entry {
       
       if (i == 0) {
         shortAuthor += name ?? "";
+        if (limit < author.length) {
+          shortAuthor +=  shortAuthor.length ? " et al." : "";
+        }
       } else if (i == limit - 1) {
         shortAuthor += name ? " and " + name : "";
         if (limit < author.length) {
