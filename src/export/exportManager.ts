@@ -151,7 +151,8 @@ export class ExportManager {
         "./exportTemp.md",
         "-o", "exportTemp.docx",
         "--lua-filter", dataDir + "/plugins/siyuan-plugin-citation/scripts/citation.lua",
-        "--reference-doc", this.userConfig.docxTemplate
+        "--reference-doc", this.userConfig.docxTemplate,
+        "--resource-path", dataDir,
       ])
       res = await this.plugin.kernelApi.getFile("/temp/convert/pandoc/citation/exportTemp.docx", "any") as any;
       const file = await (new Response(((res as any).body as ReadableStream))).blob()
