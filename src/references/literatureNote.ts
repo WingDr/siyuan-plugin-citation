@@ -81,7 +81,7 @@ export class LiteratureNote {
           await this.plugin.kernelApi.globalCopyFiles([imgPath], "/data/assets");
           const originFilename = imgPath.split("\\").slice(-1)[0];
           await this.plugin.kernelApi.renameFile(`/data/assets/${originFilename}`, assetAbsPath);
-          if (isDev) this.logger.info("移动批注图片到工作空间, info=>", {imgPath, assetAbsPath});
+          if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("移动批注图片到工作空间, info=>", {imgPath, assetAbsPath});
       } 
       // 添加width属性避免图片太大
       if (linkType == "html") return `<img src="${assetPath}" data-src="${assetPath}" style="width:100%" alt="img">`;
@@ -132,7 +132,7 @@ export class LiteratureNote {
       const avID = content.match(avIdReg)![1];
       // 检查块是否在数据库中
       res = await this.plugin.kernelApi.getAttributeViewKeys(blockID);
-      if (isDev) this.logger.info("获取到块添加的数据库", res.data);
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获取到块添加的数据库", res.data);
       const findItem = (res.data as any[]).find(item => item.avID === avID);
       if (!findItem || !findItem.keyValues) {
         if (isDev) this.logger.info("数据库中不存在块，将块插入数据库", {avID, blockID});
@@ -142,10 +142,10 @@ export class LiteratureNote {
         }]);
       }
       const dataString = generateFromTemplate(attrViewTemplate, entry);
-      if (isDev) this.logger.info("根据模板生成属性=>", {dataString});
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("根据模板生成属性=>", {dataString});
       const data = JSON.parse(dataString);
       for (const item of data) {
-        if (isDev) this.logger.info("插入数据库属性", item);
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("插入数据库属性", item);
         res = await this.plugin.kernelApi.setAttributeViewBlockAttr(avID, item.keyID, blockID, item.value)
       }
     }
@@ -330,7 +330,7 @@ export class LiteratureNote {
       });
       entry.annotations = await Promise.all(annoPList).then(res => res.join("\n\n"));
       const literatureNote = generateFromTemplate(noteTemplate, entry);
-      if (isDev) this.logger.info("向literature note发起插入请求, content=>", {literatureNote});
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("向literature note发起插入请求, content=>", {literatureNote});
       this.plugin.kernelApi.prependBlock(literatureId, "markdown", userDataLink + literatureNote);
       note.forEach( async (n: { content: string; index: any; }) => {
         const processor = new NoteProcessor(this.plugin);

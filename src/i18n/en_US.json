@@ -43,7 +43,9 @@
       "deleteDataBtnTitle": "Delete Data",
       "deleteDataBtnDescription": "Delete all setting data of this plugin (only including data displayed on the setting panel).",
       "confirmRemove": "Confirm to delete the setting data of ${name}?",
-      "deleteDataBtnText": "Delete"
+      "deleteDataBtnText": "Delete",
+      "consoleDebugTitle": "Console Debugging",
+      "consoleDebugDescription": "Enabling this will output debugging information to the console. It is recommended to keep this disabled during normal use."
     },
     "templates": {
       "title": "Template Settings",

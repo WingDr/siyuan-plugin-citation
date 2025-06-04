@@ -88,5 +88,6 @@ export const defaultSettingData = {
     attrViewTemplate: defaultAttrViewTemplate,
     userDataTemplatePath: defaultUserDataTemplatePath,
     useWholeDocAsUserData: defaultUseWholeDocAsUserData,
-    useDefaultCiteType: defaultUseDefaultCiteType
+    useDefaultCiteType: defaultUseDefaultCiteType,
+    consoleDebug: false,
 };

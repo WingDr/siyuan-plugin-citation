@@ -96,6 +96,7 @@
   let useItemKey: boolean = $state()!;
   let autoReplace: boolean = $state()!;
   let deleteUserDataWithoutConfirm: boolean = $state()!;
+  let consoleDebug: boolean = $state()!;
   // 思源模板设定变量
   let titleTemplate: string = $state()!;
   let noteTemplate: string = $state()!;
@@ -317,6 +318,8 @@
       multiCiteSuffix,
       nameTemplate
     }];
+    // 默认不在控制台输出
+    consoleDebug = plugin.data[STORAGE_NAME]?.consoleDebug ?? defaultSettingData.consoleDebug;
 
     displayPanels = generatePanels(panels);
   }
@@ -668,6 +671,30 @@
               if (isDev) logger.info("Button clicked");
               reloadDatabase(database);
               // dispatcher("reload database", { database });
+            }}
+          />
+          {/snippet}
+      </Item>
+
+      <!-- 展示控制台debug数据 -->
+      <Item
+        block={false}
+        title={(plugin.i18n.settingTab as any).basic.consoleDebugTitle}
+        text={(plugin.i18n.settingTab as any).basic.consoleDebugDescription}
+      >
+        {#snippet input()}
+          <Input
+            block={false}
+            normal={true}
+            type={ItemType.checkbox}
+            settingKey="Checkbox"
+            settingValue={consoleDebug}
+            onchanged={(event) => {
+              if (isDev)
+                logger.info(
+                  `Checkbox changed: ${event.detail.key} = ${event.detail.value}`
+                );
+                consoleDebug = event.detail.value;
             }}
           />
           {/snippet}

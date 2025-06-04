@@ -43,7 +43,9 @@
       "deleteDataBtnTitle": "删除数据",
       "deleteDataBtnDescription": "删除本插件的所有设置数据（仅包括设置面板上显示的数据）",
       "confirmRemove": "确认删除 ${name} 的设置数据？",
-      "deleteDataBtnText": "删除"
+      "deleteDataBtnText": "删除",
+      "consoleDebugTitle": "控制台调试",
+      "consoleDebugDescription": "开启后会在控制台输出调试信息，平常使用建议关闭。"
     },
     "templates": {
       "title": "模板设置",
