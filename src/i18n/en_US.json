@@ -115,6 +115,13 @@
         "searchDialogSelectorTitle": "Search Panel for Inserting Literature",
         "searchDialogSelectorDescription": "Select the search panel used when inserting literature: \"SiYuan\" is based on SiYuan style and has faster and more stable searching speed; \"Zotero\" is the classic view of Zotero, which can be set in the Zotero software."
       }
+    },
+    "export": {
+      "title": "Export",
+      "exportWordParamTitle": "Word Export Parameters",
+      "exportWordParamDescription": "Set the <b>additional</b> parameters for pandoc to convert markdown to Word when exporting. Separate parameters with commas, for example: '--highlight-style=haddock,--citeproc=1'. The default export parameters are: '--reference-doc=/path/to/template.docx,--lua-filter=/path/to/citation.lua'. For more parameters, refer to the <a href=\"https://pandoc.org/MANUAL.html#option-reference-doc\"><b>Pandoc Official Documentation</b></a>.",
+      "exportLaTeXParamTitle": "LaTeX Export Parameters",
+      "exportLaTeXParamDescription": "Set the <b>additional</b> parameters for pandoc to convert markdown to LaTeX when exporting. The format is the same as Word export parameters, and the default export parameter is: '--wrap=none'."
     }
   },
   "menuItems": {

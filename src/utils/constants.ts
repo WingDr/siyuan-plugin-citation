@@ -90,4 +90,6 @@ export const defaultSettingData = {
     useWholeDocAsUserData: defaultUseWholeDocAsUserData,
     useDefaultCiteType: defaultUseDefaultCiteType,
     consoleDebug: false,
+    exportWordParam: "",
+    exportLaTeXParam: "",
 };

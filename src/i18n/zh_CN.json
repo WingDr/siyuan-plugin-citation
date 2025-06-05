@@ -115,6 +115,13 @@
         "searchDialogSelectorTitle": "插入文献时使用的搜索面板",
         "searchDialogSelectorDescription": "选择插入文献时使用的搜索面板：\"SiYuan\" 为基于思源样式类型的搜索面板，搜索速度更快并且更稳定；\"Zotero\"为Zotero自带的搜索面板，可以在Zotero软件中设置是否使用经典视图"
       }
+    },
+    "export": {
+      "title": "导出设置",
+      "exportWordParamTitle": "Word导出参数",
+      "exportWordParamDescription": "设置导出Word时，pandoc将markdown转换为Word的<b>额外</b>参数，以逗号隔开，例如：'--highlight-stype=haddock,--citeproc=1'，默认导出参数有：'--reference-doc=/path/to/template.docx,--lua-filter=/path/to/citation.lua'，更多参数参考<a href=\"https://pandoc.org/MANUAL.html#option-reference-doc\"><b>Pandoc官方文档</b></a>",
+      "exportLaTeXParamTitle": "LaTeX导出参数",
+      "exportLaTeXParamDescription": "设置导出LaTeX时，pandoc将markdown转换为LaTeX的<b>额外</b>参数，格式同Word导出参数一致，默认导出参数有：'--wrap=none'"
     }
   },
   "menuItems": {

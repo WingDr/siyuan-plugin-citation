@@ -1,4 +1,4 @@
-import { dataDir, isDev, workspaceDir } from "../utils/constants";
+import { dataDir, isDev, STORAGE_NAME, workspaceDir } from "../utils/constants";
 import SiYuanPluginCitation from "../index";
 import { createLogger, type ILogger } from "../utils/simple-logger";
 
@@ -147,12 +147,16 @@ export class ExportManager {
       }
       if (isDev) this.logger.info("获得处理后的导出内容, contents=>", {content});
       await this.plugin.kernelApi.putFile("/temp/convert/pandoc/citation/exportTemp.md", false, new Blob([content]));
+      // 添加额外参数
+      const exportWordParams = this.plugin.data[STORAGE_NAME].exportWordParam as string || "";
+      const additionalParams = exportWordParams ? exportWordParams.split(",") : [];
       await this.plugin.kernelApi.pandoc("citation", [
         "./exportTemp.md",
         "-o", "exportTemp.docx",
         "--lua-filter", dataDir + "/plugins/siyuan-plugin-citation/scripts/citation.lua",
         "--reference-doc", this.userConfig.docxTemplate,
         "--resource-path", dataDir,
+        ...additionalParams
       ])
       res = await this.plugin.kernelApi.getFile("/temp/convert/pandoc/citation/exportTemp.docx", "any") as any;
       const file = await (new Response(((res as any).body as ReadableStream))).blob()
@@ -223,10 +227,14 @@ export class ExportManager {
       }
       if (isDev) this.logger.info("获得处理后的导出内容, contents=>", {content});
       await this.plugin.kernelApi.putFile("/temp/convert/pandoc/citation/exportTemp.md", false, new Blob([content]));
+      // 添加额外参数
+      const exportLatexParams = this.plugin.data[STORAGE_NAME].exportLaTeXParam as string || "";
+      const additionalParams = exportLatexParams ? exportLatexParams.split(",") : [];
       await this.plugin.kernelApi.pandoc("citation", [
         "./exportTemp.md",
         "-o", "exportTemp.tex",
-        "--wrap=none"
+        "--wrap=none",
+        ...additionalParams
       ])
       res = await this.plugin.kernelApi.getFile("/temp/convert/pandoc/citation/exportTemp.tex", "any") as any;
       const file = await (new Response(((res as any).body as ReadableStream))).blob()

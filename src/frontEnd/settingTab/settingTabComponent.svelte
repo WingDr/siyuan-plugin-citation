@@ -136,7 +136,10 @@
   // debug-bridge变量
   let dbPassword: string = $state()!;
   let dbSearchDialogType: string = $state()!;
-  
+  // 导出相关变量
+  let exportWordParam: string = $state("");
+  let exportLaTeXParam: string = $state("");
+
   let settingIndex = $state(0);
 
   let show_link_detail = $state(false);
@@ -160,6 +163,13 @@
       text: (plugin.i18n.settingTab as any).debug_bridge.title,
       name: "citation-setting-debug-bridge",
       icon: "#iconPlugin",
+      supportDatabase: ["Zotero (debug-bridge)", "Juris-M (debug-bridge)"],
+    },
+    {
+      key: 4,
+      text: (plugin.i18n.settingTab as any).export.title,
+      name: "citation-setting-export",
+      icon: "#iconUpload",
       supportDatabase: ["Zotero (debug-bridge)", "Juris-M (debug-bridge)"],
     },
   ];
@@ -320,25 +330,12 @@
     }];
     // 默认不在控制台输出
     consoleDebug = plugin.data[STORAGE_NAME]?.consoleDebug ?? defaultSettingData.consoleDebug;
+    // 默认导出Word和LaTex自定义参数为空
+    exportWordParam = plugin.data[STORAGE_NAME]?.exportWordParam ?? defaultSettingData.exportWordParam;
+    exportLaTeXParam = plugin.data[STORAGE_NAME]?.exportLaTeXParam ?? defaultSettingData.exportLaTeXParam;
 
     displayPanels = generatePanels(panels);
   }
-
-  function _checkDebugBridge(dtype: string): boolean {
-    if (["Zotero (debug-bridge)", "Juris-M (debug-bridge)"].indexOf(dtype) != -1) return true;
-    else return false;
-  }
-
-  onMount(async () => {
-    const file = await plugin.kernelApi.getFile("/data/plugins/siyuan-plugin-citation/plugin.json", "json");
-    pluginVersion = (file as any).version;
-    await initializeData();
-  });
-
-  onDestroy(() => {
-    if (isDev) logger.info("关闭设置界面");
-    _saveData();
-  });
 
   function _saveData() {
     // 将主要参数设置为第一组参数
@@ -379,7 +376,10 @@
       attrViewTemplate,
       useWholeDocAsUserData,
       userDataTemplatePath,
-      useDefaultCiteType
+      useDefaultCiteType,
+      consoleDebug,
+      exportWordParam,
+      exportLaTeXParam
     };
     if (settingData.database === "Zotero")
       settingData.database = "Zotero (better-bibtex)";
@@ -409,6 +409,22 @@
       if (isDev) logger.info("数据保存成功, settingData=>", settingData);
     });
   }
+
+  function _checkDebugBridge(dtype: string): boolean {
+    if (["Zotero (debug-bridge)", "Juris-M (debug-bridge)"].indexOf(dtype) != -1) return true;
+    else return false;
+  }
+
+  onMount(async () => {
+    const file = await plugin.kernelApi.getFile("/data/plugins/siyuan-plugin-citation/plugin.json", "json");
+    pluginVersion = (file as any).version;
+    await initializeData();
+  });
+
+  onDestroy(() => {
+    if (isDev) logger.info("关闭设置界面");
+    _saveData();
+  });
 
   function clickCardSetting(event: any) {
     const target = event.target as HTMLElement;
@@ -1402,6 +1418,59 @@
           </div>
                   {/snippet}
         </Tabs>
+    </Panel>
+    <Panel display={panels[3].key === panel_focus}>
+      <!-- 导出word的pandoc参数 -->
+      <Item
+        block={true}
+        title={(plugin.i18n.settingTab as any).export.exportWordParamTitle}
+        text={(plugin.i18n.settingTab as any).export.exportWordParamDescription}
+      >
+        {#snippet input()}
+              <Input
+            
+            block={true}
+            normal={true}
+            type={ItemType.text}
+            settingKey="Text"
+            settingValue={exportWordParam}
+            placeholder="Input the params"
+            onchanged={(event) => {
+              if (isDev)
+                logger.info(
+                  `Input changed: ${event.detail.key} = ${event.detail.value}`
+                );
+              exportWordParam = event.detail.value;
+            }}
+          />
+            {/snippet}
+      </Item>
+
+      <!-- 导出LaTex的pandoc参数 -->
+      <Item
+        block={true}
+        title={(plugin.i18n.settingTab as any).export.exportLaTeXParamTitle}
+        text={(plugin.i18n.settingTab as any).export.exportLaTeXParamDescription}
+      >
+        {#snippet input()}
+              <Input
+            
+            block={true}
+            normal={true}
+            type={ItemType.text}
+            settingKey="Text"
+            settingValue={exportLaTeXParam}
+            placeholder="Input the params"
+            onchanged={(event) => {
+              if (isDev)
+                logger.info(
+                  `Input changed: ${event.detail.key} = ${event.detail.value}`
+                );
+              exportLaTeXParam = event.detail.value;
+            }}
+          />
+            {/snippet}
+      </Item>
     </Panel>
   {/snippet}
 </Panels>
