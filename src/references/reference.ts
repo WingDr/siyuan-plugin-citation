@@ -55,7 +55,7 @@ export class Reference {
     this.refSpanList = [];
   }
 
-  public getAllNeighborReference(protyle: IProtyle): {
+  public getAllNeighborReference(protyle: IProtyle, needTransport=true): {
     keyList: string[],
     refStartNode: HTMLElement | null,
     refEndNode: HTMLElement | null
@@ -63,7 +63,7 @@ export class Reference {
     // 只允许使用debug-bridge和siyuan面板的使用neighbor特性
     const database = this.plugin.data[STORAGE_NAME].database;
     const dbSearchDialogType = this.plugin.data[STORAGE_NAME].dbSearchDialogType;
-    if (["Zotero (debug-bridge)", "Juris-M (debug-bridge)"].indexOf(database) == -1 || dbSearchDialogType != "SiYuan") {
+    if (["Zotero (debug-bridge)", "Juris-M (debug-bridge)"].indexOf(database) == -1 || (dbSearchDialogType != "SiYuan" && needTransport)) {
       this.refStartNode = null;
       this.refEndNode = null;
       return {keyList: [], refStartNode: null, refEndNode: null};
@@ -132,7 +132,7 @@ export class Reference {
     if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获取到当前元素所在块：", {block, blockID});
     if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("更新结果：", {block, blockID});
     if (!blockID) return;
-    const keys = this.getAllNeighborReference(protyle).keyList;
+    const keys = this.getAllNeighborReference(protyle, false).keyList;
     const content = await this.processReferenceContents(keys, protyle.block.rootID, target_type);
     const replacedHTML = this.refSpanList.map(e => e.outerHTML).join("");
     if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("更新前的HTML：", {block:block.innerHTML, span:replacedHTML});
