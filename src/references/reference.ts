@@ -68,21 +68,21 @@ export class Reference {
       this.refEndNode = null;
       return {keyList: [], refStartNode: null, refEndNode: null};
     }
-    if (isDev) this.logger.info("获取到protyle=>", protyle);
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获取到protyle=>", protyle);
     if (!protyle.toolbar) {
       // 如果获取不到toolbar就不选择
       this.setEmptySelection(); 
       return {keyList: [], refStartNode: null, refEndNode: null};
     }
-    if (isDev) this.logger.info("获取到选区=>", protyle.toolbar.range);
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获取到选区=>", protyle.toolbar.range);
     const pRange = protyle.toolbar.range;
     const selectedNode = pRange.startContainer;
-    if (isDev) this.logger.info("定位到起始点=>", selectedNode);
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("定位到起始点=>", selectedNode);
     let isInRef = false;
     let currentElement = selectedNode as HTMLElement;
     if (selectedNode.parentElement && this._checkReferenceElement(selectedNode.parentElement)) {
       //说明输入在引用内
-      if (isDev) this.logger.info("起始点在引用内");
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("起始点在引用内");
       currentElement = selectedNode.parentElement;
       isInRef = true;
     }
@@ -93,7 +93,7 @@ export class Reference {
     } else {
       startElements = this._getNeighborReference(currentElement, true);
     }
-    if (isDev) this.logger.info("获取到头引用=>", startElements);
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获取到头引用=>", startElements);
     let endElements = null;
     if (isInRef) {
       endElements = this._getNeighborReference(currentElement, false);
@@ -105,19 +105,19 @@ export class Reference {
       // 由于文本的末尾nextSibling永远会出现空字符占位，所以需要独立判断然后跳过
       endElements = [currentElement, ...this._getNeighborReference(currentElement.nextElementSibling as HTMLSpanElement, false)];
     }
-    if (isDev) this.logger.info("获取到尾引用=>", endElements);
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获取到尾引用=>", endElements);
     const refStartNode = startElements[0];
     const refEndNode = endElements[endElements.length - 1]
     this.refStartNode = refStartNode;
     this.refEndNode = refEndNode;
     const existRefSpanList = isInRef ? [...startElements.slice(0, -1), ...endElements] : [...startElements.slice(0, -1), ...endElements.slice(1)];
     this.refSpanList = existRefSpanList;
-    if (isDev) this.logger.info("所有引用=>", existRefSpanList);
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("所有引用=>", existRefSpanList);
     const existRefList = existRefSpanList.map((e:HTMLSpanElement) => {
       return this.plugin.literaturePool.get(e.getAttribute("data-id") as string);
     });
-    if (isDev) this.logger.info("头尾引用为, nodes=>", {start: this.refStartNode, end: this.refEndNode});
-    if (isDev) this.logger.info("所有引用, key=>", existRefList);
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("头尾引用为, nodes=>", {start: this.refStartNode, end: this.refEndNode});
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("所有引用, key=>", existRefList);
     this.replaceEndNode = (refEndNode != selectedNode);
     return {
       keyList: existRefList,
@@ -129,15 +129,15 @@ export class Reference {
   public async updateNeighborLinks(element:HTMLElement, protyle: IProtyle, target_type: string) {
     const block = this._getCurrentBlock(element);
     const blockID = block.getAttribute("data-node-id");
-    if (isDev) this.logger.info("获取到当前元素所在块：", {block, blockID});
-    if (isDev) this.logger.info("更新结果：", {block, blockID});
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获取到当前元素所在块：", {block, blockID});
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("更新结果：", {block, blockID});
     if (!blockID) return;
     const keys = this.getAllNeighborReference(protyle).keyList;
     const content = await this.processReferenceContents(keys, protyle.block.rootID, target_type);
     const replacedHTML = this.refSpanList.map(e => e.outerHTML).join("");
-    if (isDev) this.logger.info("更新前的HTML：", {block:block.innerHTML, span:replacedHTML});
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("更新前的HTML：", {block:block.innerHTML, span:replacedHTML});
     const res = block.outerHTML.toString().replace(replacedHTML, content.join(""));
-    if (isDev) this.logger.info("更新后的HTML：", {block:res});
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("更新后的HTML：", {block:res});
     this.plugin.kernelApi.updateBlockContent(blockID, "dom", res);
   }
 
@@ -151,11 +151,11 @@ export class Reference {
         content: block.markdown as string
       };
     });
-    if (isDev) this.logger.info("获取到引用块内容=>", citedBlocks);
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获取到引用块内容=>", citedBlocks);
     const writeList:{content: string, blockId: string}[] = [];
     const generatePromise = citedBlocks.map(async block => {
       const spans = (await this.plugin.kernelApi.getCitedSpans(block.id)).data as ISpanItem[];
-      if (isDev) this.logger.info("获取到引用行级元素span=>", spans);
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获取到引用行级元素span=>", spans);
       // 引用块的结构：(( id "content" )){: ial_data }，因此要通过查找到的spans进行处理
       const reg = refReg;
       const cited_spans = spans.reduce((acc:any[], cur) => {
@@ -197,7 +197,7 @@ export class Reference {
           });
         });
       }));
-      if (isDev) this.logger.info("获得块中引用行级元素基本信息=>", {block, cited_spans, replaceList});
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获得块中引用行级元素基本信息=>", {block, cited_spans, replaceList});
       let newContent = block.content;
       replaceList.forEach(span => {
         newContent = newContent.replace(span.full_content, span.insertContent);
@@ -208,7 +208,7 @@ export class Reference {
       });
     });
     await Promise.all(generatePromise);
-    if (isDev) this.logger.info("写入引用列表 =>", writeList);
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("写入引用列表 =>", writeList);
     const update = writeList.map(witem => {
       return this.plugin.kernelApi.updateCitedBlock(witem.blockId, witem.content);
     });
@@ -221,9 +221,9 @@ export class Reference {
     await loadLocalRef(this.plugin);
     const pList = this.plugin.literaturePool.keys.map(async key => {
       const entry = await this.plugin.database.getContentByKey(key);
-      if (isDev) this.logger.info("从database中获得文献内容 =>", entry);
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("从database中获得文献内容 =>", entry);
       if (!entry) {
-        if (isDev) this.logger.error("找不到文献数据", {key, blockID: this.plugin.literaturePool.get(key)});
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.error("找不到文献数据", {key, blockID: this.plugin.literaturePool.get(key)});
         this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);
         // 在zotero里对应不到了，把文档名改成unlinked
         const literatureId = this.plugin.literaturePool.get(key);
@@ -245,12 +245,12 @@ export class Reference {
       if (noteTitle != title) await this.plugin.kernelApi.renameDoc(notebookId, (res.data as any[])[0].path , noteTitle);
       const literatureKey = ((await this.plugin.kernelApi.getBlockAttrs(literatureId)) as any).data["custom-literature-key"];
       if (literatureKey != entry.key) {
-        if (isDev) this.logger.info("给文档刷新key，detail=>", {id: literatureId, name: entry.key});
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("给文档刷新key，detail=>", {id: literatureId, name: entry.key});
         await this.plugin.kernelApi.setBlockKey(literatureId, entry.key);
-      } else if (isDev) this.logger.info("文档无需刷新key，detail=>", {id: literatureId, name: entry.key});
+      } else if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("文档无需刷新key，detail=>", {id: literatureId, name: entry.key});
     });
     return await Promise.all(pList).then(async () => {
-      if (isDev) this.logger.info("所有文件标题已更新");
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("所有文件标题已更新");
       this.plugin.noticer.info((this.plugin.i18n.notices as any).refreshTitleSuccess, {size: this.plugin.literaturePool.size});
       await loadLocalRef(this.plugin);
       return this.plugin.literaturePool.content;
@@ -267,7 +267,7 @@ export class Reference {
       const id = ids[i];
       await this.refreshSingleLiteratureNote(id, false, noConfirmUserData);
     }
-    if (isDev) this.logger.info("所有文献内容刷新完毕");
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("所有文献内容刷新完毕");
     this.plugin.noticer.info((this.plugin.i18n.notices as any).refreshLiteratureNoteContentsSuccess, {size: this.plugin.literaturePool.size});
   }
 
@@ -276,42 +276,42 @@ export class Reference {
     if (needRefresh) await loadLocalRef(this.plugin);
     const key = this.plugin.literaturePool.get(literatureId);
     const entry = await this.plugin.database.getContentByKey(key);
-    if (isDev) this.logger.info("从database中获得文献内容 =>", entry);
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("从database中获得文献内容 =>", entry);
     if (!entry) {
-      if (isDev) this.logger.error("找不到文献数据", {key, blockID: this.plugin.literaturePool.get(key)});
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.error("找不到文献数据", {key, blockID: this.plugin.literaturePool.get(key)});
       this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);
       return null;
     }
     await this.LiteratureNote.updateLiteratureNote(key, entry, noConfirmUserData);
-    if (isDev) this.logger.info("文献内容刷新完毕, literatureId=>", {literatureId, key, title: entry.title});
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("文献内容刷新完毕, literatureId=>", {literatureId, key, title: entry.title});
     if (needRefresh) this.plugin.noticer.info((this.plugin.i18n.notices as any).refreshSingleLiteratureNoteSuccess, {key});
     return;
   }
 
   public async insertContent(protyle: Protyle, content: string, refStartNode: HTMLElement | null = null, refEndNode: HTMLElement | null = null) {
-    if (isDev) this.logger.info("插入内容, detail=>", {protyle, content});
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("插入内容, detail=>", {protyle, content});
     const blockId = protyle.protyle.block.id;
     const rootId = protyle.protyle.block.rootID;
-    if (isDev) this.logger.info("Protyle块ID =>", blockId);
-    if (isDev) this.logger.info("Protyle文档ID =>", rootId);
-    if (isDev) this.logger.info("插入的内容为, content=>", content);
-    if (isDev) this.logger.info("头尾引用为, nodes=>", {start: refStartNode, end: refEndNode});
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("Protyle块ID =>", blockId);
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("Protyle文档ID =>", rootId);
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("插入的内容为, content=>", content);
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("头尾引用为, nodes=>", {start: refStartNode, end: refEndNode});
     // 避免重复设置或者不设置导致的bug
     if (refStartNode && refStartNode != protyle.protyle.toolbar!.range.startContainer) protyle.protyle.toolbar!.range.setStartBefore(refStartNode);
     if (refEndNode && this.replaceEndNode){
-      if (isDev) this.logger.info("确认结尾节点变化，替换结尾节点");
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("确认结尾节点变化，替换结尾节点");
       protyle.protyle.toolbar!.range.setEndAfter(refEndNode);
     } 
-    if (isDev) this.logger.info("替换选区为, range=>", {range: protyle.protyle.toolbar!.range});
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("替换选区为, range=>", {range: protyle.protyle.toolbar!.range});
     await protyle.insert(content, false, true);
     // TODO 等待前后端联动API更新再更新文档标号
-    // if (isDev) this.getCursorOffsetInBlock(blockId);
+    // if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.getCursorOffsetInBlock(blockId);
     // await this.plugin.kernelApi.setBlockCited(blockId, true);
     // await this.plugin.reference.updateLiteratureLink(rootId);
   }
 
   public async copyContent(content: string, type: string) {
-    if (isDev) this.logger.info("复制的内容为, content=>", content);
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("复制的内容为, content=>", content);
     navigator.clipboard.writeText(content);
     this.plugin.noticer.info(((this.plugin.i18n.notices as any).copyContentSuccess as string), {type});
   }
@@ -343,9 +343,9 @@ export class Reference {
     const insertContent = keys.map(async (key, i) => {
       const idx = existNotes.indexOf(key);
       const entry = await this.plugin.database.getContentByKey(key);
-      if (isDev) this.logger.info("从database中获得文献内容 =>", entry);
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("从database中获得文献内容 =>", entry);
       if (!entry || !entry.key) {
-        if (isDev) this.logger.error("找不到文献数据", {key, blockID: this.plugin.literaturePool.get(key)});
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.error("找不到文献数据", {key, blockID: this.plugin.literaturePool.get(key)});
         if (errorReminder) this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);
         return null;
       }

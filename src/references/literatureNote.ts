@@ -32,7 +32,7 @@ export class LiteratureNote {
       const data = (await res).data as any[];
       if (data.length) {
         const literatureId = data[0].id;
-        if (isDev) this.logger.info("已存在文献文档，id=>", {literatureId});
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("已存在文献文档，id=>", {literatureId});
         // 保险起见更新一下字典
         this.plugin.literaturePool.set({id: literatureId, key});
         await this._processExistedLiteratureNote(literatureId, key, entry, noConfirmUserData);
@@ -46,14 +46,14 @@ export class LiteratureNote {
         //文件不存在就新建文件
         let noteTitle = generateFromTemplate(titleTemplate, entry);
         noteTitle = noteTitle.replace(DISALLOWED_FILENAME_CHARACTERS_RE, "_");
-        if (isDev) this.logger.info("生成文件标题 =>", noteTitle);
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("生成文件标题 =>", noteTitle);
         // const noteData = await this._createLiteratureNote(noteTitle);
         // 创建新文档
         const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
         const refPath = this.plugin.data[STORAGE_NAME].referencePath as string;
         const res = await this.plugin.kernelApi.createDocWithMd(notebookId, refPath + `/${noteTitle}`, "");
         const rootId = String(res.data);
-        if (isDev) this.logger.info("创建文档，ID =>", rootId);
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("创建文档，ID =>", rootId);
         const userDataId = await this._updateEmptyNote(rootId);
         const noteData = { rootId, userDataId };
         // 将文献的基本内容塞到用户文档的自定义属性中
@@ -116,10 +116,10 @@ export class LiteratureNote {
         itemAttrs["tags"] = zoteroTags;
       }
   
-      if (isDev) this.logger.info("获取更新数据源数据, attrs=>", itemAttrs);
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获取更新数据源数据, attrs=>", itemAttrs);
   
       if (Object.keys(itemAttrs).length) this.plugin.database.updateDataSourceItem(key, itemAttrs);
-      else if (isDev) this.logger.info("没有数据源数据需要更新");
+      else if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("没有数据源数据需要更新");
     }
 
     private async _updateAttrView(key: string, entry: any) {
@@ -135,7 +135,7 @@ export class LiteratureNote {
       if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获取到块添加的数据库", res.data);
       const findItem = (res.data as any[]).find(item => item.avID === avID);
       if (!findItem || !findItem.keyValues) {
-        if (isDev) this.logger.info("数据库中不存在块，将块插入数据库", {avID, blockID});
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("数据库中不存在块，将块插入数据库", {avID, blockID});
         res = await this.plugin.kernelApi.addAttributeViewBlocks(avID, [{
           id: blockID,
           isDetached: false
@@ -170,7 +170,7 @@ export class LiteratureNote {
         userDataId = userDataInfo.userDataId;
         userDataLink = userDataInfo.userDataLink;
         const hasUserData = userDataInfo.hasUserData;
-        if (isDev) this.logger.info("获得用户片段更新信息=>", userDataInfo);
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获得用户片段更新信息=>", userDataInfo);
         if (!hasUserData) {
           // 没有查找到用户数据片段时进行更新
           if (!noConfirmUserData) return confirm("⚠️", (this.plugin.i18n.confirms as any).updateWithoutUserData.replaceAll("${title}", entry.title), async () => {
@@ -192,7 +192,7 @@ export class LiteratureNote {
           }
         }
       } else {
-        if (isDev) this.logger.info("文献内容文档中没有内容");
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("文献内容文档中没有内容");
         // 更新空的文档内容
         userDataId = await this._updateEmptyNote(literatureId);
       }
@@ -261,7 +261,7 @@ export class LiteratureNote {
         const idx = dataIds.indexOf(dyMatch[0].split(" ")[0].slice(2));
         userDataId = dataIds[idx];
         userDataLink = dyMatch[0];
-        if (isDev) this.logger.info("匹配到用户片段动态锚文本链接 =>", {dyMatch: dyMatch, id: userDataId});
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("匹配到用户片段动态锚文本链接 =>", {dyMatch: dyMatch, id: userDataId});
         // 更新为新形式的user data判断
         await this.plugin.kernelApi.setBlockAttr(userDataId, {"custom-literature-block-type": "user data"});
         // 删除所有需要更新的片段 
@@ -276,7 +276,7 @@ export class LiteratureNote {
         const idx = dataIds.indexOf(stMatch[0].split(" ")[0].slice(2));
         userDataId = dataIds[idx];
         userDataLink = stMatch[0];
-        if (isDev) this.logger.info("匹配到用户片段静态锚文本链接 =>", {stMatch: stMatch, id: userDataId});
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("匹配到用户片段静态锚文本链接 =>", {stMatch: stMatch, id: userDataId});
         // 更新为新形式的user data判断
         await this.plugin.kernelApi.setBlockAttr(userDataId, {"custom-literature-block-type": "user data"});
         // 删除所有需要更新的片段
@@ -287,7 +287,7 @@ export class LiteratureNote {
           hasUserData: true
         };
       } else {
-        if (isDev) this.logger.info("未匹配到用户片段链接 =>", {
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("未匹配到用户片段链接 =>", {
           markdown: (res.data as any[])[0].markdown, stMatch, dyMatch, totalIds: dataIds
         });
         // 执行后续操作之前先更新文献池
@@ -364,11 +364,11 @@ export class LiteratureNote {
       const data = res.data as any[];
       if (!data.length) {
         if (callbackTimes >= 1) {
-          if (isDev) this.logger.info("更新次数到极限，本次暂停更新, detail=>", { index, content, literatureId, userDataId, callbackTimes});
+          if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("更新次数到极限，本次暂停更新, detail=>", { index, content, literatureId, userDataId, callbackTimes});
           return;
         }
         // 还没更新出来就重新塞回队列
-        if (isDev) this.logger.info("文档尚未更新到数据库，等下一次数据库更新，detail=>", { index, content, literatureId, userDataId, callbackTimes });
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("文档尚未更新到数据库，等下一次数据库更新，detail=>", { index, content, literatureId, userDataId, callbackTimes });
         return this.plugin.eventTrigger.addSQLIndexEvent({
           triggerFn: this._insertNotes.bind(this),
           params: {
@@ -437,7 +437,7 @@ export class LiteratureNote {
       const userDataTemplatePath = this.plugin.data[STORAGE_NAME].userDataTemplatePath as string;
       let userDataId = "";
       if (useWholeDocAsUserData) {
-        if (isDev) this.logger.info("使用整个文档作为用户数据");
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("使用整个文档作为用户数据");
         // 对整个文档附加custom-literature-block-type属性
         await this.plugin.kernelApi.setBlockAttr(rootId, {
           "custom-literature-block-type": "user data"
@@ -448,11 +448,11 @@ export class LiteratureNote {
         const res = await this.plugin.kernelApi.getChidBlocks(rootId);
         userDataId = (res.data as any[])[0].id as string;
       }
-      if (isDev) this.logger.info("获取用户区域标题，ID =>", userDataId);
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获取用户区域标题，ID =>", userDataId);
       if (userDataTemplatePath.length) {
         // 在用户数据中调用模板渲染
         const absTemplatePath = workspaceDir + userDataTemplatePath
-        if (isDev) this.logger.info("获取到模板绝对路径：" + absTemplatePath);
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获取到模板绝对路径：" + absTemplatePath);
         try {
           const res = await this.plugin.kernelApi.renderTemplate(rootId, absTemplatePath);
           this.plugin.kernelApi.appendBlock(rootId, "dom", (res.data as any).content)
