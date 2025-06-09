@@ -347,22 +347,19 @@ export class EntryCSLAdapter extends Entry {
     if (author.length == 0) {
       return "";
     }
-    for (let i = 0; i < limit && i < author.length; i++) {
+    const max_width = limit >  author.length ? author.length : limit;
+    for (let i = 0; i < max_width; i++) {
       const name = author[i].family;
-      if (i == 0) {
-        shortAuthor += name ?? "";
-        if (limit < author.length) {
-          shortAuthor +=  shortAuthor.length ? " et al." : "";
-        }
-      } else if (i == limit - 1) {
-        shortAuthor += name ? " and " + name : "";
-        if (limit < author.length) {
-          shortAuthor +=  shortAuthor.length ? " et al." : "";
-        }
-      } else if (author.length < limit && i == author.length - 1) {
-        shortAuthor += name ? " and " + name : "";
+
+      shortAuthor += name;
+      if (i == max_width -1 && author.length > limit) {
+        shortAuthor += shortAuthor.length ? " et al." : "";
+      } else if (i == max_width - 2) {
+        shortAuthor += shortAuthor.length ? " and " : "";
+      } else if (i == max_width - 1) {
+        shortAuthor += "";
       } else {
-        shortAuthor += name ? ", " + name : "";
+        shortAuthor += ", ";
       }
     }
     return shortAuthor;
@@ -574,25 +571,21 @@ export class EntryBibLaTeXAdapter extends Entry {
     if (!author || author.length == 0) {
       return "";
     }
-    for (let i = 0; i < limit && i < author.length; i++) {
+    const max_width = limit >  author.length ? author.length : limit;
+    for (let i = 0; i < max_width; i++) {
       let name = "";
       if (author[i].literal) name = author[i].literal!;
       else name = author[i].lastName!;
-      
-      if (i == 0) {
-        shortAuthor += name ?? "";
-        if (limit < author.length) {
-          shortAuthor +=  shortAuthor.length ? " et al." : "";
-        }
-      } else if (i == limit - 1) {
-        shortAuthor += name ? " and " + name : "";
-        if (limit < author.length) {
-          shortAuthor +=  shortAuthor.length ? " et al." : "";
-        }
-      } else if (author.length < limit && i == author.length - 1) {
-        shortAuthor += name ? " and " + name : "";
+
+      shortAuthor += name;
+      if (i == max_width -1 && author.length > limit) {
+        shortAuthor += shortAuthor.length ? " et al." : "";
+      } else if (i == max_width - 2) {
+        shortAuthor += shortAuthor.length ? " and " : "";
+      } else if (i == max_width - 1) {
+        shortAuthor += "";
       } else {
-        shortAuthor += name ? ", " + name : "";
+        shortAuthor += ", ";
       }
     }
     return shortAuthor;

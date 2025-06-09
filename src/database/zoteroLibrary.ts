@@ -1,4 +1,4 @@
-import moment from "moment";
+import moment, { max } from "moment";
 import { Entry, type Author, type IIndexable, type File, type SingleNote } from "./filesLibrary";
 import { htmlNotesProcess } from "../utils/notes";
 import { filePathProcess, fileNameProcess } from "../utils/util";
@@ -278,22 +278,19 @@ export class EntryZoteroAdapter extends Entry {
     if (!author || author.length == 0) {
       return "";
     }
-    for (let i = 0; i < limit && i < author.length; i++) {
+    const max_width = limit >  author.length ? author.length : limit;
+    for (let i = 0; i < max_width; i++) {
       const name = author[i].lastName ? author[i].lastName: author[i].name;
-      if (i == 0) {
-        shortAuthor += name ?? "";
-        if (limit < author.length) {
-          shortAuthor +=  shortAuthor.length ? " et al." : "";
-        }
-      } else if (i == limit - 1) {
-        shortAuthor += name ? " and " + name : "";
-        if (limit < author.length) {
-          shortAuthor +=  shortAuthor.length ? " et al." : "";
-        }
-      } else if (author.length < limit && i == author.length - 1) {
-        shortAuthor += name ? " and " + name : "";
+
+      shortAuthor += name;
+      if (i == max_width -1 && author.length > limit) {
+        shortAuthor += shortAuthor.length ? " et al." : "";
+      } else if (i == max_width - 2) {
+        shortAuthor += shortAuthor.length ? " and " : "";
+      } else if (i == max_width - 1) {
+        shortAuthor += "";
       } else {
-        shortAuthor += name ? ", " + name : "";
+        shortAuthor += ", ";
       }
     }
     return shortAuthor;

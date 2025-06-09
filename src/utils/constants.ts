@@ -57,8 +57,6 @@ export const defaultUserDataTile = "User Data";
 export const defaultAttrViewBlock = "";
 export const defaultAttrViewTemplate = "";
 export const defaultUserDataTemplatePath = "";
-export const defaultUseDefaultCiteType = false;
-export const defaultUseWholeDocAsUserData = false;
 
 export const defaultSettingData = {
     referenceNotebook: "",
@@ -87,8 +85,8 @@ export const defaultSettingData = {
     attrViewBlock: defaultAttrViewBlock,
     attrViewTemplate: defaultAttrViewTemplate,
     userDataTemplatePath: defaultUserDataTemplatePath,
-    useWholeDocAsUserData: defaultUseWholeDocAsUserData,
-    useDefaultCiteType: defaultUseDefaultCiteType,
+    useWholeDocAsUserData: false,
+    useDefaultCiteType: true,
     consoleDebug: false,
     exportWordParam: "",
     exportLaTeXParam: "",
