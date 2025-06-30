@@ -484,7 +484,6 @@
     const avID = content.match(avIdReg)![1];
     res = await plugin.kernelApi.getAttributeView(avID);
     const av = (res.data as any).av;
-    console.log(av);
     if (!av) attrViewSuggest = "";
     else attrViewSuggest = av.keyValues.map((item: { key: { id: string; name: string; type: string; }; }) => {
       return `id: ${item.key.id}, name: ${item.key.name}, type: ${item.key.type}`

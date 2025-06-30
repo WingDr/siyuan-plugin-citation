@@ -428,9 +428,10 @@ class KernelApi extends BaseApi {
 
   }
 
-  public async exportMDContent(blockID: string) {
+  public async exportMDContent(blockID: string, yfm: boolean) {
     const params = {
-      "id": blockID
+      "id": blockID,
+      yfm
     };
     return await this.siyuanRequest("/api/export/exportMdContent", params);
   }

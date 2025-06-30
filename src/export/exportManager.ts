@@ -20,7 +20,7 @@ interface ExportOption {
 }
 
 export class ExportManager {
-  private userConfig!: {[key: string]: string};
+  private userConfig!: {[key: string]: any};
   private logger: ILogger;
 
   constructor (private plugin: SiYuanPluginCitation) {
@@ -56,7 +56,7 @@ export class ExportManager {
       const citeBlockIDs = this.plugin.literaturePool.ids;
       let res = await this.plugin.kernelApi.getBlock(exportID);
       const fileTitle = (res.data as any)[0].content;
-      res = await this.plugin.kernelApi.exportMDContent(exportID);
+      res = await this.plugin.kernelApi.exportMDContent(exportID, this.userConfig.markdownYFM);
       let content = (res.data as any).content as string;
       if (isDev) this.logger.info("获得导出内容，content=>", {content});
       let iter = 0;
@@ -105,7 +105,7 @@ export class ExportManager {
       const citeBlockIDs = this.plugin.literaturePool.ids;
       let res = await this.plugin.kernelApi.getBlock(exportID);
       const fileTitle = (res.data as any)[0].content;
-      res = await this.plugin.kernelApi.exportMDContent(exportID);
+      res = await this.plugin.kernelApi.exportMDContent(exportID, this.userConfig.markdownYFM);
       let content = (res.data as any).content as string;
       if (isDev) this.logger.info("获得导出内容，content=>", {content});
       let iter = 0;
@@ -185,7 +185,7 @@ export class ExportManager {
       const citeBlockIDs = this.plugin.literaturePool.ids;
       let res = await this.plugin.kernelApi.getBlock(exportID);
       const fileTitle = (res.data as any)[0].content;
-      res = await this.plugin.kernelApi.exportMDContent(exportID);
+      res = await this.plugin.kernelApi.exportMDContent(exportID, this.userConfig.markdownYFM);
       let content = (res.data as any).content as string;
       if (isDev) this.logger.info("获得导出内容，content=>", {content});
       let iter = 0;
