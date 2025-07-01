@@ -150,14 +150,19 @@ export class ExportManager {
       // 添加额外参数
       const exportWordParams = this.plugin.data[STORAGE_NAME].exportWordParam as string || "";
       const additionalParams = exportWordParams ? exportWordParams.split(",") : [];
-      await this.plugin.kernelApi.pandoc("citation", [
+      // 构建pandoc导出参数
+      const pandocParams = [
         "./exportTemp.md",
         "-o", "exportTemp.docx",
         "--lua-filter", dataDir + "/plugins/siyuan-plugin-citation/scripts/citation.lua",
-        "--reference-doc", this.userConfig.docxTemplate,
         "--resource-path", dataDir,
         ...additionalParams
-      ])
+      ];
+      if (this.userConfig.docxTemplate) {
+        pandocParams.push("--reference-doc", this.userConfig.docxTemplate);
+      }
+      if (isDev) this.logger.info("开始调用pandoc导出word，参数=>", pandocParams);
+      await this.plugin.kernelApi.pandoc("citation", pandocParams)
       res = await this.plugin.kernelApi.getFile("/temp/convert/pandoc/citation/exportTemp.docx", "any") as any;
       const file = await (new Response(((res as any).body as ReadableStream))).blob()
       // 下载
