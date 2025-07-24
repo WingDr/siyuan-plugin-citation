@@ -303,7 +303,12 @@ export class Reference {
       protyle.protyle.toolbar!.range.setEndAfter(refEndNode);
     } 
     if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("替换选区为, range=>", {range: protyle.protyle.toolbar!.range});
-    await protyle.insert(content, false, true);
+    console.log(protyle.protyle.toolbar!.range);
+    if (!content.length) {
+      await protyle.insert(window.Lute.Caret, false, true);
+    } else {
+      await protyle.insert(content, false, true);
+    }
     // TODO 等待前后端联动API更新再更新文档标号
     // if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.getCursorOffsetInBlock(blockId);
     // await this.plugin.kernelApi.setBlockCited(blockId, true);

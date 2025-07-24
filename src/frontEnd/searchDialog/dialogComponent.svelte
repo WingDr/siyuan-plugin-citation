@@ -92,9 +92,11 @@
                 onSelection(selectedList.map(item => item.key));
                 confirm();
             } else {
+                onSelection([]);
                 confirm();
             }
         } else if (ev.key == "Escape") {
+            onSelection([]);
             confirm();
         }
     }
