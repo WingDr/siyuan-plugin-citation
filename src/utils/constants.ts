@@ -11,7 +11,7 @@ export const pluginIconSVG = '<svg xmlns="http://www.w3.org/2000/svg" version="1
 
 export const citeLinkStatic = "<span data-type=\"block-ref\" custom-cite-type=\"${cite_type}\" data-id=\"${id}\" data-subtype=\"s\">${link}</span>";
 export const citeLinkDynamic = "<span data-type=\"block-ref\" custom-cite-type=\"${cite_type}\" data-id=\"${id}\" data-subtype=\"d\">${link}</span>";
-export const DISALLOWED_FILENAME_CHARACTERS_RE = /[*"\\/<>:|?\/]/g;
+export const DISALLOWED_FILENAME_CHARACTERS_RE = /[\/]/g;
 export const refReg = /\(\((.*?)\)\)/;
 export const refRegStatic = /\(\((.*?)\"(.*?)\"\)\)/g;
 export const refRegDynamic = /\(\((.*?)\'(.*?)\'\)\)/g;
