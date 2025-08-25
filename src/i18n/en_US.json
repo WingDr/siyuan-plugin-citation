@@ -51,8 +51,8 @@
       "title": "Template Settings",
       "citeLink": {
         "title": "Citation Links",
-        "useDefaultCiteTypeTitle": "默认使用第一种引用类型",
-        "useDefaultCiteTypeDescription": "在插入引用时直接使用第一种引用类型，不单独弹窗选择引用类型（在引用的右键菜单中可以手动切换引用类型）",
+        "useDefaultCiteTypeTitle": "Default to First Citation Type",
+        "useDefaultCiteTypeDescription": "Directly use the first citation type when inserting references, without displaying a separate pop-up selection window (citation types can be manually switched via the right-click menu on citations).",
         "citeTypeCardTitle": "Citation Type List",
         "citeTypeCardSet": "Settings",
         "citeTypeCardDelete": "Delete",
@@ -87,10 +87,10 @@
         "title": "User Data",
         "titleUserDataInput": "Custom 'User Data' headers",
         "titleUserDataInputDescription": "The default is 'User Data', which can be customized",
-        "userDataTemplatePathTitle": "用户数据模板路径",
-        "userDataTemplatePathDescription": "使用思源自带的模板自动生成用户数据区域，在输入框中输入该模板的路径，以/data/开头。",
-        "useWholeDocAsUserDataTitle": "使用整个文档作为用户数据区域",
-        "useWholeDocAsUserDataDescription": "将整个文档作为用户数据区域使用，新建之后不再更新，建议配合用户数据模板和数据库功能使用。",
+        "userDataTemplatePathTitle": "User Data Template Path",
+        "userDataTemplatePathDescription": "Automatically generate the user data area using Siyuan's built-in templates. Enter the template path starting with `/data/` in the input field.",
+        "useWholeDocAsUserDataTitle": "Use Entire Document as User Data Area",
+        "useWholeDocAsUserDataDescription": "Use the entire document as the user data area. Once created, it will not update. Recommended for use with the User Data Template and database features.",
         "attrViewBlockInput": "Database block id",
         "attrViewBlockDescription": "The id of the database that needed to be update during citation",
         "attrViewTemplateInput": "Database attribute template",
@@ -135,12 +135,14 @@
     "refPathInvalid": "Literature Library Path Does Not Exist! Please create the corresponding path in the document tree.",
     "hotKeyUsage": "Please use the shortcut key to execute this command!",
     "loadRefFailed": "Failed to Import Literature References",
-    "zoteroNotRunning": "${type} is not running",
+    "zoteroNotRunning": "Unable to find ${type} or the debug-bridge plugin. Please check if ${type} is running and ensure the debug-bridge plugin is properly installed and up to date.",
+    "zoteroRequestForbidden": "Access request denied. Please update the citation plugin to the latest version.",
+    "zoteroCannotReached": "Failed to communicate with Zotero. Ensure the Unblock browser plugin is installed and enabled.",
     "getLiteratureFailed": "Failed to Get Cited Literature",
     "loadLibraryFailed": "Failed to Import Literature Library",
     "bbtDisabled": "No 'citekey' field detected. Please check if the better-bibtex plugin is running or switch to using 'itemKey' as the index.",
     "wrongDBPassword": "Debug-Bridge Plugin Password Incorrect. Please set the correct password in the settings interface.",
-    "userDataTemplatePathRenderError": "用户数据模板路径错误，无法渲染模板"
+    "userDataTemplatePathRenderError": "Invalid user data template path. Failed to render the template."
   },
   "confirms": {
     "updateWithoutUserData": "The \"User Data (# User Data)\" area of literature note document \"${title}\" is not detected (missing citations or citations are invalid). Are you sure you want to update the literature content?"

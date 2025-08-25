@@ -608,9 +608,9 @@ export class ZoteroDBModal extends DataModal {
     }).catch(async (e: { response: { status: number; }; }) => {
       if (isDev) this.logger.error("访问Zotero发生错误, error=>", e);
       if (e.response?.status == 401) this.plugin.noticer.error((this.plugin.i18n.errors as any).wrongDBPassword); // 密码错误
-      else if (e.response?.status == 403) this.plugin.noticer.error(((this.plugin.i18n.errors as any).zoteroNotRunning as string), {type: this.type}); // 访问请求被禁止，建议更新到最新版本citation插件
+      else if (e.response?.status == 403) this.plugin.noticer.error(((this.plugin.i18n.errors as any).zoteroRequestForbidden as string), {type: this.type}); // 访问请求被禁止，建议更新到最新版本citation插件
       else if (e.response?.status == 404) this.plugin.noticer.error(((this.plugin.i18n.errors as any).zoteroNotRunning as string), {type: this.type}); //找不到Zotero或者debug-bridge
-      else if (e.response?.status == 0) this.plugin.noticer.error(((this.plugin.i18n.errors as any).zoteroNotRunning as string), {type: this.type}); //无法与Zotero通信，没安装Unblock浏览器插件
+      else if (e.response?.status == 0) this.plugin.noticer.error(((this.plugin.i18n.errors as any).zoteroCannotReached as string), {type: this.type}); //无法与Zotero通信，没安装Unblock浏览器插件
       else if (e.response?.status == 400) {
         this.useJSHeaders = !this.useJSHeaders;
         const data = await this._callZoteroJS(filename, prefix);
