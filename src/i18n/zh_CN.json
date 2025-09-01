@@ -142,7 +142,8 @@
     "loadLibraryFailed": "文献库导入失败",
     "bbtDisabled": "未检索到citekey字段，请检查better-bibtex插件是否运行，或者切换到使用itemKey进行索引",
     "wrongDBPassword": "debug-bridge插件密码错误，请在设置界面中设置正确密码",
-    "userDataTemplatePathRenderError": "用户数据模板路径错误，无法渲染模板"
+    "userDataTemplatePathRenderError": "用户数据模板路径错误，无法渲染模板",
+    "attrViewTemplateNotJson": "数据库属性模板无法解析，请检查是否为严格json格式。"
   },
   "confirms": {
     "updateWithoutUserData": "文献内容文档\"${title}\"未检测到“用户数据（# User Data）”区域（缺少引用或引用失效），确定要更新文献内容吗？"

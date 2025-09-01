@@ -143,6 +143,11 @@ export class LiteratureNote {
       }
       const dataString = generateFromTemplate(attrViewTemplate, entry);
       if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("根据模板生成属性=>", {dataString});
+      try { 
+        JSON.parse(dataString);
+      } catch (error) { 
+        this.plugin.noticer.error((this.plugin.i18n as any).errors.attrViewTemplateNotJson + error);
+      }
       const data = JSON.parse(dataString);
       for (const item of data) {
         if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("插入数据库属性", item);
