@@ -149,9 +149,13 @@ export class LiteratureNote {
         this.plugin.noticer.error((this.plugin.i18n as any).errors.attrViewTemplateNotJson + error);
       }
       const data = JSON.parse(dataString);
+      // 获取块在数据库中对应的itemID
+      res = await this.plugin.kernelApi.getAttributeViewItemIDsByBoundIDs(avID, [blockID]);
+      const itemID = (res.data as any)[blockID];
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获取到文档对应的itemID=>", {itemID});
       for (const item of data) {
         if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("插入数据库属性", item);
-        res = await this.plugin.kernelApi.setAttributeViewBlockAttr(avID, item.keyID, blockID, item.value)
+        res = await this.plugin.kernelApi.setAttributeViewBlockAttr(avID, item.keyID, itemID, item.value)
       }
     }
 
