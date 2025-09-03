@@ -153,10 +153,12 @@ export class LiteratureNote {
       res = await this.plugin.kernelApi.getAttributeViewItemIDsByBoundIDs(avID, [blockID]);
       const itemID = (res.data as any)[blockID];
       if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获取到文档对应的itemID=>", {itemID});
-      for (const item of data) {
-        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("插入数据库属性", item);
-        res = await this.plugin.kernelApi.setAttributeViewBlockAttr(avID, item.keyID, itemID, item.value)
-      }
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("插入数据库属性", data);
+      await this.plugin.kernelApi.batchSetAttributeViewBlockAttrs(avID, data.map((d: { keyID: string; value: any; }) => ({
+        keyID: d.keyID,
+        itemID,
+        value: d.value
+      })));
     }
 
     private async _processExistedLiteratureNote(literatureId: string, key: string, entry: any, noConfirmUserData=this.plugin.data[STORAGE_NAME].deleteUserDataWithoutConfirm) {

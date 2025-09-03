@@ -437,6 +437,13 @@ class KernelApi extends BaseApi {
     })
   }
 
+  public async batchSetAttributeViewBlockAttrs(avID: string, values: {keyID: string, itemID: string, value: any}[] ) {
+    return await this.siyuanRequest("/api/av/batchSetAttributeViewBlockAttrs", {
+      avID,
+      values
+    })
+  }
+
   public async setExport(options: object) {
     return await this.siyuanRequest("/api/setting/setExport", options);
   }
