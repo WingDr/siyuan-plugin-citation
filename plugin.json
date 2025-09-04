@@ -6,6 +6,7 @@
   "minAppVersion": "3.3.1",
   "backends": ["windows", "linux", "darwin", "docker"],
   "frontends": ["all"],
+  "disabledInPublish": false,
   "i18n": ["en_US", "zh_CN"],
   "displayName": {
     "default": "Citation for SiYuan",
