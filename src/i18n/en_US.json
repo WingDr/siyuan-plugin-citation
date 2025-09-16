@@ -128,7 +128,9 @@
     "refreshCitation": "Refresh citation links",
     "refreshSingleLiteratureNote": "Refresh literature note",
     "turnTo": "Turn to",
-    "export": "Export"
+    "export": "Export",
+    "bindToLiterature": "Bind to Literature",
+    "unbindFromLiterature": "Unbind from Literature"
   },
   "errors": {
     "notebookUnselected": "Notebook Not Selected!",
@@ -156,6 +158,7 @@
     "changeKey": "Switched Index Successfully. Literature index has been changed to ${keyType}.",
     "noSelectedItem": "No literature is selected.",
     "refreshLiteratureNoteContents": "Successfully Refreshed ${size} Literature Note.",
-    "refreshSingleLiteratureNoteSucess": "Successfully Refreshed Note of Literature ${key}."
+    "refreshSingleLiteratureNoteSuccess": "Successfully Refreshed Note of Literature ${key}.",
+    "unbindDocumentFromLiteratureSuccess": "Successfully Unbound Document from Literature."
   }
 }

@@ -74,6 +74,11 @@ export async function loadLocalRef(plugin: SiYuanPluginCitation): Promise<any> {
     const pList = literatureDocs.map(async file => {
       let key = "";
       const literatureKey = file.literature_key;
+      const literatureUnlink = file.literature_unlink;
+      if (literatureUnlink || literatureUnlink == "true") {
+        // 如果是未链接的，就跳过这个文件
+        return;
+      }
       if (!literatureKey) {
         // 如果没有这个自定义属性，就在标题和命名里找一下
         if (file.name === "") {

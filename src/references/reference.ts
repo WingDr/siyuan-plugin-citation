@@ -231,8 +231,10 @@ export class Reference {
         this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);
         // 在zotero里对应不到了，把文档名改成unlinked
         const literatureId = this.plugin.literaturePool.get(key);
+        // 解除文献绑定
+        this.unbindDocumentFromLiterature(literatureId);
         const res = await this.plugin.kernelApi.getBlock(literatureId);
-        await this.plugin.kernelApi.renameDoc(notebookId, (res.data as any[])[0].path , "unlinked");
+        await this.plugin.kernelApi.renameDoc(notebookId, (res.data as any[])[0].path , "unlinked"+(res.data as any[])[0].title);
         return null;
       }
       const noteTitle = generateFromTemplate(titleTemplate, entry);
@@ -323,6 +325,19 @@ export class Reference {
     if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("复制的内容为, content=>", content);
     navigator.clipboard.writeText(content);
     this.plugin.noticer.info(((this.plugin.i18n.notices as any).copyContentSuccess as string), {type});
+  }
+
+  public async bindDocumentToLiterature(documentId: string) {
+    // 将当前文档绑定到某个文献
+
+  }
+
+  public async unbindDocumentFromLiterature(documentId: string) {
+    // 将当前文档从某个文献中解绑
+    // 直接删除文档的custom-literature-unlink属性
+    await this.plugin.kernelApi.setBlockAttr(documentId, {"custom-literature-unlink": "true"});
+    this.plugin.noticer.info((this.plugin.i18n.notices as any).unbindDocumentFromLiteratureSuccess, {documentId});
+    await loadLocalRef(this.plugin);
   }
 
   // Extra Functions

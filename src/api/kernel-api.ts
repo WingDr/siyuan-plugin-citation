@@ -241,11 +241,14 @@ class KernelApi extends BaseApi {
   public async getLiteratureDocInPath(notebook: string, dir_hpath: string, offset: number, limit: number): Promise<SiyuanData> {
     const params = {
       "stmt": `SELECT 
-          b.id, b.root_id, b.box, b."path", b.hpath, b.name, b.content, a.value as literature_key 
+          b.id, b.root_id, b.box, b."path", b.hpath, b.name, b.content, a.value as literature_key, c.value as literature_unlink
         FROM blocks b 
           left outer join (
             select * FROM "attributes" WHERE name = "custom-literature-key"
           ) as a on b.id = a.block_id 
+          left outer join (
+            select * FROM "attributes" WHERE name = "custom-literature-unlink"
+          ) as c on b.id = c.block_id 
         WHERE 
           b.box like '${notebook}' and 
           b.hpath like '${dir_hpath}%' and 

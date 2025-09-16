@@ -128,7 +128,9 @@
     "refreshCitation": "刷新引用",
     "refreshSingleLiteratureNote": "刷新文献内容",
     "turnTo": "转换为",
-    "export": "导出"
+    "export": "导出",
+    "bindToLiterature": "绑定到文献",
+    "unbindFromLiterature": "解除与文献绑定"
   },
   "errors": {
     "notebookUnselected": "未选择笔记本！",
@@ -156,6 +158,7 @@
     "changeKey": "切换索引成功，文献索引已经切换到${keyType}。",
     "noSelectedItem": "没有选中的文献",
     "refreshLiteratureNoteContentsSuccess": "成功刷新${size}篇文献内容",
-    "refreshSingleLiteratureNoteSuccess": "成功刷新文献${key}内容"
+    "refreshSingleLiteratureNoteSuccess": "成功刷新文献${key}内容",
+    "unbindDocumentFromLiteratureSuccess": "成功解除文档绑定"
   }
 }
