@@ -16,10 +16,32 @@ import { NoteProcessor } from "./noteProcessor";
 export class LiteratureNote {
     plugin: SiYuanPluginCitation;
     private logger: ILogger;
+    private updateBatches: Map<string, {entry: any, noConfirmUserData: boolean}>; // 批量更新
 
     constructor(plugin: SiYuanPluginCitation) {
         this.plugin = plugin;
         this.logger = createLogger("literature-note");
+        this.updateBatches = new Map();
+    }
+
+    public async addLiteratureNotesToUpdateBatch(key: string, entry: any, noConfirmUserData=this.plugin.data[STORAGE_NAME].deleteUserDataWithoutConfirm) {
+      // 判断batch里面是否重复
+      if (this.updateBatches.has(key)) {
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("文献更新任务已存在，key=>", key);
+        return;
+      }
+      this.updateBatches.set(key, {entry, noConfirmUserData});
+    }
+
+    public async processUpdateBatches() {
+      if (!this.updateBatches.size) return;
+      // 获取所有的key、entry、noConfirmUserData
+      const batches = Array.from(this.updateBatches.entries());
+      // 对batches异步处理但是promise.all
+      await Promise.all(batches.map(([key, {entry, noConfirmUserData}]) => {
+        return this.updateLiteratureNote(key, entry, noConfirmUserData);
+      }));
+      this.updateBatches.clear();
     }
 
     public async updateLiteratureNote(key: string, entry: any, noConfirmUserData=this.plugin.data[STORAGE_NAME].deleteUserDataWithoutConfirm) {
@@ -326,6 +348,7 @@ export class LiteratureNote {
       if (userDataId == literatureId) return;
       const noteTemplate = this.plugin.data[STORAGE_NAME].noteTemplate as string;
       const note = entry.note;
+      console.log("note=>", note);
       entry.note = entry.note?.map((n: { prefix: string; index: any; }) => {
         return n.prefix + `\n\n{ {note${n.index}} }`;
         // return `${n.prefix}\n\n${n.content}`;

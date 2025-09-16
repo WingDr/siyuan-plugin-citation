@@ -164,7 +164,10 @@ export class Reference {
         // 如果不在文献池里说明不是文献的引用
         if (!this.plugin.literaturePool.get(target_id))  return acc;
         const full_content = cur.markdown + cur.ial;
-        const cite_type = cur.ial.match(/custom-cite-type=\"(.*?)\"/)![1];
+        let cite_type_reg = cur.ial.match(/custom-cite-type=\"(.*?)\"/);
+        // 如果没有类型就选择第一个类型
+        let cite_type = this.plugin.data[STORAGE_NAME].linkTemplatesGroup[0].name;
+        if (cite_type_reg && cite_type_reg.length > 1) cite_type = cite_type_reg[1];
         const startPos = block.content.indexOf(full_content);
         const endPos = startPos+full_content.length;
         let res = acc;
@@ -208,6 +211,7 @@ export class Reference {
       });
     });
     await Promise.all(generatePromise);
+    this.LiteratureNote.processUpdateBatches();
     if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("写入引用列表 =>", writeList);
     const update = writeList.map(witem => {
       return this.plugin.kernelApi.updateCitedBlock(witem.blockId, witem.content);
@@ -354,7 +358,8 @@ export class Reference {
         if (errorReminder) this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);
         return null;
       }
-      await this.LiteratureNote.updateLiteratureNote(key, entry);
+      await this.LiteratureNote.addLiteratureNotesToUpdateBatch(key, entry);
+      // await this.LiteratureNote.updateLiteratureNote(key, entry);
       const citeId = this.plugin.literaturePool.get(key);
       const link = this._processMultiCitation(await this.Cite.generateCiteLink(key, idx, typeSetting, false), i, keys.length, typeSetting);
       const name = await this.Cite.generateLiteratureName(key, typeSetting);
