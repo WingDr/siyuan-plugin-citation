@@ -1164,31 +1164,33 @@
 
         <!-- 标签页 3 内容 -->
         <div data-type={template_tabs[2].name} class:fn__none={template_tabs[2].key !== focus}>
-          <!-- 自定义用户数据标题 -->
-          <Item
-            block={true}
-            title={(plugin.i18n.settingTab as any).templates.userData.titleUserDataInput}
-            text={(plugin.i18n.settingTab as any).templates.userData.titleUserDataInputDescription}
-          >
-            {#snippet input()}
-                  <Input
-                
-                block={true}
-                normal={true}
-                type={ItemType.text}
-                settingKey="Text"
-                settingValue={userDataTitle}
-                placeholder="Input the 'User Data' title"
-                onchanged={(event) => {
-                  if (isDev)
-                    logger.info(
-                    `Input changed: ${event.detail.key} = ${event.detail.value}`
-                  );
-                  userDataTitle = event.detail.value; 
-                }}
-              />
-                {/snippet}
-          </Item>
+          {#if !useWholeDocAsUserData}
+            <!-- 自定义用户数据标题 -->
+            <Item
+              block={true}
+              title={(plugin.i18n.settingTab as any).templates.userData.titleUserDataInput}
+              text={(plugin.i18n.settingTab as any).templates.userData.titleUserDataInputDescription}
+            >
+              {#snippet input()}
+                    <Input
+                  
+                  block={true}
+                  normal={true}
+                  type={ItemType.text}
+                  settingKey="Text"
+                  settingValue={userDataTitle}
+                  placeholder="Input the 'User Data' title"
+                  onchanged={(event) => {
+                    if (isDev)
+                      logger.info(
+                      `Input changed: ${event.detail.key} = ${event.detail.value}`
+                    );
+                    userDataTitle = event.detail.value; 
+                  }}
+                />
+                  {/snippet}
+            </Item>
+          {/if}
           <!-- 用户数据模板路径 -->
           <Item
             block={true}

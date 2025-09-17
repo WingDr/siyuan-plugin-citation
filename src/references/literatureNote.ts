@@ -119,7 +119,7 @@ export class LiteratureNote {
           // 如果没有用户数据，将整个文档作为用户数据
           if (!userDataInfo.hasUserData) await this.plugin.kernelApi.setBlockAttr(literatureId, {"custom-literature-key": key});
         } else await this.plugin.kernelApi.setBlockAttr(literatureId, {"custom-literature-key": key}); // 空白文档一样处理
-        // 清楚unlink状态
+        // 清除unlink状态
         await this.plugin.kernelApi.setBlockAttr(literatureId, {"custom-literature-unlinked": ""});
         await this._processExistedLiteratureNote(literatureId, key, entry);
       } else {
