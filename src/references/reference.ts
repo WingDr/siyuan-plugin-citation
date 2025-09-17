@@ -219,6 +219,41 @@ export class Reference {
     return Promise.all(update);
   }
 
+  public async refreshSingleLiteratureNoteTitles(literatureId: string) {
+    const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
+    const titleTemplate = this.plugin.data[STORAGE_NAME].titleTemplate as string;
+    const key = this.plugin.literaturePool.get(literatureId);
+    const entry = await this.plugin.database.getContentByKey(key);
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("从database中获得文献内容 =>", entry);
+    if (!entry) {
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.error("找不到文献数据", {key, blockID: this.plugin.literaturePool.get(key)});
+      this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);
+      // 在zotero里对应不到了，把文档名改成unlinked
+      const literatureId = this.plugin.literaturePool.get(key);
+      // 解除文献绑定
+      this.unbindDocumentFromLiterature(literatureId);
+      const res = await this.plugin.kernelApi.getBlock(literatureId);
+      await this.plugin.kernelApi.renameDoc(notebookId, (res.data as any[])[0].path , "\u274C"+(res.data as any[])[0].content);
+      return null;
+    }
+    const noteTitle = generateFromTemplate(titleTemplate, entry);
+    noteTitle.replace(DISALLOWED_FILENAME_CHARACTERS_RE, "_");
+    // 不对的时候才更新标题
+    const res = await this.plugin.kernelApi.getBlock(literatureId);
+    if (!(res.data as any[]).length) {
+      // 如果这个文档没有了，那就在池子里去掉它
+      this.plugin.literaturePool.delete(key);
+      return;
+    } 
+    const title = (res.data as any[])[0].content;
+    if (noteTitle != title) await this.plugin.kernelApi.renameDoc(notebookId, (res.data as any[])[0].path , noteTitle);
+    const literatureKey = ((await this.plugin.kernelApi.getBlockAttrs(literatureId)) as any).data["custom-literature-key"];
+    if (literatureKey != entry.key) {
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("给文档刷新key，detail=>", {id: literatureId, name: entry.key});
+      await this.plugin.kernelApi.setBlockKey(literatureId, entry.key);
+    } else if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("文档无需刷新key，detail=>", {id: literatureId, name: entry.key});
+  }
+
   public async refreshLiteratureNoteTitles(titleTemplate: string) {
     const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
     // 在刷新之前先更新一下文献池
@@ -327,15 +362,19 @@ export class Reference {
     this.plugin.noticer.info(((this.plugin.i18n.notices as any).copyContentSuccess as string), {type});
   }
 
-  public async bindDocumentToLiterature(documentId: string) {
-    // 将当前文档绑定到某个文献
-
+  public async bindDocumentToLiterature(key: string, documentId: string) {
+    // 检查文档id是否合法，文件是否在文献库中
+    if (!documentId || !documentId.length) {
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("无法获取文档ID，无法绑定文档");
+      return;
+    }
+    return await this.LiteratureNote.bindDocumentToLiterature(key, documentId);
   }
 
   public async unbindDocumentFromLiterature(documentId: string) {
     // 将当前文档从某个文献中解绑
-    // 直接删除文档的custom-literature-unlink属性
-    await this.plugin.kernelApi.setBlockAttr(documentId, {"custom-literature-unlink": "true"});
+    // 直接设置文档的custom-literature-unlinked属性
+    await this.plugin.kernelApi.setBlockAttr(documentId, {"custom-literature-unlinked": "true"});
     this.plugin.noticer.info((this.plugin.i18n.notices as any).unbindDocumentFromLiteratureSuccess, {documentId});
     await loadLocalRef(this.plugin);
   }

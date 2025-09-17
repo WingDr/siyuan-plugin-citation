@@ -127,6 +127,7 @@
   "menuItems": {
     "refreshCitation": "刷新引用",
     "refreshSingleLiteratureNote": "刷新文献内容",
+    "refreshSingleLiteratureNoteTitle": "刷新文档标题",
     "turnTo": "转换为",
     "export": "导出",
     "bindToLiterature": "绑定到文献",

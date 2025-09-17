@@ -227,7 +227,11 @@ export class InteractionManager {
         iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconLink"></use></svg>',
         label: (this.plugin.i18n.menuItems as any).bindToLiterature,
         // clickCallback: (id) => {this.plugin.exportManager.export(id, "markdown");},
-        clickCallback: (id) => {this.plugin.reference.bindDocumentToLiterature(id);}
+        clickCallback: (id) => {
+          this.plugin.database.setSelected([]);
+          this.plugin.reference.setEmptySelection();
+          this.plugin.database.linkDocToLiterature(id);
+        }
       },
       {
         // 与文献解锁绑定
@@ -237,6 +241,14 @@ export class InteractionManager {
         label: (this.plugin.i18n.menuItems as any).unbindFromLiterature,
         // clickCallback: (id) => {this.plugin.exportManager.export(id, "markdown");},
         clickCallback: (id) => {this.plugin.reference.unbindDocumentFromLiterature(id);}
+      },
+      {
+        // 刷新标题
+        place: ["BreadcrumbMore", "TitleIcon"],
+        check: this.isLiteratureNote.bind(this),
+        iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconRefresh"></use></svg>',
+        label: (this.plugin.i18n.menuItems as any).refreshSingleLiteratureNoteTitle,
+        clickCallback: (id) => {this.plugin.reference.refreshSingleLiteratureNoteTitles(id);}
       },
       {
         place: ["BlockRef"],

@@ -127,6 +127,7 @@
   "menuItems": {
     "refreshCitation": "Refresh citation links",
     "refreshSingleLiteratureNote": "Refresh literature note",
+    "refreshSingleLiteratureNoteTitle": "Refresh document title",
     "turnTo": "Turn to",
     "export": "Export",
     "bindToLiterature": "Bind to Literature",

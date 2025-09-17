@@ -247,7 +247,7 @@ class KernelApi extends BaseApi {
             select * FROM "attributes" WHERE name = "custom-literature-key"
           ) as a on b.id = a.block_id 
           left outer join (
-            select * FROM "attributes" WHERE name = "custom-literature-unlink"
+            select * FROM "attributes" WHERE name = "custom-literature-unlinked"
           ) as c on b.id = c.block_id 
         WHERE 
           b.box like '${notebook}' and 

@@ -23,6 +23,7 @@ export class Database {
   private refEndNode: HTMLElement | null;
 
   private protyle!: Protyle;
+  private docId!: string;
 
   constructor(private plugin: SiYuanPluginCitation) {
     this.logger = createLogger("database");
@@ -113,6 +114,11 @@ export class Database {
     }
   }
 
+  public async linkDocToLiterature(docId: string) {
+    this.docId = docId;
+    if (await this.checkSettings()) return this.dataModal.showSearching(null, this.linkDocToLiteratureBySelection.bind(this));
+  }
+
 
   // Group: 间接通用接口
 
@@ -120,6 +126,7 @@ export class Database {
     if (!keys.length) {
       // 确保可能导致选择问题的全部为空
       this.setRefNode(null, null);
+      this.docId = "";
       this.plugin.reference.setEmptySelection();
     }
     this.dataModal.selectedList = keys;
@@ -215,5 +222,15 @@ export class Database {
     });
     const content = await Promise.all(insertContent);
     this.plugin.reference.copyContent(content.join(""), this.plugin.i18n.notes);
+  }
+
+  private async linkDocToLiteratureBySelection(keys: string[]) {
+    if (!keys.length) {
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("没有选择任何条目，无法绑定文档");
+      return;
+    }
+    const key = keys[0];
+    const docId = this.docId;
+    this.plugin.reference.bindDocumentToLiterature(key, docId);
   }
 }

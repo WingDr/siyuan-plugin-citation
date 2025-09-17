@@ -91,6 +91,47 @@ export class LiteratureNote {
       }
     }
 
+    public async bindDocumentToLiterature(key: string, literatureId: string) {
+      const useItemKey = this.plugin.data[STORAGE_NAME].useItemKey as boolean;
+      // 查找用户自定义片段
+      const res = await this.plugin.kernelApi.getChidBlocks(literatureId);
+      const dataIds = (res.data as any[]).map(data => {
+        return data.id as string;
+      });
+      const userDataTitle = this.plugin.data[STORAGE_NAME].userDataTitle as string;
+      // 获取文献信息
+      const entry = await this.plugin.database.getContentByKey(key);
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("从database中获得文献内容 =>", entry);
+      if (!entry) {
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.error("找不到文献数据", {key, blockID: this.plugin.literaturePool.get(key)});
+        this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);
+        return null;
+      }
+      // 先检查是否已经有文档绑定在了相同文献
+      if (!this.plugin.literaturePool.get(key)) {
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("没有已重复文献，key=>", key);
+        // 没有重复，是好事，直接形成文献内容文档，形成结构然后刷新
+        this.plugin.literaturePool.set({key, id: literatureId});
+        // 检查是否有用户数据区域
+        if (dataIds.length) {
+          // 查找用户数据片段
+          const userDataInfo = await this._detectUserData(literatureId, dataIds, key, userDataTitle);
+          // 如果没有用户数据，将整个文档作为用户数据
+          if (!userDataInfo.hasUserData) await this.plugin.kernelApi.setBlockAttr(literatureId, {"custom-literature-key": key});
+        } else await this.plugin.kernelApi.setBlockAttr(literatureId, {"custom-literature-key": key}); // 空白文档一样处理
+        // 清楚unlink状态
+        await this.plugin.kernelApi.setBlockAttr(literatureId, {"custom-literature-unlinked": ""});
+        await this._processExistedLiteratureNote(literatureId, key, entry);
+      } else {
+        // TODO: 有重复，得额外处理
+      }
+      // 最后更新一下key的形式
+      const new_key = "1_" + (useItemKey ? entry.itemKey : entry.citekey);
+      await this.plugin.kernelApi.setBlockKey(literatureId, new_key);
+      this.plugin.literaturePool.set({id: literatureId, key:new_key});
+      this.plugin.kernelApi.setBlockEntry(literatureId, JSON.stringify(cleanEmptyKey(Object.assign({}, entry))));
+    }
+
     public async moveImgToAssets(imgPath: string, detail: any, linkType: "html" | "markdown" = "markdown"): Promise<string> {
       const time = detail.dateAdded.replace(/[-:\s]/g, "");
       // 用于欺骗思源的随机（伪）字符串，是7位的小写字母和数字（itemKey是8位）
