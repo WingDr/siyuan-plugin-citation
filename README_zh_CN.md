@@ -108,11 +108,15 @@
   - 插入文献引用：弹出文献搜索面板，选中文献后将该文献的[引用链接](#名词说明)插入到当前光标位置，并更新文献库，如果非快捷键调用或者光标没有聚焦在编辑器，则改为复制到剪贴板。
   - 插入文献笔记：弹出文献搜索面板，选中文献后将该文献的笔记插入到当前光标位置，如果非快捷键调用或者光标没有聚焦在编辑器，则改为复制到剪贴板。
   - 引用Zotero中选中的文献：同斜杠菜单功能，如果非快捷键调用或者光标没有聚焦在编辑器，则改为复制到剪贴板。
-  - 刷新所有文献内容：对文献库中的所有文献内容进行刷新，建议多等待一段时间再进行下一步操作
+  - 刷新所有文献内容：对文献库中的所有文献内容进行刷新，建议多等待一段时间再进行下一步操作。
+  - 检查失效文献：检查文献库中所有的文献是否失效（与zotero中的文献失去对应），如果失效则进行标记。
 - 文档标题块菜单：
   - 刷新引用：使用当前的[引用链接模板](#对插件进行设置)刷新当前文档的全部（**在当前设置的[文献库](#名词说明)中有存放[文献内容](#名词说明)**）的引用链接的锚文本。当引用链接模板有变化时，可以通过该功能刷新文档内全部的引用链接格式。
   - 刷新文献内容（仅当该文档在文献库中并且被载入）：刷新当前文档的文献内容，相当于再引用一次该文献但是不复制引用链接
+  - 刷新文档标题（仅当该文档在文献库中并且被载入）：刷新当前文献内容文档的标题。
   - 导出：支持将带引用的文档导出为带zotero引用的Markdown、Word以及LaTex文件，其中导出Word不要求Zotero中安装better-bibtex插件，而导出带citekey引用的Markdown文件以及LaTex文件都要求Zotero中按章better-bibtex插件。
+  - 绑定到文献：将当前文档绑定到所选文献，其中内容会自动被当做用户数据，若已有文档绑定到所选文献，则会自动合并。
+  - 解除与文献绑定（仅当该文档在文献库中并且被载入）：删除所选文献的绑定，此后该插件的所有操作都不会涉及到该文档。
 - 引用链接右键菜单：
   - 切换引用格式：将选中的引用（包含相邻的多个引用）转换为指定的引用格式。
 
@@ -148,6 +152,7 @@
 - {{creators}}: 作者列表，为初始数据源格式，方便用户自定义。本身是一个对象列表，可以通过`.`调用其属性，不存在则为空列表。
 - {{firstCreator}}: 第一个作者
 - {{containerTitle}}：文献所在刊物（论文集、期刊等）标题，不存在则为null
+- {{conferenceName}}：会议名称（仅当条目是会议论文时这个变量有效）
 - {{DOI}}：文献的 DOI
 - {{eprint}}：预印本
 - {{eprinttype}}：预印本类型
@@ -312,6 +317,75 @@
 
 ![](./assets/database.png)
 
+### 数据库属性模板
+
+数据库属性模板为标准的json列表格式（请确保在模板填入数据后为正确的json格式，否则可能报错）。一个json块的基本形式为：
+```json
+{
+  "keyID": "<设置面板中显示的列id>",
+  "value": {
+    <不同列类型（type）对应的写入值>
+  }
+}
+```
+json列表的格式为：
+```json
+[<json块>, <json块>, ... , <json块>]
+```
+**注意：**
+1. 只有在逗号、大括号或中括号后可换行。
+2. 请勿在最后一个json块后添加逗号。
+
+列类型对应写入值如下：
+| 列类型 | 写入值 |
+| :---- | :---- |
+| block | 文档的块，**不要写入这个列** |
+| number | {"number": {"content": <数字>}} |
+| text | {"text": {"content": "<字符串>"}} |
+| select | {"mSelect": [{"content": "<单选值>"}]} |
+| url | {"url": {"content": "<URL>"}} |
+| mSelect | {"mSelect": [{"content": "<多选值1>", "color": <该选项颜色>}, {"content": "<多选值2>", "color": <该选项颜色>}, ... , {"content": "<多选值N>", "color": <该选项颜色>}]} |
+| email | {"email": {"content": "<邮箱>"}} |
+| phone | {"phone": {"content": "<手机号>"}} |
+| checkbox | {"checkbox": {"content": {"checked": <是否选中，值为true/false>}}} |
+| date | {"date": {"content": "<日期，Unix时间格式>", "content2": "<结束日期，Unix时间格式>", "isNotTime": <是否显示具体时间，值为true/false>}} |
+| mAsset | {"mAsset": [{"content": "<素材1在data文件夹中的地址，通常为“assets/”开头>", "name": "<素材1命名>", "type": "<素材1类型，目前只有image/file>"}, {"content": "<素材2地址>", "name": "<素材2命名>", "type": "<素材2类型>"}, ... , {"content": "<素材N地址>", "name": "<素材N命名>", "type": "<素材N类型>"}]} |
+
+
+以下给出一个例子，对应的列类型即上面的示例图片所展示的。
+```json
+[{
+  "keyID": "20241213145643-93lsu79",
+  "value": {
+    "number": {
+          "content": {{ year ? year + ".0" : 0 }},
+          "isNotEmpty": {{ year ? "true" : "false" }}
+    }
+  }
+},{
+  "keyID": "20241213154218-0xmwul5",
+  "value": {
+    "text": {"content": "{{ authorString }}"}
+  }
+},{
+  "keyID": "20241213154247-n49kxja",
+  "value": {
+    "mSelect": [{"content": "{{ containerTitle }}"}]
+  }
+},{
+  "keyID": "20241213154804-8m6pn1p",
+  "value": {
+    "url": {"content": "{{ zoteroSelectURI }}"}
+  }
+},{
+  "keyID": "20241213154948-lsl87m9",
+  "value": {
+    "mSelect": {{ tags ? "[" + tags.split(", ").map(tag => `{ "content": "${tag}" }`).join(",") + "]" : "[]" }}
+  }
+}
+]
+```
+
 ## 扩展：从zotero反过来索引到思源中的文献内容文档
 
 **注意：该功能仅适用于使用debug-bridge插件的模式中，因为传输的数据是itemKey，其他模式获取不到**
@@ -348,7 +422,7 @@
 
 ### Zotero/Juris-M 没有在运行
 
-请检查您的 Zotero/Juris-M 的打开状态，以及在 Zotero/Juris-M 中是否安装了 [Better BibTex](https://github.com/retorquere/zotero-better-bibtex) 插件，本插件依赖于该插件运行，目前有不依赖该插件[直接访问zotero.sqlite](#todo)的计划。
+请检查您的 Zotero/Juris-M 的打开状态，以及在 Zotero/Juris-M 中是否安装了 [Better BibTex](https://github.com/retorquere/zotero-better-bibtex) 插件或者最新的[debug-bridge](https://github.com/retorquere/zotero-better-bibtex/releases?q=debug-bridge&expanded=true) 插件，本插件依赖于这两个插件运行。
 
 ### 这些问题都不是
 
