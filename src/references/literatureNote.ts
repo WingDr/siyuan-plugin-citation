@@ -94,7 +94,7 @@ export class LiteratureNote {
     public async bindDocumentToLiterature(key: string, literatureId: string) {
       const useItemKey = this.plugin.data[STORAGE_NAME].useItemKey as boolean;
       // 查找用户自定义片段
-      const res = await this.plugin.kernelApi.getChidBlocks(literatureId);
+      const res = await this.plugin.kernelApi.getChildBlocks(literatureId);
       const dataIds = (res.data as any[]).map(data => {
         return data.id as string;
       });
@@ -123,7 +123,35 @@ export class LiteratureNote {
         await this.plugin.kernelApi.setBlockAttr(literatureId, {"custom-literature-unlinked": ""});
         await this._processExistedLiteratureNote(literatureId, key, entry);
       } else {
-        // TODO: 有重复，得额外处理
+        // 有重复，得额外处理
+        const existDocId = this.plugin.literaturePool.get(key);
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("已存在文献内容文档，id=>", {existDocId});
+        if (dataIds.length) {
+          // 对于空白文档直接删除（虽然不太可能有这种情况）
+          // 查找用户数据片段
+          const userDataInfo = await this._detectUserData(literatureId, dataIds, key, userDataTitle);
+          let moveList = []; // 需要移动的块列表
+          if (!userDataInfo.hasUserData || userDataInfo.userDataId === literatureId) {
+            // 把整个当做用户数据片段
+            moveList = dataIds;
+          } else {
+            // 把userDataId后面的都移动
+            moveList = dataIds.slice(dataIds.indexOf(userDataInfo.userDataId)+1);
+          }
+          let res = await this.plugin.kernelApi.getChildBlocks(existDocId);
+          // 如果已有文档是空的，设定moveInside
+          if (!(res.data as any[]).length) {
+            await this._moveBlocks(moveList, 0, existDocId, true);
+          } else {
+            const startBlock = (res.data as any[])[(res.data as any[]).length - 1].id;
+            await this._moveBlocks(moveList, 0, startBlock, false);
+          }
+        }
+        // 将当前文档的所有引用转移到已有文档
+        await this.plugin.kernelApi.transferBlockRef(literatureId, existDocId);
+        // 最终删除当前的重复文档，并提示用户
+        await this.plugin.kernelApi.removeDocByID(literatureId);
+        this.plugin.noticer.info((this.plugin.i18n.notices as any).deleteDuplicatedDocument, {documentId: literatureId});
       }
       // 最后更新一下key的形式
       const new_key = "1_" + (useItemKey ? entry.itemKey : entry.citekey);
@@ -230,7 +258,7 @@ export class LiteratureNote {
       // 首先将文献的基本内容塞到用户文档的自定义属性中
       this.plugin.kernelApi.setBlockEntry(literatureId, JSON.stringify(cleanEmptyKey(Object.assign({}, entry))));
       // 查找用户自定义片段
-      const res = await this.plugin.kernelApi.getChidBlocks(literatureId);
+      const res = await this.plugin.kernelApi.getChildBlocks(literatureId);
       const dataIds = (res.data as any[]).map(data => {
         return data.id as string;
       });
@@ -251,7 +279,7 @@ export class LiteratureNote {
             this._updateDataSourceItem(key, entry);
             this._updateAttrView(key, entry);
             // 不存在用户数据区域，整个更新
-            deleteList = dataIds;
+            deleteList = [];
             userDataId = await this._updateEmptyNote(literatureId);
             // if (!userDataLink.length) userDataLink = `((${userDataId} '${userDataTitle}'))\n\n`;
             userDataLink = `[${userDataTitle}](siyuan://blocks/${userDataId})\n\n`;
@@ -261,7 +289,7 @@ export class LiteratureNote {
           else {
             this._updateDataSourceItem(key, entry);
             this._updateAttrView(key, entry);
-            deleteList = dataIds;
+            deleteList = [];
             userDataId = await this._updateEmptyNote(literatureId);
           }
         }
@@ -381,6 +409,16 @@ export class LiteratureNote {
       });
       return Promise.all(p);
     }
+
+    private async _moveBlocks(moveList: string[], currentIndex: number, targetID: string, moveInside: boolean): Promise<void> {
+      // 迭代移动块
+      if (!moveList.length) return;
+      if (currentIndex >= moveList.length) return;
+      const blockId = moveList[currentIndex];
+      if (moveInside) await this.plugin.kernelApi.moveBlockByParentID(blockId, targetID);
+      else await this.plugin.kernelApi.moveBlockByPreviousID(blockId, targetID);
+      return await this._moveBlocks(moveList, currentIndex + 1, blockId, false);
+    }
   
     private async _updateComplexContents(literatureId: string, userDataId: string, userDataLink: string, entry: any, deleteList: string[]) {
       // 通用操作，先把需要删掉的都删掉
@@ -431,7 +469,7 @@ export class LiteratureNote {
       const literatureId = params.literatureId;
       const userDataId = params.userDataId;
       const callbackTimes = params.callbackTimes;
-      let res = await this.plugin.kernelApi.getChidBlocks(literatureId);
+      let res = await this.plugin.kernelApi.getChildBlocks(literatureId);
       const dataIds = (res.data as any[]).map(data => {
         return data.id as string;
       });
@@ -519,8 +557,8 @@ export class LiteratureNote {
         });
         userDataId = rootId;
       } else {
-        await this.plugin.kernelApi.updateBlockContent(rootId, "markdown", `# ${userDataTitle}\n{: custom-literature-block-type="user data"}`);
-        const res = await this.plugin.kernelApi.getChidBlocks(rootId);
+        await this.plugin.kernelApi.prependBlock(rootId, "markdown", `# ${userDataTitle}\n{: custom-literature-block-type="user data"}`);
+        const res = await this.plugin.kernelApi.getChildBlocks(rootId);
         userDataId = (res.data as any[])[0].id as string;
       }
       if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获取用户区域标题，ID =>", userDataId);

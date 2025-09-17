@@ -161,6 +161,7 @@
     "refreshLiteratureNoteContents": "Successfully Refreshed ${size} Literature Note.",
     "refreshSingleLiteratureNoteSuccess": "Successfully Refreshed Note of Literature ${key}.",
     "unbindDocumentFromLiteratureSuccess": "Successfully Unbound Document from Literature.",
-    "loadRefRepeat": "Literature \"${key}\" is duplicated. The current document has been renamed. Please check."
+    "loadRefRepeat": "Literature \"${key}\" is duplicated. The current document has been renamed. Please check.",
+    "deleteDuplicatedDocument": "Successfully Deleted Duplicated Empty Literature Content Document. Document ID: ${documentId}"
   }
 }

@@ -274,7 +274,7 @@ class KernelApi extends BaseApi {
     return await this.siyuanRequest("/api/block/getBlockKramdown", params);
   }
 
-  public async getChidBlocks(blockId: string) {
+  public async getChildBlocks(blockId: string) {
     const params = {
       "id": blockId
     };
@@ -352,6 +352,21 @@ class KernelApi extends BaseApi {
       "title": title
     };
     return await this.siyuanRequest("/api/filetree/renameDoc", params);
+  }
+
+  public async removeDoc(notebook: string, path: string) {
+    const params = {
+      "notebook": notebook,
+      "path": path
+    };
+    return await this.siyuanRequest("/api/filetree/removeDoc", params);
+  }
+
+  public async removeDocByID(id: string) {
+    const params = {
+      "id": id
+    };
+    return await this.siyuanRequest("/api/filetree/removeDocByID", params);
   }
 
   public async setBlockKey(blockId: string, key: string): Promise<SiyuanData> {
@@ -445,6 +460,31 @@ class KernelApi extends BaseApi {
       avID,
       values
     })
+  }
+
+  public async moveBlockByPreviousID(id: string, previousID: string): Promise<SiyuanData> {
+    const Params = {
+      id,
+      previousID
+    };
+    return await this.siyuanRequest("/api/block/moveBlock", Params);
+  }
+
+  public async moveBlockByParentID(id: string, parentID: string): Promise<SiyuanData> {
+    const Params = {
+      id,
+      parentID
+    };
+    return await this.siyuanRequest("/api/block/moveBlock", Params);
+  }
+
+  public async transferBlockRef(fromID: string, toID: string, refIDs: string[] = []): Promise<SiyuanData> {
+    const Params = {
+      fromID,
+      toID,
+      refIDs
+    };
+    return await this.siyuanRequest("/api/block/transferBlockRef", Params);
   }
 
   public async setExport(options: object) {

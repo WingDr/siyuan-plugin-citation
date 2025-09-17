@@ -161,6 +161,7 @@
     "refreshLiteratureNoteContentsSuccess": "成功刷新${size}篇文献内容",
     "refreshSingleLiteratureNoteSuccess": "成功刷新文献${key}内容",
     "unbindDocumentFromLiteratureSuccess": "成功解除文档绑定",
-    "loadRefRepeat": "文献\"${key}\"存在重复，已将当前文档重命名，请检查"
+    "loadRefRepeat": "文献\"${key}\"存在重复，已将当前文档重命名，请检查",
+    "deleteDuplicatedDocument": "已删除重复的空白文献内容文档，文档ID：${documentId}"
   }
 }
