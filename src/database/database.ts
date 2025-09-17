@@ -116,6 +116,23 @@ export class Database {
 
   public async linkDocToLiterature(docId: string) {
     this.docId = docId;
+    // 检查文档id是否合法，文件是否在文献库中
+    if (!docId || !docId.length) {
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("无法获取文档ID，无法绑定文档");
+      return;
+    }
+    const res = await this.plugin.kernelApi.getHPathByID(docId);
+    const hpath = (res.data as any) as string;
+    // 检查文档是否在文献库中
+    const refPath = this.plugin.data[STORAGE_NAME].referencePath as string;
+    const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
+    const fileInPath = await this.plugin.kernelApi.checkFileInHPath(notebookId, refPath, docId);
+    console.log(fileInPath);
+    if (!hpath || !hpath.length || !fileInPath) {
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("文档不在文献库中");
+      this.plugin.noticer.error((this.plugin.i18n.errors as any).documentNotInRefDir);
+      return;
+    }
     if (await this.checkSettings()) return this.dataModal.showSearching(null, this.linkDocToLiteratureBySelection.bind(this));
   }
 

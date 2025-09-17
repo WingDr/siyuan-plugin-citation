@@ -146,7 +146,8 @@
     "bbtDisabled": "No 'citekey' field detected. Please check if the better-bibtex plugin is running or switch to using 'itemKey' as the index.",
     "wrongDBPassword": "Debug-Bridge Plugin Password Incorrect. Please set the correct password in the settings interface.",
     "userDataTemplatePathRenderError": "Invalid user data template path. Failed to render the template.",
-    "attrViewTemplateNotJson": "The database attribute template cannot be parsed. Please verify that it is in strict JSON format."
+    "attrViewTemplateNotJson": "The database attribute template cannot be parsed. Please verify that it is in strict JSON format.",
+    "documentNotInRefDir": "The current document is not in the library path and cannot be bound to the literature."
   },
   "confirms": {
     "updateWithoutUserData": "The \"User Data (# User Data)\" area of literature note document \"${title}\" is not detected (missing citations or citations are invalid). Are you sure you want to update the literature content?"

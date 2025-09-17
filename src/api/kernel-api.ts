@@ -257,6 +257,13 @@ class KernelApi extends BaseApi {
     return await this.siyuanRequest("/api/query/sql", params);
   }
 
+  public async checkFileInHPath(notebook: string, hpath: string, docID: string): Promise<boolean> {
+    const params = {
+      "stmt": `SELECT * FROM blocks WHERE box like '${notebook}' and hpath like '${hpath}%' and id = '${docID}'`
+    };
+    return ((await this.siyuanRequest("/api/query/sql", params)).data as any[]).length > 0;
+  }
+
   public async getLiteratureUserData(literatureId: string) {
     const params = {
       "stmt": `select a.block_id from attributes a where 
@@ -367,6 +374,13 @@ class KernelApi extends BaseApi {
       "id": id
     };
     return await this.siyuanRequest("/api/filetree/removeDocByID", params);
+  }
+
+  public async getHPathByID(id: string) {
+    const params = {
+      "id": id
+    };
+    return await this.siyuanRequest("/api/filetree/getHPathByID", params);
   }
 
   public async setBlockKey(blockId: string, key: string): Promise<SiyuanData> {
