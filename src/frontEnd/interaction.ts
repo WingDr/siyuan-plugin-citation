@@ -159,6 +159,18 @@ export class InteractionManager {
         callback: () => { return this.plugin.database.copyNotes(); }
       },
       {
+        supportDatabase: ["Juris-M (debug-bridge)", "Zotero (debug-bridge)"],
+        langKey: "addSelectedItems",
+        hotkey: "",
+        callback: () => { return this.plugin.database.copySelectedCiteLink();},
+        editorCallback: (p) => {
+          const protyle = p.getInstance() as Protyle;
+          this.plugin.database.setSelected([]);
+          this.plugin.reference.setEmptySelection();
+          this.plugin.database.insertSelectedCiteLink(protyle);
+        }
+      },
+      {
         langKey: "reloadDatabase",
         hotkey: "",
         callback: async () => {
@@ -187,25 +199,13 @@ export class InteractionManager {
         callback: async () => {
           return this.plugin.reference.checkUnlinkedLiteratures();
         }
-      },
+      }
       // {
       //   langKey: "test",
       //   hotkey: "",
       //   callback: async () => {
       //   }
       // },
-      {
-        supportDatabase: ["Juris-M (debug-bridge)", "Zotero (debug-bridge)"],
-        langKey: "addSelectedItems",
-        hotkey: "",
-        callback: () => { return this.plugin.database.copySelectedCiteLink();},
-        editorCallback: (p) => {
-          const protyle = p.getInstance() as Protyle;
-          this.plugin.database.setSelected([]);
-          this.plugin.reference.setEmptySelection();
-          this.plugin.database.insertSelectedCiteLink(protyle);
-        }
-      }
     ];
     this.menuItems = [
       {
