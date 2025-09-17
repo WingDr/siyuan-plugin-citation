@@ -91,7 +91,12 @@ export async function loadLocalRef(plugin: SiYuanPluginCitation): Promise<any> {
           key = file.name;
         }
       } else key = literatureKey;
-      plugin.literaturePool.set({id: file.id, key});
+      // 处理重复问题，如果重复，给重复的文档标题中添加\1F501符号
+      if (plugin.literaturePool.get(key)) {
+        await plugin.kernelApi.renameDoc(notebookId, file.path, "\u{1F501} " + file.content);
+        await plugin.kernelApi.setBlockAttr(file.id, {"custom-literature-unlinked": "true"});
+        plugin.noticer.error((plugin.i18n.notices as any).loadRefRepeat, {key, id: file.id});
+      } else plugin.literaturePool.set({id: file.id, key});
     });
     promiseList = [...promiseList, ...pList];
     offset += limit;

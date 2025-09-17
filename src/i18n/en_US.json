@@ -160,6 +160,7 @@
     "noSelectedItem": "No literature is selected.",
     "refreshLiteratureNoteContents": "Successfully Refreshed ${size} Literature Note.",
     "refreshSingleLiteratureNoteSuccess": "Successfully Refreshed Note of Literature ${key}.",
-    "unbindDocumentFromLiteratureSuccess": "Successfully Unbound Document from Literature."
+    "unbindDocumentFromLiteratureSuccess": "Successfully Unbound Document from Literature.",
+    "loadRefRepeat": "Literature \"${key}\" is duplicated. The current document has been renamed. Please check."
   }
 }
