@@ -19,6 +19,7 @@
   "addSelectedItems": "引用Zotero中选中的文献",
   "refreshSingleLiteratureNote": "刷新文献内容",
   "refreshLiteratureNotesContents": "刷新所有文献内容",
+  "checkUnlinkedLiterature": "检查失效文献",
   "test": "测试",
   "settingTab": {
     "settingTabTitle": "插件版本：${version}",
@@ -156,6 +157,7 @@
     "loadLibrarySuccess": "成功导入${size}个文献数据",
     "loadRefSuccess": "成功导入${size}个文献引用",
     "refreshTitleSuccess": "成功刷新${size}篇文献内容文档标题",
+    "checkUnlinkedSuccess": "已检查${size}篇文献内容文档与文献的绑定情况，其中${unlinked}篇文献内容文档失效，请检查所有标题前带有\u274C的文档",
     "copyContentSuccess": "${type}已在剪贴板",
     "changeKey": "切换索引成功，文献索引已经切换到${keyType}。",
     "noSelectedItem": "没有选中的文献",

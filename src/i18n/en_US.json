@@ -19,6 +19,7 @@
   "addSelectedItems": "Cite Selected Literature in Zotero",
   "refreshLiteratureNotesContents": "Refresh all literature notes",
   "refreshSingleLiteratureNote": "Refresh literature note",
+  "checkUnlinkedLiterature": "Check Unlinked Literatures",
   "test": "test",
   "settingTab": {
     "settingTabTitle": "Plugin Version: ${version}",
@@ -156,6 +157,7 @@
     "loadLibrarySuccess": "Successfully Imported ${size} Literature Data",
     "loadRefSuccess": "Successfully Imported ${size} Literature References",
     "refreshTitleSuccess": "Successfully Refreshed ${size} Literature Note Document Titles",
+    "checkUnlinkedSuccess": "Checked ${size} literature note documents and their binding status, ${unlinked} of which are invalid. Please check all documents with titles marked with \u274C.",
     "copyContentSuccess": "${type} copied to clipboard",
     "changeKey": "Switched Index Successfully. Literature index has been changed to ${keyType}.",
     "noSelectedItem": "No literature is selected.",

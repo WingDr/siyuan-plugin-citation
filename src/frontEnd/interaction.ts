@@ -181,6 +181,13 @@ export class InteractionManager {
           return this.plugin.reference.refreshLiteratureNoteContents();
         }
       },
+      {
+        langKey: "checkUnlinkedLiterature",
+        hotkey: "",
+        callback: async () => {
+          return this.plugin.reference.checkUnlinkedLiteratures();
+        }
+      },
       // {
       //   langKey: "test",
       //   hotkey: "",
@@ -206,6 +213,14 @@ export class InteractionManager {
         iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconRefresh"></use></svg>',
         label: (this.plugin.i18n.menuItems as any).refreshCitation,
         clickCallback: (id) => {this.plugin.reference.updateLiteratureLink.bind(this.plugin.reference)(id);}
+      },
+      {
+        // 刷新标题
+        place: ["BreadcrumbMore", "TitleIcon"],
+        check: this.isLiteratureNote.bind(this),
+        iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconRefresh"></use></svg>',
+        label: (this.plugin.i18n.menuItems as any).refreshSingleLiteratureNoteTitle,
+        clickCallback: (id) => {this.plugin.reference.refreshSingleLiteratureNoteTitles(id);}
       },
       {
         place: ["BreadcrumbMore", "TitleIcon"],
@@ -241,14 +256,6 @@ export class InteractionManager {
         label: (this.plugin.i18n.menuItems as any).unbindFromLiterature,
         // clickCallback: (id) => {this.plugin.exportManager.export(id, "markdown");},
         clickCallback: (id) => {this.plugin.reference.unbindDocumentFromLiterature(id);}
-      },
-      {
-        // 刷新标题
-        place: ["BreadcrumbMore", "TitleIcon"],
-        check: this.isLiteratureNote.bind(this),
-        iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconRefresh"></use></svg>',
-        label: (this.plugin.i18n.menuItems as any).refreshSingleLiteratureNoteTitle,
-        clickCallback: (id) => {this.plugin.reference.refreshSingleLiteratureNoteTitles(id);}
       },
       {
         place: ["BlockRef"],
