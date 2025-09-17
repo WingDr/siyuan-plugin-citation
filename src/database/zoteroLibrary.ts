@@ -88,7 +88,7 @@ const ZOTERO_PROPERTY_MAPPING: Record<string, string> = {
   abstractNote: "abstract",
   accessDate: "accessDate",
   attachments: "_attachments",
-  conferenceName: "_containerTitle",
+  conferenceName: "conferenceName",
   thesisType: "thesis",
   dateAdded: "dateAdded",
   dateModified: "dateModified",
@@ -117,6 +117,7 @@ export class EntryZoteroAdapter extends Entry {
   abstract?: string;
   _containerTitle?: string;
   containerTitleShort?: string;
+  conferenceName?: string;
   DOI?: string;
   eprint?: string;
   eprinttype?: string;
@@ -385,6 +386,7 @@ export function getTemplateVariablesForZoteroEntry(entry: EntryZoteroAdapter): R
     annotationList: entry.annotationList,
     containerTitle: entry.containerTitle,
     containerTitleShort: entry.containerTitleShort,
+    conferenceName: entry.conferenceName,
     creators: entry.creators,
     DOI: entry.DOI,
     eprint: entry.eprint,
