@@ -16,7 +16,11 @@ import { NoteProcessor } from "./noteProcessor";
 export class LiteratureNote {
     plugin: SiYuanPluginCitation;
     private logger: ILogger;
-    private updateBatches: Map<string, {entry: any, noConfirmUserData: boolean}>; // 批量更新
+    private updateBatches: Map<string, {
+      entry: any, 
+      noConfirmUserData: boolean,
+      mission: Promise<void> | null
+    }>; // 批量更新
 
     constructor(plugin: SiYuanPluginCitation) {
         this.plugin = plugin;
@@ -27,10 +31,26 @@ export class LiteratureNote {
     public async addLiteratureNotesToUpdateBatch(key: string, entry: any, noConfirmUserData=this.plugin.data[STORAGE_NAME].deleteUserDataWithoutConfirm) {
       // 判断batch里面是否重复
       if (this.updateBatches.has(key)) {
-        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("文献更新任务已存在，key=>", key);
+        this.plugin.noticer.error("文献更新任务已存在");
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("文献更新任务已存在，batch=>", this.updateBatches);
         return;
       }
-      this.updateBatches.set(key, {entry, noConfirmUserData});
+      // 首先进行占位
+      this.updateBatches.set(key, {entry, noConfirmUserData, mission:null});
+      // 检查文档是否存在，不存在则新建
+      const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
+      const refPath = this.plugin.data[STORAGE_NAME].referencePath as string;
+      const res = this.plugin.kernelApi.searchFileWithKey(notebookId, refPath + "/", key);
+      const data = (await res).data as any[];
+      let userDataId = "";
+      if (!data.length) {
+        const literatureId = await this._createEmptyNote(key, entry);
+        userDataId = await this._updateEmptyNote(literatureId);
+      }
+      // 这里仅新建文档不填充内容，在_processExistedLiteratureNote中会被判断为空文档然后填充
+      const mission = this.updateLiteratureNote(key, entry, {noConfirmUserData, userDataId});
+      // 这里更新内容
+      this.updateBatches.set(key, {entry, noConfirmUserData, mission});
     }
 
     public async processUpdateBatches() {
@@ -38,57 +58,33 @@ export class LiteratureNote {
       // 获取所有的key、entry、noConfirmUserData
       const batches = Array.from(this.updateBatches.entries());
       // 对batches异步处理但是promise.all
-      await Promise.all(batches.map(([key, {entry, noConfirmUserData}]) => {
-        return this.updateLiteratureNote(key, entry, noConfirmUserData);
+      await Promise.all(batches.map(([key, {entry, noConfirmUserData, mission}]) => {
+        return mission;
       }));
       this.updateBatches.clear();
     }
 
-    public async updateLiteratureNote(key: string, entry: any, noConfirmUserData=this.plugin.data[STORAGE_NAME].deleteUserDataWithoutConfirm) {
+    public async updateLiteratureNote(key: string, entry: any, {noConfirmUserData=this.plugin.data[STORAGE_NAME].deleteUserDataWithoutConfirm, userDataId=""}={}) {
       const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
       const refPath = this.plugin.data[STORAGE_NAME].referencePath as string;
-      const titleTemplate = this.plugin.data[STORAGE_NAME].titleTemplate as string;
-      const userDataTitle = this.plugin.data[STORAGE_NAME].userDataTitle as string;
       const useItemKey = this.plugin.data[STORAGE_NAME].useItemKey as boolean;
       const res = this.plugin.kernelApi.searchFileWithKey(notebookId, refPath + "/", key);
       const data = (await res).data as any[];
-      if (data.length) {
-        const literatureId = data[0].id;
-        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("已存在文献文档，id=>", {literatureId});
-        // 保险起见更新一下字典
-        this.plugin.literaturePool.set({id: literatureId, key});
-        await this._processExistedLiteratureNote(literatureId, key, entry, noConfirmUserData);
-        // 最后更新一下key的形式
-        const new_key = "1_" + (useItemKey ? entry.itemKey : entry.citekey);
-        await this.plugin.kernelApi.setBlockKey(literatureId, new_key);
-        this.plugin.literaturePool.set({id: literatureId, key:new_key});
-        this.plugin.kernelApi.setBlockEntry(literatureId, JSON.stringify(cleanEmptyKey(Object.assign({}, entry))));
-        return;
-      } else {
-        //文件不存在就新建文件
-        let noteTitle = generateFromTemplate(titleTemplate, entry);
-        noteTitle = noteTitle.replace(DISALLOWED_FILENAME_CHARACTERS_RE, "_");
-        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("生成文件标题 =>", noteTitle);
-        // const noteData = await this._createLiteratureNote(noteTitle);
-        // 创建新文档
-        const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
-        const refPath = this.plugin.data[STORAGE_NAME].referencePath as string;
-        const res = await this.plugin.kernelApi.createDocWithMd(notebookId, refPath + `/${noteTitle}`, "");
-        const rootId = String(res.data);
-        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("创建文档，ID =>", rootId);
-        const userDataId = await this._updateEmptyNote(rootId);
-        const noteData = { rootId, userDataId };
-        // 将文献的基本内容塞到用户文档的自定义属性中
-        await this.plugin.kernelApi.setBlockKey(noteData.rootId, key);
-        this.plugin.kernelApi.setBlockEntry(noteData.rootId, JSON.stringify(cleanEmptyKey(Object.assign({}, entry))));
-        // 新建文件之后也要更新对应字典
-        this.plugin.literaturePool.set({id: noteData.rootId, key: key});
-        this._updateDataSourceItem(key, entry);
-        this._updateAttrView(key, entry);
-        // 对文档本身进行更新
-        this._updateComplexContents(noteData.rootId, noteData.userDataId, `[${userDataTitle}](siyuan://blocks/${noteData.userDataId})\n\n`, entry, []);
-        return;
-      }
+      let literatureId = "";
+      if (!data.length) {
+        literatureId = await this._createEmptyNote(key, entry);
+        userDataId = await this._updateEmptyNote(literatureId);
+      } else literatureId = data[0].id;
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("已存在文献文档，id=>", {literatureId});
+      // 保险起见更新一下字典
+      this.plugin.literaturePool.set({id: literatureId, key});
+      await this._processExistedLiteratureNote(literatureId, key, entry, {noConfirmUserData, userDataId});
+      // 最后更新一下key的形式
+      const new_key = "1_" + (useItemKey ? entry.itemKey : entry.citekey);
+      await this.plugin.kernelApi.setBlockKey(literatureId, new_key);
+      this.plugin.literaturePool.set({id: literatureId, key:new_key});
+      this.plugin.kernelApi.setBlockEntry(literatureId, JSON.stringify(cleanEmptyKey(Object.assign({}, entry))));
+      return;
     }
 
     public async bindDocumentToLiterature(key: string, literatureId: string) {
@@ -252,9 +248,8 @@ export class LiteratureNote {
       })));
     }
 
-    private async _processExistedLiteratureNote(literatureId: string, key: string, entry: any, noConfirmUserData=this.plugin.data[STORAGE_NAME].deleteUserDataWithoutConfirm) {
+    private async _processExistedLiteratureNote(literatureId: string, key: string, entry: any, {noConfirmUserData=this.plugin.data[STORAGE_NAME].deleteUserDataWithoutConfirm, userDataId=""}={}) {
       // 文件存在就更新文件内容
-      let deleteList: string[] = [];
       // 首先将文献的基本内容塞到用户文档的自定义属性中
       this.plugin.kernelApi.setBlockEntry(literatureId, JSON.stringify(cleanEmptyKey(Object.assign({}, entry))));
       // 查找用户自定义片段
@@ -263,41 +258,89 @@ export class LiteratureNote {
         return data.id as string;
       });
       const userDataTitle = this.plugin.data[STORAGE_NAME].userDataTitle as string;
-      let userDataId = "";
-      let userDataLink = "";
-      if (dataIds.length) {
-        // 查找用户数据片段
-        const userDataInfo = await this._detectUserData(literatureId, dataIds, key, userDataTitle);
-        deleteList = userDataInfo.deleteList;
-        userDataId = userDataInfo.userDataId;
-        userDataLink = userDataInfo.userDataLink;
-        const hasUserData = userDataInfo.hasUserData;
-        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获得用户片段更新信息=>", userDataInfo);
-        if (!hasUserData) {
-          // 没有查找到用户数据片段时进行更新
-          if (!noConfirmUserData) return confirm("⚠️", (this.plugin.i18n.confirms as any).updateWithoutUserData.replaceAll("${title}", entry.title), async () => {
-            this._updateDataSourceItem(key, entry);
-            this._updateAttrView(key, entry);
-            // 不存在用户数据区域，整个更新
-            deleteList = [];
-            userDataId = await this._updateEmptyNote(literatureId);
-            // if (!userDataLink.length) userDataLink = `((${userDataId} '${userDataTitle}'))\n\n`;
-            userDataLink = `[${userDataTitle}](siyuan://blocks/${userDataId})\n\n`;
-            this._updateComplexContents(literatureId, userDataId, userDataLink, entry, deleteList);
+      const that = this;
+      // 玩玩状态机
+      // 1. 判定状态
+      let state: string = "";
+      let userDataInfo: any = null;
+      let deleteList: string[] = [];
+      let userDataLink: string = "";
+      if (!userDataId.length) {
+        if (dataIds.length) {
+          userDataInfo = await this._detectUserData(literatureId, dataIds, key, userDataTitle);
+          ({deleteList, userDataId, userDataLink} = userDataInfo);
+          if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获得用户片段更新信息=>", userDataInfo);
+          if (!userDataInfo.hasUserData) {
+            state = noConfirmUserData ? "updateEmpty" : "confirmUpdate";
+          }
+        } else {
+          if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("文献内容文档中没有内容");
+          state = "updateEmpty";
+        }
+      }
+      // 2. 定义状态 -> 差异函数
+      const handlers: Record<string, () => Promise<Partial<{ deleteList: any[]; userDataId: string; userDataLink: string; }> | void>> = {
+        async confirmUpdate() {
+          // 注意这里直接 return 整个函数，不再走后续公共逻辑
+          return await confirm("⚠️", (that.plugin.i18n.confirms as any).updateWithoutUserData.replaceAll("${title}", entry.title), async () => {
+            that._updateDataSourceItem(key, entry);
+            that._updateAttrView(key, entry);
+            const newUserDataId = await that._updateEmptyNote(literatureId);
+            const newUserDataLink = `[${userDataTitle}](siyuan://blocks/${newUserDataId})\n\n`;
+            that._updateComplexContents(literatureId, newUserDataId, newUserDataLink, entry, []);
             return;
           });
-          else {
-            this._updateDataSourceItem(key, entry);
-            this._updateAttrView(key, entry);
-            deleteList = [];
-            userDataId = await this._updateEmptyNote(literatureId);
-          }
-        }
-      } else {
-        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("文献内容文档中没有内容");
-        // 更新空的文档内容
-        userDataId = await this._updateEmptyNote(literatureId);
-      }
+        },
+        async updateEmpty() {
+          const newUserDataId = await that._updateEmptyNote(literatureId);
+          return { deleteList: [], userDataId: newUserDataId };
+        },
+        async default() {
+          return {};
+        },
+      };
+      // 执行
+      const diff = await (handlers[state] || handlers.default).call(this);
+      // 如果 confirmUpdate 已经 return 出去了，这里就不会执行
+      if (!diff) return;  
+      // 公共逻辑
+      deleteList = diff.deleteList ?? deleteList;
+      userDataId = diff.userDataId ?? userDataId;
+      userDataLink = diff.userDataLink ?? userDataLink;
+
+      // if (!userDataId.length) {
+      //   if (dataIds.length) {
+      //     // 查找用户数据片段
+      //     const userDataInfo = await this._detectUserData(literatureId, dataIds, key, userDataTitle);
+      //     deleteList = userDataInfo.deleteList;
+      //     userDataId = userDataInfo.userDataId;
+      //     userDataLink = userDataInfo.userDataLink;
+      //     const hasUserData = userDataInfo.hasUserData;
+      //     if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获得用户片段更新信息=>", userDataInfo);
+      //     if (!hasUserData) {
+      //       // 没有查找到用户数据片段时进行更新
+      //       if (!noConfirmUserData) return confirm("⚠️", (this.plugin.i18n.confirms as any).updateWithoutUserData.replaceAll("${title}", entry.title), async () => {
+      //         this._updateDataSourceItem(key, entry);
+      //         this._updateAttrView(key, entry);
+      //         // 不存在用户数据区域，整个更新
+      //         deleteList = [];
+      //         userDataId = await this._updateEmptyNote(literatureId);
+      //         // if (!userDataLink.length) userDataLink = `((${userDataId} '${userDataTitle}'))\n\n`;
+      //         userDataLink = `[${userDataTitle}](siyuan://blocks/${userDataId})\n\n`;
+      //         this._updateComplexContents(literatureId, userDataId, userDataLink, entry, deleteList);
+      //         return;
+      //       });
+      //       else {
+      //         deleteList = [];
+      //         userDataId = await this._updateEmptyNote(literatureId);
+      //       }
+      //     }
+      //   } else {
+      //     if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("文献内容文档中没有内容");
+      //     // 更新空的文档内容
+      //     userDataId = await this._updateEmptyNote(literatureId);
+      //   }
+      // }
       // 执行后续操作之前先更新文献池
       this.plugin.literaturePool.set({id: literatureId, key: key});
       // 插入前置片段
@@ -427,7 +470,6 @@ export class LiteratureNote {
       if (userDataId == literatureId) return;
       const noteTemplate = this.plugin.data[STORAGE_NAME].noteTemplate as string;
       const note = entry.note;
-      console.log("note=>", note);
       entry.note = entry.note?.map((n: { prefix: string; index: any; }) => {
         return n.prefix + `\n\n{ {note${n.index}} }`;
         // return `${n.prefix}\n\n${n.content}`;
@@ -544,6 +586,25 @@ export class LiteratureNote {
       return `{{{row\n> ${quoteContent}\n[Open on Zotero](${content.openURI})\n\n${content.detail.annotationComment ? content.detail.annotationComment : ""}\n}}}\n{: custom-annotation-color="${content.detail.annotationColor}" style="border:dashed 0.2em ${content.detail.annotationColor}" }`;
     }
     
+    private async _createEmptyNote(key: string, entry: any): Promise<string> {
+      const titleTemplate = this.plugin.data[STORAGE_NAME].titleTemplate as string;
+      //文件不存在就新建文件
+      let noteTitle = generateFromTemplate(titleTemplate, entry);
+      noteTitle = noteTitle.replace(DISALLOWED_FILENAME_CHARACTERS_RE, "_");
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("生成文件标题 =>", noteTitle);
+      // 创建新文档
+      const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
+      const refPath = this.plugin.data[STORAGE_NAME].referencePath as string;
+      const res = await this.plugin.kernelApi.createDocWithMd(notebookId, refPath + `/${noteTitle}`, "");
+      const rootId = String(res.data);
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("创建文档，ID =>", rootId);
+      // 将文献的基本内容塞到用户文档的自定义属性中
+      await this.plugin.kernelApi.setBlockKey(rootId, key);
+      // 新建文件之后也要更新对应字典
+      this.plugin.literaturePool.set({id: rootId, key: key});
+      return rootId;
+    }
+
     private async _updateEmptyNote(rootId: string): Promise<string> {
       const userDataTitle = this.plugin.data[STORAGE_NAME].userDataTitle as string;
       const useWholeDocAsUserData = this.plugin.data[STORAGE_NAME].useWholeDocAsUserData as boolean;
