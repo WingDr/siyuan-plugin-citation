@@ -4,6 +4,8 @@
 
 > A citation plugin that implements basic functionality, hoping to make your SiYuan more academically oriented.
 
+**"In version 0.4.6, I made significant changes to the citation logic, which may cause some bugs. If you encounter any issues, please report them in time. Thank you very much!!!"**
+
 **Important Updates in 0.4.0**
 1. **Modified citation logic: adjacent citations should be edited together**
 2. **Support for multiple citation styles**
