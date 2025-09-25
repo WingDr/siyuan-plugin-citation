@@ -192,7 +192,7 @@ export class Reference {
       if (!cited_spans.length) return;
       const replaceList: { full_content: any; insertContent: any; }[] = [];
       await Promise.all(cited_spans.map(async group_cite => {
-        const insertContent = await this.processReferenceContents(group_cite.map((span: { key: any; }) => span.key), fileId, group_cite[0].cite_type);
+        const insertContent = await this.processReferenceContents(group_cite.map((span: { key: any; }) => span.key), fileId, group_cite[0].cite_type, {outerBatch: true});
         return group_cite.map((span: any, idx: number) => {
           replaceList.push({
             full_content: span.full_content,
@@ -398,7 +398,16 @@ export class Reference {
     return await this.LiteratureNote.moveImgToAssets(imgPath, detail, linkType);
   }
 
-  public async processReferenceContents(keys: string[], fileId?: string, type_name="", returnDetail=false, errorReminder=true): Promise<any[]> {
+  /**
+   * 获取当前文档的文献列表
+   * @param fileId 文档ID
+   * @param type_name 引用类型
+   * @param returnDetail 是否返回详细信息
+   * @param errorReminder 是否在找不到文献时进行错误提醒
+   * @param batchOperation 是否为批量操作（如果是则要求调用LiteratureNote.processUpdateBatches）
+   * @returns 插入的内容
+   */
+  public async processReferenceContents(keys: string[], fileId?: string, type_name="", {returnDetail=false, errorReminder=true, outerBatch=false}={}): Promise<any[]> {
     // let literatureEnum = [];
     // if (fileId) literatureEnum = await this._getLiteratureEnum(fileId);
     const typeSetting = this.getCurrentTypeSetting(type_name);
@@ -433,6 +442,7 @@ export class Reference {
       }
       return await this.Cite.generateCiteRef(citeId, link, name, typeSetting);
     });
+    if (!outerBatch) await this.LiteratureNote.processUpdateBatches();
     return await Promise.all(insertContent);
   }
 

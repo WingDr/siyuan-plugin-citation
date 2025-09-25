@@ -31,7 +31,7 @@ export class LiteratureNote {
     public async addLiteratureNotesToUpdateBatch(key: string, entry: any, noConfirmUserData=this.plugin.data[STORAGE_NAME].deleteUserDataWithoutConfirm) {
       // 判断batch里面是否重复
       if (this.updateBatches.has(key)) {
-        this.plugin.noticer.error("文献更新任务已存在");
+        // this.plugin.noticer.error("文献更新任务已存在");
         if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("文献更新任务已存在，batch=>", this.updateBatches);
         return;
       }
@@ -60,8 +60,13 @@ export class LiteratureNote {
       // 对batches异步处理但是promise.all
       await Promise.all(batches.map(([key, {entry, noConfirmUserData, mission}]) => {
         return mission;
-      }));
-      this.updateBatches.clear();
+      })).then(() => {
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("批量更新完成");
+        batches.forEach(([key, {entry, noConfirmUserData, mission}]) => {
+          this.updateBatches.delete(key);
+        });
+      });
+      // this.updateBatches.clear();
     }
 
     public async updateLiteratureNote(key: string, entry: any, {noConfirmUserData=this.plugin.data[STORAGE_NAME].deleteUserDataWithoutConfirm, userDataId=""}={}) {

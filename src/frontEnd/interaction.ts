@@ -382,7 +382,7 @@ export class InteractionManager {
       const itemKey = zoteroURLMatch![1];
       const key = "1_" + itemKey;
       if (isDev) this.logger.info("确认到从Zotero拖拽事件, itemKey=>", {itemKey});
-      const content = await this.plugin.reference.processReferenceContents([key], "", "", true, false);
+      const content = await this.plugin.reference.processReferenceContents([key], "", "", {returnDetail: true, errorReminder:false});
       if (!content[0]) return;
       citeDetail = content[0];
       if (isDev) this.logger.info("获取到插入内容, content=>", {citeDetail});
@@ -401,7 +401,7 @@ export class InteractionManager {
         const zoteroURLMatch = resHTML.match(zoteroURLReg);
         const itemKey = zoteroURLMatch![1];
         const key = "1_" + itemKey;
-        const content = await this.plugin.reference.processReferenceContents([key], "", "", true, false);
+        const content = await this.plugin.reference.processReferenceContents([key], "", "", {returnDetail: true, errorReminder:false});
         if (!content[0]) return;
         citeDetail = content[0];
         if (isDev) this.logger.info("获取到插入内容, content=>", {citeDetail});
