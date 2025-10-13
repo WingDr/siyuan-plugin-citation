@@ -47,7 +47,7 @@ for (let noteID of noteIDs) {
 // 获得attachments和annotations
 var attachmentIDs = item.getAttachments();
 let attachments = [];
-var annotationFileType = ["pdf", "equb"];
+var annotationFileType = ["pdf", "epub"];
 let annotations = [];
 for (let attachmentID of attachmentIDs) {
   var attachment = Zotero.Items.get(attachmentID);
@@ -60,8 +60,7 @@ for (let attachmentID of attachmentIDs) {
   }
   attachments.push(attachDetail);
   if (attachDetail.path 
-    && (attachDetail.path.split(".").slice(-1) == "pdf"
-    || attachDetail.path.split(".").slice(-1) == "equb")) {
+    && (annotationFileType.indexOf(attachDetail.path.split(".").slice(-1)[0]) != -1)) {
     var annoItems = attachment.getAnnotations();
     if (annoItems.length) {
       var annoDetail = {
