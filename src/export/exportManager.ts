@@ -19,6 +19,15 @@ interface ExportOption {
     "pandocBin"?: string
 }
 
+const exportMarkdownOptions: ExportOption = {
+  blockRefMode: 2,
+  blockEmbedMode: 0,
+  blockRefTextLeft: "\\exportRef{",
+  blockRefTextRight: "\}"
+};
+
+const refReg = /\[\\\\exportRef\{(.*?)\}\]\(siyuan:\/\/blocks\/(.*?)\)/;
+
 export class ExportManager {
   private userConfig!: {[key: string]: any};
   private logger: ILogger;
@@ -44,15 +53,9 @@ export class ExportManager {
 
   private async exportMarkdown(exportID: string) {
     // 导出带有citekey的markdown文档
-    await this.setExportConfig({
-      blockRefMode: 2,
-      blockEmbedMode: 0,
-      blockRefTextLeft: "\\exportRef{",
-      blockRefTextRight: "\}"
-    } as ExportOption);
+    await this.setExportConfig(exportMarkdownOptions);
 
     try {
-      const refReg = /\[\\exportRef\{(.*?)\}\]\(siyuan:\/\/blocks\/(.*?)\)/;
       const citeBlockIDs = this.plugin.literaturePool.ids;
       let res = await this.plugin.kernelApi.getBlock(exportID);
       const fileTitle = (res.data as any)[0].content;
@@ -94,14 +97,8 @@ export class ExportManager {
 
   private async exportWord(exportID: string) {
     // 导出带有citekey的markdown文档
-    await this.setExportConfig({
-      blockRefMode: 2,
-      blockEmbedMode: 0,
-      blockRefTextLeft: "\\exportRef{",
-      blockRefTextRight: "\}"
-    } as ExportOption);
+    await this.setExportConfig(exportMarkdownOptions);
     try {
-      const refReg = /\[\\exportRef\{(.*?)\}\]\(siyuan:\/\/blocks\/(.*?)\)/;
       const citeBlockIDs = this.plugin.literaturePool.ids;
       let res = await this.plugin.kernelApi.getBlock(exportID);
       const fileTitle = (res.data as any)[0].content;
@@ -179,14 +176,8 @@ export class ExportManager {
 
   private async exportLatex(exportID: string) {
     // 导出带有citekey的markdown文档
-    await this.setExportConfig({
-      blockRefMode: 2,
-      blockEmbedMode: 0,
-      blockRefTextLeft: "\\exportRef{",
-      blockRefTextRight: "\}"
-    } as ExportOption);
+    await this.setExportConfig(exportMarkdownOptions);
     try {
-      const refReg = /\[\\exportRef\{(.*?)\}\]\(siyuan:\/\/blocks\/(.*?)\)/;
       const citeBlockIDs = this.plugin.literaturePool.ids;
       let res = await this.plugin.kernelApi.getBlock(exportID);
       const fileTitle = (res.data as any)[0].content;
@@ -204,6 +195,7 @@ export class ExportManager {
         }
         else {
           const following = this.getNeighborCites(content.slice(match!.index! + match![0].length), citeBlockIDs)
+          console.log(following)
           totalStr = following ? match![0] + following.totalStr : match![0];
           const keys = following ? [match![2], ...following.keys] : [match![2]];
           const links = following ? [match![1], ...following.links] : [match![1]];
@@ -272,7 +264,6 @@ export class ExportManager {
   }
 
   private getNeighborCites(content: string, citeBlockIDs: string[]): null | {totalStr: string, links: string[], keys: string[]} {
-    const refReg = /\[\\exportRef\{(.*?)\}\]\(siyuan:\/\/blocks\/(.*?)\)/;
     const match = content.match(refReg);
     if (!match) { return null; }
     else if (citeBlockIDs.indexOf(match[2]) != -1 && (match.index == 1 || match.index == 0)) {
