@@ -102,8 +102,10 @@ export async function loadLocalRef(plugin: SiYuanPluginCitation): Promise<any> {
     offset += limit;
   }
   await Promise.all(promiseList);
-  if (isDev) logger.info("成功载入引用，content=>", plugin.literaturePool.content);
-  plugin.noticer.info((plugin.i18n.notices as any).loadRefSuccess, {size: plugin.literaturePool.size});
+  if (isDev || plugin.data[STORAGE_NAME].consoleDebug) {
+    logger.info("成功载入引用，content=>", plugin.literaturePool.content);
+  } 
+  if (plugin.data[STORAGE_NAME].consoleDebug) plugin.noticer.info((plugin.i18n.notices as any).loadRefSuccess, {size: plugin.literaturePool.size});
 }
 
 export function generateFileLinks(files: string[]) {
