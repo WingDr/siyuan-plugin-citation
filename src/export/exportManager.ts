@@ -152,6 +152,7 @@ export class ExportManager {
         "./exportTemp.md",
         "-o", "exportTemp.docx",
         "--lua-filter", dataDir + "/plugins/siyuan-plugin-citation/scripts/citation.lua",
+        "--lua-filter", dataDir + "/plugins/siyuan-plugin-citation/scripts/math.lua",
         "--resource-path", dataDir,
         ...additionalParams
       ];
@@ -199,7 +200,6 @@ export class ExportManager {
           totalStr = following ? match![0] + following.totalStr : match![0];
           const keys = following ? [match![2], ...following.keys] : [match![2]];
           const links = following ? [match![1], ...following.links] : [match![1]];
-          console.log({totalStr, keys, links})
           if (keys.length == 1) {
             if (citeBlockIDs.indexOf(keys[0]) != -1) {
               const key = this.plugin.literaturePool.get(match![2]);
@@ -230,6 +230,7 @@ export class ExportManager {
       await this.plugin.kernelApi.pandoc("citation", [
         "./exportTemp.md",
         "-o", "exportTemp.tex",
+        "--lua-filter", dataDir + "/plugins/siyuan-plugin-citation/scripts/math.lua",
         "--wrap=none",
         ...additionalParams
       ])
