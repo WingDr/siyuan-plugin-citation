@@ -32,6 +32,7 @@ export default class SiYuanPluginCitation extends Plugin {
 
     public isMobile!: boolean;
     public isRefPathExist!: boolean;
+    public isLoadingRef!: boolean;
 
     public literaturePool!: LiteraturePool;
 
@@ -50,6 +51,7 @@ export default class SiYuanPluginCitation extends Plugin {
     async onload() {
         this.logger = createLogger("index");
         this.noticer = createNoticer();
+        this.isLoadingRef = false;
         this.literaturePool = new LiteraturePool();
         this.networkManager = new NetworkMananger(this, 64);
 

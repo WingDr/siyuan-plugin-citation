@@ -260,9 +260,10 @@ export class Reference {
     const pList = this.plugin.literaturePool.ids.map(async id => {
       return await this.refreshSingleLiteratureNoteTitles(id, titleTemplate, true);
     });
+    const updateSize = pList.length;
     return await Promise.all(pList).then(async () => {
       if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("所有文件标题已更新");
-      this.plugin.noticer.info((this.plugin.i18n.notices as any).refreshTitleSuccess, {size: this.plugin.literaturePool.size});
+      this.plugin.noticer.info((this.plugin.i18n.notices as any).refreshTitleSuccess, {size: updateSize});
       await loadLocalRef(this.plugin);
       return this.plugin.literaturePool.content;
     }).catch(e => {

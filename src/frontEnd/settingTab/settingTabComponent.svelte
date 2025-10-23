@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy, createEventDispatcher } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import { showMessage, confirm } from "siyuan";
 
   import SiYuanPluginCitation from "../../index";
@@ -11,6 +11,7 @@
     dbSearchDialogTypes,
     defaultSettingData
   } from "../../utils/constants";
+  import { loadLocalRef } from "../../utils/util";
   import { type ILogger } from "../../utils/simple-logger";
   import { type DatabaseType } from "../../database/database";
 
@@ -407,6 +408,9 @@
           ((plugin.i18n.notices as any).changeKey as string), {keyType: settingData.useItemKey ? "itemKey" : "citekey"}
         );
       if (isDev) logger.info("数据保存成功, settingData=>", settingData);
+      if (referenceNotebook != plugin.data[STORAGE_NAME]?.referenceNotebook) {
+        loadLocalRef(plugin);
+      }
     });
   }
 
