@@ -224,7 +224,8 @@ export class Reference {
     const key = this.plugin.literaturePool.get(literatureId);
     const entry = await this.plugin.database.getContentByKey(key);
     if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("从database中获得文献内容 =>", entry);
-    if (!entry) {
+    if (entry === false) return null; // 说明服务器请求失败，而不是找不到文献数据
+    else if (!entry) { // 这是entry是null，也就是找不到数据
       if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.error("找不到文献数据", {key, blockID: this.plugin.literaturePool.get(key)});
       this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);
       // 在zotero里对应不到了，把文档名改成unlinked
@@ -357,7 +358,8 @@ export class Reference {
     const pList = this.plugin.literaturePool.keys.map(async key => {
       const entry = await this.plugin.database.getContentByKey(key);
       if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("从database中获得文献内容 =>", entry);
-      if (!entry) {
+      if (entry === false) return null; // 说明服务器请求失败，而不是找不到文献数据
+      else if (!entry) {
         if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.error("找不到文献数据", {key, blockID: this.plugin.literaturePool.get(key)});
         this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);
         // 在zotero里对应不到了，把文档名改成unlinked

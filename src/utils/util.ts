@@ -49,7 +49,11 @@ export async function fileSearch(plugin: SiYuanPluginCitation, dirPath: string, 
   });
 }
 
+// 如果重复触发会导致全体文档重复载入，因此需要加锁
+export let isLoadingRef = false;
 export async function loadLocalRef(plugin: SiYuanPluginCitation): Promise<any> {
+  if (isLoadingRef) return;
+  isLoadingRef = true;
   const logger = createLogger("load references");
   const notebookId = plugin.data[STORAGE_NAME].referenceNotebook as string;
   const refPath = plugin.data[STORAGE_NAME].referencePath as string;
@@ -106,6 +110,7 @@ export async function loadLocalRef(plugin: SiYuanPluginCitation): Promise<any> {
     logger.info("成功载入引用，content=>", plugin.literaturePool.content);
   } 
   if (plugin.data[STORAGE_NAME].consoleDebug) plugin.noticer.info((plugin.i18n.notices as any).loadRefSuccess, {size: plugin.literaturePool.size});
+  isLoadingRef = false;
 }
 
 export function generateFileLinks(files: string[]) {

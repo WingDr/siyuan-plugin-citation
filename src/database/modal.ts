@@ -455,7 +455,7 @@ export class ZoteroDBModal extends DataModal {
       if (entry.files) entry.files = entry.files.join("\n");
       if (isDev) this.logger.info("文献内容 =>", entry);
       return entry;
-    } else return null;
+    } else return itemKey;
   }
 
   public async getCollectedNotesFromKey(key: string) {
@@ -503,7 +503,7 @@ export class ZoteroDBModal extends DataModal {
     `);
   }
 
-  private async checkBeforeRunning(key: string): Promise<string | null> {
+  private async checkBeforeRunning(key: string): Promise<string | null | false> {
     if (await this.checkZoteroRunning()) {
       let itemKey = this.useItemKey ? key : await this.getItemKeyByCitekey(...processKey(key));
       if (!(await this.checkItemKeyExist(...processKey(itemKey)))) itemKey = this.useItemKey ? await this.getItemKeyByCitekey(...processKey(key)) : key;
@@ -514,7 +514,7 @@ export class ZoteroDBModal extends DataModal {
       return itemKey;
     } else {
       this.plugin.noticer.error(((this.plugin.i18n.errors as any).zoteroNotRunning as string), {type: this.type});
-      return null;
+      return false;
     }
   }
 
