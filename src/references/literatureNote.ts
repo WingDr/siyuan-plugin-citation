@@ -223,16 +223,19 @@ export class LiteratureNote {
       const avIdReg = /.*data-av-id=\"(.*?)\".*/;
       const avID = content.match(avIdReg)![1];
       // 检查块是否在数据库中
-      res = await this.plugin.kernelApi.getAttributeViewKeys(blockID);
-      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获取到块添加的数据库", res.data);
-      const findItem = (res.data as any[]).find(item => item.avID === avID);
-      if (!findItem || !findItem.keyValues) {
+      res = await this.plugin.kernelApi.getAttributeViewItemIDsByBoundIDs(avID, [blockID]);
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获取到块在数据库中的绑定情况", res.data);
+      const findItem = (res.data as any)[blockID];
+      // 返回值是一个对象，键是块ID，值是itemID
+      if (!findItem || !findItem.length) {
+        // 创建数据库
         if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("数据库中不存在块，将块插入数据库", {avID, blockID});
         res = await this.plugin.kernelApi.addAttributeViewBlocks(avID, [{
           id: blockID,
           isDetached: false
         }]);
       }
+      // 生成插入数据
       const dataString = generateFromTemplate(attrViewTemplate, entry);
       if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("根据模板生成属性=>", {dataString});
       try { 
