@@ -634,7 +634,8 @@ export class LiteratureNote {
         if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获取到模板绝对路径：" + absTemplatePath);
         try {
           const res = await this.plugin.kernelApi.renderTemplate(rootId, absTemplatePath);
-          this.plugin.kernelApi.appendBlock(rootId, "dom", (res.data as any).content)
+          if (useWholeDocAsUserData) this.plugin.kernelApi.insertBlock("dom", (res.data as any).content, "", "", rootId);
+          else this.plugin.kernelApi.insertBlock("dom", (res.data as any).content, "", userDataId, "");
         } catch (error) {
           this.plugin.noticer.error((this.plugin.i18n as any).errors.userDataTemplatePathRenderError, error);
         }

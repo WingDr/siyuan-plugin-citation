@@ -311,6 +311,17 @@ class KernelApi extends BaseApi {
     return await this.siyuanRequest("/api/query/sql", params);
   }
 
+  public async insertBlock(dataType: "markdown" | "dom", data: string, nextID: string, previousID: string, parentID: string) {
+    const params = {
+      "data": data,
+      "dataType": dataType,
+      "nextID": nextID,
+      "parentID": parentID,
+      "previousID": previousID
+    };
+    return await this.siyuanRequest("/api/block/insertBlock", params);
+  }
+
   public async prependBlock(blockId: string, type: "markdown" | "dom", data: string) {
     const params = {
       "data": data,
