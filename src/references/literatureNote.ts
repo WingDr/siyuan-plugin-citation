@@ -234,6 +234,7 @@ export class LiteratureNote {
           id: blockID,
           isDetached: false
         }]);
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("插入数据库api返回", res);
       }
       // 生成插入数据
       const dataString = generateFromTemplate(attrViewTemplate, entry);
@@ -242,6 +243,7 @@ export class LiteratureNote {
         JSON.parse(dataString);
       } catch (error) { 
         this.plugin.noticer.error((this.plugin.i18n as any).errors.attrViewTemplateNotJson + error);
+        return;
       }
       const data = JSON.parse(dataString);
       // 获取块在数据库中对应的itemID
@@ -292,10 +294,12 @@ export class LiteratureNote {
           // 注意这里直接 return 整个函数，不再走后续公共逻辑
           return await confirm("⚠️", (that.plugin.i18n.confirms as any).updateWithoutUserData.replaceAll("${title}", entry.title), async () => {
             that._updateDataSourceItem(key, entry);
-            that._updateAttrView(key, entry);
             const newUserDataId = await that._updateEmptyNote(literatureId);
             const newUserDataLink = `[${userDataTitle}](siyuan://blocks/${newUserDataId})\n\n`;
             that._updateComplexContents(literatureId, newUserDataId, newUserDataLink, entry, []);
+            setTimeout(() => {
+              that._updateAttrView(key, entry);
+            }, 1000);
             return;
           });
         },
@@ -315,40 +319,6 @@ export class LiteratureNote {
       deleteList = diff.deleteList ?? deleteList;
       userDataId = diff.userDataId ?? userDataId;
       userDataLink = diff.userDataLink ?? userDataLink;
-
-      // if (!userDataId.length) {
-      //   if (dataIds.length) {
-      //     // 查找用户数据片段
-      //     const userDataInfo = await this._detectUserData(literatureId, dataIds, key, userDataTitle);
-      //     deleteList = userDataInfo.deleteList;
-      //     userDataId = userDataInfo.userDataId;
-      //     userDataLink = userDataInfo.userDataLink;
-      //     const hasUserData = userDataInfo.hasUserData;
-      //     if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获得用户片段更新信息=>", userDataInfo);
-      //     if (!hasUserData) {
-      //       // 没有查找到用户数据片段时进行更新
-      //       if (!noConfirmUserData) return confirm("⚠️", (this.plugin.i18n.confirms as any).updateWithoutUserData.replaceAll("${title}", entry.title), async () => {
-      //         this._updateDataSourceItem(key, entry);
-      //         this._updateAttrView(key, entry);
-      //         // 不存在用户数据区域，整个更新
-      //         deleteList = [];
-      //         userDataId = await this._updateEmptyNote(literatureId);
-      //         // if (!userDataLink.length) userDataLink = `((${userDataId} '${userDataTitle}'))\n\n`;
-      //         userDataLink = `[${userDataTitle}](siyuan://blocks/${userDataId})\n\n`;
-      //         this._updateComplexContents(literatureId, userDataId, userDataLink, entry, deleteList);
-      //         return;
-      //       });
-      //       else {
-      //         deleteList = [];
-      //         userDataId = await this._updateEmptyNote(literatureId);
-      //       }
-      //     }
-      //   } else {
-      //     if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("文献内容文档中没有内容");
-      //     // 更新空的文档内容
-      //     userDataId = await this._updateEmptyNote(literatureId);
-      //   }
-      // }
       // 执行后续操作之前先更新文献池
       this.plugin.literaturePool.set({id: literatureId, key: key});
       // 插入前置片段
@@ -356,7 +326,9 @@ export class LiteratureNote {
       userDataLink = `[${userDataTitle}](siyuan://blocks/${userDataId})\n\n`;
       this._updateComplexContents(literatureId, userDataId, userDataLink, entry, deleteList);
       this._updateDataSourceItem(key, entry);
-      this._updateAttrView(key, entry);
+      setTimeout(() => {
+        this._updateAttrView(key, entry);
+      }, 1000);
     }
 
     private async _detectUserData( literatureId: string, dataIds: string[], key: string, userDataTitle: string ): Promise<{
