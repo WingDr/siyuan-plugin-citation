@@ -217,6 +217,7 @@ export class LiteratureNote {
     private async _updateAttrView(key: string, entry: any) {
       const attrViewBlock = this.plugin.data[STORAGE_NAME].attrViewBlock;
       const attrViewTemplate = this.plugin.data[STORAGE_NAME].attrViewTemplate;
+      if (!attrViewBlock || !attrViewTemplate || !attrViewBlock.length || !attrViewTemplate.length) return;
       const blockID = this.plugin.literaturePool.get(key);
       let res = await this.plugin.kernelApi.getBlock(attrViewBlock);
       const content = (res.data as any[])[0].markdown as string;
