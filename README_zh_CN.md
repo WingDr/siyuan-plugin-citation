@@ -14,6 +14,7 @@
 5. **支持数据库同步（但是模板比较难写，需要对思源的数据库有一定认知）**
 
 **感谢[Geo123abc](https://github.com/Geo123abc)制作的[教学视频](https://www.bilibili.com/video/BV17u411j79z/?vd_source=b4b4ca14b1a866918dcef4ca52896f03)**
+**感谢[Achuan-2](https://github.com/Achuan-2)撰写的[教学文档](https://ld246.com/article/1751194855664)**
 
 ## 功能
 

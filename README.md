@@ -14,6 +14,7 @@
 5. **Database synchronization support (template creation requires understanding of SiYuan's database)**
 
 **Special thanks to [Geo123abc](https://github.com/Geo123abc) for creating the [tutorial video](https://www.bilibili.com/video/BV17u411j79z/?vd_source=b4b4ca14b1a866918dcef4ca52896f03).**
+**Special thanks to [Achuan-2](https://github.com/Achuan-2) for creating the [tutorial document](https://ld246.com/article/1751194855664)**
 
 ## Features
 
