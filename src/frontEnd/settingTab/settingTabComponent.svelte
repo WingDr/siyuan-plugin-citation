@@ -521,7 +521,7 @@
       <Item
         block={false}
         title={(plugin.i18n.settingTab as any).basic.notebookSelectorTitle}
-        text={(plugin.i18n.settingTab as any).basic.databaseSelectorDescription}
+        text={(plugin.i18n.settingTab as any).basic.notebookSelectorDescription}
       >
         {#snippet input()}
             <Input

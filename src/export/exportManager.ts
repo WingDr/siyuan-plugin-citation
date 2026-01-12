@@ -231,6 +231,7 @@ export class ExportManager {
         "./exportTemp.md",
         "-o", "exportTemp.tex",
         "--lua-filter", dataDir + "/plugins/siyuan-plugin-citation/scripts/math.lua",
+        "--lua-filter", dataDir + "/plugins/siyuan-plugin-citation/scripts/latex.lua",
         "--wrap=none",
         ...additionalParams
       ])

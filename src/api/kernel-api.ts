@@ -430,6 +430,7 @@ class KernelApi extends BaseApi {
       }
     };
     return await this.siyuanRequest("/api/attr/setBlockAttrs", attrParams);
+    // return await this.siyuanRequest("/api/attr/set", attrParams);
   }
 
   public async getBlocksWithContent(notebookId: string, fileId: string, content: string) {

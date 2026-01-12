@@ -2,7 +2,8 @@ import {
   Setting,
   Protyle,
   Menu,
-  openTab
+  openTab,
+  Dialog
 } from "siyuan";
 import { type IMenu, subMenu } from "siyuan";
 import SiYuanPluginCitation from "../index";
@@ -60,6 +61,8 @@ interface IMenuItemSetting {
   index?: number
   element?: HTMLElement
 }
+
+const LaTexEnvironments = {"ASSUMPTION":"Assumption", "LEMMA": "Lemma", "THEOREM": "Theorem", "PROPOSITION": "Proposition", "COROLLARY": "Corollary", "DEFINITION": "Definition", "PROBLEM": "Problem", "EXAMPLE": "Example", "REMARK": "Remark"};
 
 export class InteractionManager {
   public plugin: SiYuanPluginCitation;
@@ -134,6 +137,23 @@ export class InteractionManager {
         supportDatabase: ["Juris-M (debug-bridge)", "Zotero (debug-bridge)"],
       }
     ];
+    Object.keys(LaTexEnvironments).forEach(key => {
+      const name = LaTexEnvironments[key as keyof typeof LaTexEnvironments];
+      this.protyleSlashs.push({
+        filter: [name.toLowerCase(), name, name.toUpperCase()],
+        html: `<div class = "b3-list-item__first">
+          <svg class="b3-list-item__graphic">
+            <use xlink:href="#iconRef"></use>
+          </svg>
+          <span class="b3-list-item__text">${name}</span>
+        </div>`,
+        id: `insert-env-${key.toLowerCase()}`,
+        callback: async (protyle: Protyle) => {
+          protyle.insert(`> [!${key}] ${name} \n> `, false, true);
+        },
+        // supportDatabase: ["Juris-M (debug-bridge)", "Zotero (debug-bridge)"],
+      });
+    });
     this.commands = [
       {
         langKey: "addCitation",

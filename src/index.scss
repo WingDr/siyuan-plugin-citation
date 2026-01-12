@@ -29,3 +29,36 @@
 .protyle div[data-type="NodeSuperBlock"][custom-annotation-color] {
   border: dashed 0.1em gray;
 }
+
+// callout块相关样式
+.callout[data-subtype=COROLLARY]::before {
+  background-color: var(--b3-callout-tip);
+}
+
+.callout[data-subtype=COROLLARY] .callout-info {
+  color: var(--b3-callout-tip);
+}
+
+.callout[data-subtype=THEOREM]::before {
+  background-color: var(--b3-callout-important);
+}
+
+.callout[data-subtype=THEOREM] .callout-info {
+  color: var(--b3-callout-important);
+}
+
+.callout[data-subtype=LEMMA]::before {
+  background-color: var(--b3-callout-warning);
+}
+
+.callout[data-subtype=LEMMA] .callout-info {
+  color: var(--b3-callout-warning);
+}
+
+.callout[data-subtype=REMARK]::before {
+  background-color: var(--b3-callout-caution);
+}
+
+.callout[data-subtype=REMARK] .callout-info {
+  color: var(--b3-callout-caution);
+}
