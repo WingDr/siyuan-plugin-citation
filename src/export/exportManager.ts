@@ -233,6 +233,8 @@ export class ExportManager {
         "--lua-filter", dataDir + "/plugins/siyuan-plugin-citation/scripts/math.lua",
         "--lua-filter", dataDir + "/plugins/siyuan-plugin-citation/scripts/latex.lua",
         "--wrap=none",
+        "--template", "D:/Documents/OneDrive/杂项/模板/pandoc_template.tex",
+        "--standalone",
         ...additionalParams
       ])
       res = await this.plugin.kernelApi.getFile("/temp/convert/pandoc/citation/exportTemp.tex", "any") as any;
