@@ -17,9 +17,11 @@
   "copyCiteLink": "复制文献引用",
   "copyNotes": "复制文献笔记",
   "addSelectedItems": "引用Zotero中选中的文献",
+  "checkDuplicatedLiterature": "检查重复文献",
   "refreshSingleLiteratureNote": "刷新文献内容",
   "refreshLiteratureNotesContents": "刷新所有文献内容",
   "checkUnlinkedLiterature": "检查失效文献",
+  "clearAllUnlinkedLiterature": "清除全部未链接标记",
   "test": "测试",
   "settingTab": {
     "settingTabTitle": "插件版本：${version}",
@@ -164,6 +166,9 @@
     "refreshLiteratureNoteContentsSuccess": "成功刷新${size}篇文献内容",
     "refreshSingleLiteratureNoteSuccess": "成功刷新文献${key}内容",
     "unbindDocumentFromLiteratureSuccess": "成功解除文档绑定",
+    "checkDuplicatedLiteratureSuccess": "已手动标记${size}个重复文献文档",
+    "checkDuplicatedLiteratureNoDuplicate": "未检测到重复文献文档",
+    "clearAllUnlinkedLiteratureSuccess": "已清除${size}个文献文档的未链接标记",
     "loadRefRepeat": "文献\"${key}\"存在重复，已将当前文档重命名，请检查",
     "deleteDuplicatedDocument": "已删除重复的空白文献内容文档，文档ID：${documentId}"
   }

@@ -264,6 +264,22 @@ class KernelApi extends BaseApi {
     return ((await this.siyuanRequest("/api/query/sql", params)).data as any[]).length > 0;
   }
 
+  public async getUnlinkedLiteratureDocs(notebook: string, dir_hpath: string): Promise<SiyuanData> {
+    const params = {
+      "stmt": `SELECT
+          b.id, b.root_id, b.box, b."path", b.hpath, b.name, b.content, a.value as literature_unlink
+        FROM blocks b
+          inner join (
+            select * FROM "attributes" WHERE name = "custom-literature-unlinked" and value != ""
+          ) as a on b.id = a.block_id
+        WHERE
+          b.box like '${notebook}' and
+          b.hpath like '${dir_hpath}%' and
+          b.type like 'd'`
+    };
+    return await this.siyuanRequest("/api/query/sql", params);
+  }
+
   public async getLiteratureUserData(literatureId: string) {
     const params = {
       "stmt": `select a.block_id from attributes a where 

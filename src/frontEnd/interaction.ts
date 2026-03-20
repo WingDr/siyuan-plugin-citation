@@ -219,6 +219,20 @@ export class InteractionManager {
         callback: async () => {
           return this.plugin.reference.checkUnlinkedLiteratures();
         }
+      },
+      {
+        langKey: "clearAllUnlinkedLiterature",
+        hotkey: "",
+        callback: async () => {
+          return this.plugin.reference.clearAllUnlinkedLiteratures();
+        }
+      },
+      {
+        langKey: "checkDuplicatedLiterature",
+        hotkey: "",
+        callback: async () => {
+          return this.plugin.reference.checkDuplicatedLiteratures();
+        }
       }
       // {
       //   langKey: "test",

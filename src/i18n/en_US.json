@@ -17,9 +17,11 @@
   "copyCiteLink": "Copy citation",
   "copyNotes": "Copy notes",
   "addSelectedItems": "Cite Selected Literature in Zotero",
+  "checkDuplicatedLiterature": "Check Duplicated Literatures",
   "refreshLiteratureNotesContents": "Refresh all literature notes",
   "refreshSingleLiteratureNote": "Refresh literature note",
   "checkUnlinkedLiterature": "Check Unlinked Literatures",
+  "clearAllUnlinkedLiterature": "Clear All Unlinked Flags",
   "test": "test",
   "settingTab": {
     "settingTabTitle": "Plugin Version: ${version}",
@@ -164,6 +166,9 @@
     "refreshLiteratureNoteContents": "Successfully Refreshed ${size} Literature Note.",
     "refreshSingleLiteratureNoteSuccess": "Successfully Refreshed Note of Literature ${key}.",
     "unbindDocumentFromLiteratureSuccess": "Successfully Unbound Document from Literature.",
+    "checkDuplicatedLiteratureSuccess": "Marked ${size} duplicated literature documents manually.",
+    "checkDuplicatedLiteratureNoDuplicate": "No duplicated literature documents were found.",
+    "clearAllUnlinkedLiteratureSuccess": "Cleared unlinked flags from ${size} literature documents.",
     "loadRefRepeat": "Literature \"${key}\" is duplicated. The current document has been renamed. Please check.",
     "deleteDuplicatedDocument": "Successfully Deleted Duplicated Empty Literature Content Document. Document ID: ${documentId}"
   }
