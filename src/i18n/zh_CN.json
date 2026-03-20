@@ -17,8 +17,11 @@
   "copyCiteLink": "复制文献引用",
   "copyNotes": "复制文献笔记",
   "addSelectedItems": "引用Zotero中选中的文献",
+  "checkDuplicatedLiterature": "检查重复文献",
   "refreshSingleLiteratureNote": "刷新文献内容",
   "refreshLiteratureNotesContents": "刷新所有文献内容",
+  "checkUnlinkedLiterature": "检查失效文献",
+  "clearAllUnlinkedLiterature": "清除全部未链接标记",
   "test": "测试",
   "settingTab": {
     "settingTabTitle": "插件版本：${version}",
@@ -43,7 +46,9 @@
       "deleteDataBtnTitle": "删除数据",
       "deleteDataBtnDescription": "删除本插件的所有设置数据（仅包括设置面板上显示的数据）",
       "confirmRemove": "确认删除 ${name} 的设置数据？",
-      "deleteDataBtnText": "删除"
+      "deleteDataBtnText": "删除",
+      "consoleDebugTitle": "控制台调试",
+      "consoleDebugDescription": "开启后会在控制台输出调试信息，平常使用建议关闭。"
     },
     "templates": {
       "title": "模板设置",
@@ -113,25 +118,39 @@
         "searchDialogSelectorTitle": "插入文献时使用的搜索面板",
         "searchDialogSelectorDescription": "选择插入文献时使用的搜索面板：\"SiYuan\" 为基于思源样式类型的搜索面板，搜索速度更快并且更稳定；\"Zotero\"为Zotero自带的搜索面板，可以在Zotero软件中设置是否使用经典视图"
       }
+    },
+    "export": {
+      "title": "导出设置",
+      "exportWordParamTitle": "Word导出参数",
+      "exportWordParamDescription": "设置导出Word时，pandoc将markdown转换为Word的<b>额外</b>参数，以逗号隔开，例如：'--highlight-stype=haddock,--citeproc=1'，默认导出参数有：'--reference-doc=/path/to/template.docx,--lua-filter=/path/to/citation.lua'，更多参数参考<a href=\"https://pandoc.org/MANUAL.html#option-reference-doc\"><b>Pandoc官方文档</b></a>",
+      "exportLaTeXParamTitle": "LaTeX导出参数",
+      "exportLaTeXParamDescription": "设置导出LaTeX时，pandoc将markdown转换为LaTeX的<b>额外</b>参数，格式同Word导出参数一致，默认导出参数有：'--wrap=none'"
     }
   },
   "menuItems": {
     "refreshCitation": "刷新引用",
     "refreshSingleLiteratureNote": "刷新文献内容",
+    "refreshSingleLiteratureNoteTitle": "刷新文档标题",
     "turnTo": "转换为",
-    "export": "导出"
+    "export": "导出",
+    "bindToLiterature": "绑定到文献",
+    "unbindFromLiterature": "解除与文献绑定"
   },
   "errors": {
     "notebookUnselected": "未选择笔记本！",
     "refPathInvalid": "文献库路径不存在！请在<b>文档树</b>中新建对应路径的文档。",
     "hotKeyUsage": "请使用快捷键执行此命令！",
     "loadRefFailed": "文献引用导入失败",
-    "zoteroNotRunning": "${type}没有在运行",
+    "zoteroNotRunning": "找不到${type}或debug-bridge插件，请检查${type}运行情况，并确保debug-bridge插件正常安装并为最新版本",
+    "zoteroRequestForbidden": "访问请求被禁止，建议更新到最新版本citation插件",
+    "zoteroCannotReached": "无法与Zotero通信，请确保已安装并启用Unblock浏览器插件",
     "getLiteratureFailed": "获得引用文献失败",
     "loadLibraryFailed": "文献库导入失败",
     "bbtDisabled": "未检索到citekey字段，请检查better-bibtex插件是否运行，或者切换到使用itemKey进行索引",
     "wrongDBPassword": "debug-bridge插件密码错误，请在设置界面中设置正确密码",
-    "userDataTemplatePathRenderError": "用户数据模板路径错误，无法渲染模板"
+    "userDataTemplatePathRenderError": "用户数据模板路径错误，无法渲染模板",
+    "attrViewTemplateNotJson": "数据库属性模板无法解析，请检查是否为严格json格式。",
+    "documentNotInRefDir": "当前文档不在文献库路径下，无法绑定到文献"
   },
   "confirms": {
     "updateWithoutUserData": "文献内容文档\"${title}\"未检测到“用户数据（# User Data）”区域（缺少引用或引用失效），确定要更新文献内容吗？"
@@ -140,10 +159,17 @@
     "loadLibrarySuccess": "成功导入${size}个文献数据",
     "loadRefSuccess": "成功导入${size}个文献引用",
     "refreshTitleSuccess": "成功刷新${size}篇文献内容文档标题",
+    "checkUnlinkedSuccess": "已检查${size}篇文献内容文档与文献的绑定情况，其中${unlinked}篇文献内容文档失效，请检查所有标题前带有\u274C的文档",
     "copyContentSuccess": "${type}已在剪贴板",
     "changeKey": "切换索引成功，文献索引已经切换到${keyType}。",
     "noSelectedItem": "没有选中的文献",
     "refreshLiteratureNoteContentsSuccess": "成功刷新${size}篇文献内容",
-    "refreshSingleLiteratureNoteSuccess": "成功刷新文献${key}内容"
+    "refreshSingleLiteratureNoteSuccess": "成功刷新文献${key}内容",
+    "unbindDocumentFromLiteratureSuccess": "成功解除文档绑定",
+    "checkDuplicatedLiteratureSuccess": "已手动标记${size}个重复文献文档",
+    "checkDuplicatedLiteratureNoDuplicate": "未检测到重复文献文档",
+    "clearAllUnlinkedLiteratureSuccess": "已清除${size}个文献文档的未链接标记",
+    "loadRefRepeat": "文献\"${key}\"存在重复，已将当前文档重命名，请检查",
+    "deleteDuplicatedDocument": "已删除重复的空白文献内容文档，文档ID：${documentId}"
   }
 }

@@ -2,7 +2,8 @@ import {
   Setting,
   Protyle,
   Menu,
-  openTab
+  openTab,
+  Dialog
 } from "siyuan";
 import { type IMenu, subMenu } from "siyuan";
 import SiYuanPluginCitation from "../index";
@@ -60,6 +61,8 @@ interface IMenuItemSetting {
   index?: number
   element?: HTMLElement
 }
+
+const LaTexEnvironments = {"ASSUMPTION":"Assumption", "LEMMA": "Lemma", "THEOREM": "Theorem", "PROPOSITION": "Proposition", "COROLLARY": "Corollary", "DEFINITION": "Definition", "PROBLEM": "Problem", "EXAMPLE": "Example", "REMARK": "Remark"};
 
 export class InteractionManager {
   public plugin: SiYuanPluginCitation;
@@ -134,6 +137,23 @@ export class InteractionManager {
         supportDatabase: ["Juris-M (debug-bridge)", "Zotero (debug-bridge)"],
       }
     ];
+    Object.keys(LaTexEnvironments).forEach(key => {
+      const name = LaTexEnvironments[key as keyof typeof LaTexEnvironments];
+      this.protyleSlashs.push({
+        filter: [name.toLowerCase(), name, name.toUpperCase()],
+        html: `<div class = "b3-list-item__first">
+          <svg class="b3-list-item__graphic">
+            <use xlink:href="#iconRef"></use>
+          </svg>
+          <span class="b3-list-item__text">${name}</span>
+        </div>`,
+        id: `insert-env-${key.toLowerCase()}`,
+        callback: async (protyle: Protyle) => {
+          protyle.insert(`> [!${key}] ${name} \n> `, false, true);
+        },
+        // supportDatabase: ["Juris-M (debug-bridge)", "Zotero (debug-bridge)"],
+      });
+    });
     this.commands = [
       {
         langKey: "addCitation",
@@ -159,6 +179,18 @@ export class InteractionManager {
         callback: () => { return this.plugin.database.copyNotes(); }
       },
       {
+        supportDatabase: ["Juris-M (debug-bridge)", "Zotero (debug-bridge)"],
+        langKey: "addSelectedItems",
+        hotkey: "",
+        callback: () => { return this.plugin.database.copySelectedCiteLink();},
+        editorCallback: (p) => {
+          const protyle = p.getInstance() as Protyle;
+          this.plugin.database.setSelected([]);
+          this.plugin.reference.setEmptySelection();
+          this.plugin.database.insertSelectedCiteLink(protyle);
+        }
+      },
+      {
         langKey: "reloadDatabase",
         hotkey: "",
         callback: async () => {
@@ -181,24 +213,33 @@ export class InteractionManager {
           return this.plugin.reference.refreshLiteratureNoteContents();
         }
       },
+      {
+        langKey: "checkUnlinkedLiterature",
+        hotkey: "",
+        callback: async () => {
+          return this.plugin.reference.checkUnlinkedLiteratures();
+        }
+      },
+      {
+        langKey: "clearAllUnlinkedLiterature",
+        hotkey: "",
+        callback: async () => {
+          return this.plugin.reference.clearAllUnlinkedLiteratures();
+        }
+      },
+      {
+        langKey: "checkDuplicatedLiterature",
+        hotkey: "",
+        callback: async () => {
+          return this.plugin.reference.checkDuplicatedLiteratures();
+        }
+      }
       // {
       //   langKey: "test",
       //   hotkey: "",
       //   callback: async () => {
       //   }
       // },
-      {
-        supportDatabase: ["Juris-M (debug-bridge)", "Zotero (debug-bridge)"],
-        langKey: "addSelectedItems",
-        hotkey: "",
-        callback: () => { return this.plugin.database.copySelectedCiteLink();},
-        editorCallback: (p) => {
-          const protyle = p.getInstance() as Protyle;
-          this.plugin.database.setSelected([]);
-          this.plugin.reference.setEmptySelection();
-          this.plugin.database.insertSelectedCiteLink(protyle);
-        }
-      }
     ];
     this.menuItems = [
       {
@@ -206,6 +247,14 @@ export class InteractionManager {
         iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconRefresh"></use></svg>',
         label: (this.plugin.i18n.menuItems as any).refreshCitation,
         clickCallback: (id) => {this.plugin.reference.updateLiteratureLink.bind(this.plugin.reference)(id);}
+      },
+      {
+        // 刷新标题
+        place: ["BreadcrumbMore", "TitleIcon"],
+        check: this.isLiteratureNote.bind(this),
+        iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconRefresh"></use></svg>',
+        label: (this.plugin.i18n.menuItems as any).refreshSingleLiteratureNoteTitle,
+        clickCallback: (id) => {this.plugin.reference.refreshSingleLiteratureNoteTitles(id);}
       },
       {
         place: ["BreadcrumbMore", "TitleIcon"],
@@ -220,6 +269,27 @@ export class InteractionManager {
         label: (this.plugin.i18n.menuItems as any).export,
         // clickCallback: (id) => {this.plugin.exportManager.export(id, "markdown");},
         generateSubMenu: this.generateExportMenu.bind(this)
+      },
+      {
+        // 绑定文档到文献
+        place: ["BreadcrumbMore", "TitleIcon"],
+        iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconLink"></use></svg>',
+        label: (this.plugin.i18n.menuItems as any).bindToLiterature,
+        // clickCallback: (id) => {this.plugin.exportManager.export(id, "markdown");},
+        clickCallback: (id) => {
+          this.plugin.database.setSelected([]);
+          this.plugin.reference.setEmptySelection();
+          this.plugin.database.linkDocToLiterature(id);
+        }
+      },
+      {
+        // 与文献解锁绑定
+        place: ["BreadcrumbMore", "TitleIcon"],
+        check: this.isLiteratureNote.bind(this),
+        iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconTrashcan"></use></svg>',
+        label: (this.plugin.i18n.menuItems as any).unbindFromLiterature,
+        // clickCallback: (id) => {this.plugin.exportManager.export(id, "markdown");},
+        clickCallback: (id) => {this.plugin.reference.unbindDocumentFromLiterature(id);}
       },
       {
         place: ["BlockRef"],
@@ -346,7 +416,7 @@ export class InteractionManager {
       const itemKey = zoteroURLMatch![1];
       const key = "1_" + itemKey;
       if (isDev) this.logger.info("确认到从Zotero拖拽事件, itemKey=>", {itemKey});
-      const content = await this.plugin.reference.processReferenceContents([key], "", "", true, false);
+      const content = await this.plugin.reference.processReferenceContents([key], "", "", {returnDetail: true, errorReminder:false});
       if (!content[0]) return;
       citeDetail = content[0];
       if (isDev) this.logger.info("获取到插入内容, content=>", {citeDetail});
@@ -365,7 +435,7 @@ export class InteractionManager {
         const zoteroURLMatch = resHTML.match(zoteroURLReg);
         const itemKey = zoteroURLMatch![1];
         const key = "1_" + itemKey;
-        const content = await this.plugin.reference.processReferenceContents([key], "", "", true, false);
+        const content = await this.plugin.reference.processReferenceContents([key], "", "", {returnDetail: true, errorReminder:false});
         if (!content[0]) return;
         citeDetail = content[0];
         if (isDev) this.logger.info("获取到插入内容, content=>", {citeDetail});

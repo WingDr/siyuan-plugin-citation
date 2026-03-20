@@ -49,51 +49,89 @@ export async function fileSearch(plugin: SiYuanPluginCitation, dirPath: string, 
   });
 }
 
-export async function loadLocalRef(plugin: SiYuanPluginCitation): Promise<any> {
+interface DuplicateRefInfo {
+  id: string;
+  key: string;
+  title: string;
+  path: string;
+}
+
+interface LoadLocalRefResult {
+  duplicates: DuplicateRefInfo[];
+}
+
+// 如果重复触发会导致全体文档重复载入，因此需要加锁
+export async function loadLocalRef(plugin: SiYuanPluginCitation): Promise<LoadLocalRefResult | undefined> {
+  if (plugin.isLoadingRef) return;
+  plugin.isLoadingRef = true;
   const logger = createLogger("load references");
   const notebookId = plugin.data[STORAGE_NAME].referenceNotebook as string;
   const refPath = plugin.data[STORAGE_NAME].referencePath as string;
+  const duplicates: DuplicateRefInfo[] = [];
   plugin.literaturePool.empty();
   const limit = 64;
   let offset = 0;
   let cont = true;
   let promiseList: any[] = [];
-  while (cont) {
-    /**
-     * 通过读取文献库中的文献构建文献池，用于快速索引和对应key与文档id
-     * 文献的索引位置经过两次更新，因此目前要考虑将更新前的情况进行转化：
-     * 1. key在文档标题位置
-     * 2. key在文档的命名中
-     * 3. key在文档的自定义字段“custom-literature-key”中
-     */
-    const literatureDocs  = (await plugin.kernelApi.getLiteratureDocInPath(notebookId, refPath + "/", offset, limit)).data as any[];
-    if (literatureDocs.length < limit) {
-      // 已经提取到所有了
-      cont = false;
-    }
-    const pList = literatureDocs.map(async file => {
-      let key = "";
-      const literatureKey = file.literature_key;
-      if (!literatureKey) {
-        // 如果没有这个自定义属性，就在标题和命名里找一下
-        if (file.name === "") {
-          // 如果命名为空就从标题里拿
-          await plugin.kernelApi.setBlockKey(file.id, file.content);
-          key = file.content;
-        } else {
-          // 命名不为空那就在命名里
-          await plugin.kernelApi.setBlockKey(file.id, file.name);
-          key = file.name;
+  try {
+    while (cont) {
+      /**
+       * 通过读取文献库中的文献构建文献池，用于快速索引和对应key与文档id
+       * 文献的索引位置经过两次更新，因此目前要考虑将更新前的情况进行转化：
+       * 1. key在文档标题位置
+       * 2. key在文档的命名中
+       * 3. key在文档的自定义字段“custom-literature-key”中
+       */
+      const literatureDocs  = (await plugin.kernelApi.getLiteratureDocInPath(notebookId, refPath + "/", offset, limit)).data as any[];
+      if (literatureDocs.length < limit) {
+        // 已经提取到所有了
+        cont = false;
+      }
+      const pList = literatureDocs.map(async file => {
+        let key = "";
+        const literatureKey = file.literature_key;
+        const literatureUnlink = file.literature_unlink;
+        if (literatureUnlink || literatureUnlink == "true") {
+          // 如果是未链接的，就跳过这个文件
+          return;
         }
-      } else key = literatureKey;
-      plugin.literaturePool.set({id: file.id, key});
-    });
-    promiseList = [...promiseList, ...pList];
-    offset += limit;
+        if (!literatureKey) {
+          // 如果没有这个自定义属性，就在标题和命名里找一下
+          if (file.name === "") {
+            // 如果命名为空就从标题里拿
+            await plugin.kernelApi.setBlockKey(file.id, file.content);
+            key = file.content;
+          } else {
+            // 命名不为空那就在命名里
+            await plugin.kernelApi.setBlockKey(file.id, file.name);
+            key = file.name;
+          }
+        } else key = literatureKey;
+        if (plugin.literaturePool.get(key)) {
+          duplicates.push({
+            id: file.id,
+            key,
+            title: file.content,
+            path: file.path,
+          });
+          if (isDev || plugin.data[STORAGE_NAME].consoleDebug) {
+            logger.warn("检测到重复文献引用，当前仅记录不自动处理", {key, id: file.id, path: file.path});
+          }
+        } else plugin.literaturePool.set({id: file.id, key});
+      });
+      promiseList = [...promiseList, ...pList];
+      offset += limit;
+    }
+    await Promise.all(promiseList);
+    if (isDev || plugin.data[STORAGE_NAME].consoleDebug) {
+      logger.info("成功载入引用，content=>", plugin.literaturePool.content);
+      logger.info("重复文献统计=>", {count: duplicates.length, duplicates});
+    }
+    if (plugin.data[STORAGE_NAME].consoleDebug) plugin.noticer.info((plugin.i18n.notices as any).loadRefSuccess, {size: plugin.literaturePool.size});
+    return {duplicates};
+  } finally {
+    plugin.isLoadingRef = false;
   }
-  await Promise.all(promiseList);
-  if (isDev) logger.info("成功载入引用，content=>", plugin.literaturePool.content);
-  plugin.noticer.info((plugin.i18n.notices as any).loadRefSuccess, {size: plugin.literaturePool.size});
 }
 
 export function generateFileLinks(files: string[]) {

@@ -241,15 +241,41 @@ class KernelApi extends BaseApi {
   public async getLiteratureDocInPath(notebook: string, dir_hpath: string, offset: number, limit: number): Promise<SiyuanData> {
     const params = {
       "stmt": `SELECT 
-          b.id, b.root_id, b.box, b."path", b.hpath, b.name, b.content, a.value as literature_key 
+          b.id, b.root_id, b.box, b."path", b.hpath, b.name, b.content, a.value as literature_key, c.value as literature_unlink
         FROM blocks b 
           left outer join (
             select * FROM "attributes" WHERE name = "custom-literature-key"
           ) as a on b.id = a.block_id 
+          left outer join (
+            select * FROM "attributes" WHERE name = "custom-literature-unlinked"
+          ) as c on b.id = c.block_id 
         WHERE 
           b.box like '${notebook}' and 
           b.hpath like '${dir_hpath}%' and 
           b.type like 'd' limit ${limit}, ${offset}`
+    };
+    return await this.siyuanRequest("/api/query/sql", params);
+  }
+
+  public async checkFileInHPath(notebook: string, hpath: string, docID: string): Promise<boolean> {
+    const params = {
+      "stmt": `SELECT * FROM blocks WHERE box like '${notebook}' and hpath like '${hpath}%' and id = '${docID}'`
+    };
+    return ((await this.siyuanRequest("/api/query/sql", params)).data as any[]).length > 0;
+  }
+
+  public async getUnlinkedLiteratureDocs(notebook: string, dir_hpath: string): Promise<SiyuanData> {
+    const params = {
+      "stmt": `SELECT
+          b.id, b.root_id, b.box, b."path", b.hpath, b.name, b.content, a.value as literature_unlink
+        FROM blocks b
+          inner join (
+            select * FROM "attributes" WHERE name = "custom-literature-unlinked" and value != ""
+          ) as a on b.id = a.block_id
+        WHERE
+          b.box like '${notebook}' and
+          b.hpath like '${dir_hpath}%' and
+          b.type like 'd'`
     };
     return await this.siyuanRequest("/api/query/sql", params);
   }
@@ -271,7 +297,7 @@ class KernelApi extends BaseApi {
     return await this.siyuanRequest("/api/block/getBlockKramdown", params);
   }
 
-  public async getChidBlocks(blockId: string) {
+  public async getChildBlocks(blockId: string) {
     const params = {
       "id": blockId
     };
@@ -299,6 +325,17 @@ class KernelApi extends BaseApi {
       "stmt": `SELECT * FROM spans WHERE block_id like '${blockId}' and type like 'textmark block-ref'`
     };
     return await this.siyuanRequest("/api/query/sql", params);
+  }
+
+  public async insertBlock(dataType: "markdown" | "dom", data: string, nextID: string, previousID: string, parentID: string) {
+    const params = {
+      "data": data,
+      "dataType": dataType,
+      "nextID": nextID,
+      "parentID": parentID,
+      "previousID": previousID
+    };
+    return await this.siyuanRequest("/api/block/insertBlock", params);
   }
 
   public async prependBlock(blockId: string, type: "markdown" | "dom", data: string) {
@@ -351,6 +388,28 @@ class KernelApi extends BaseApi {
     return await this.siyuanRequest("/api/filetree/renameDoc", params);
   }
 
+  public async removeDoc(notebook: string, path: string) {
+    const params = {
+      "notebook": notebook,
+      "path": path
+    };
+    return await this.siyuanRequest("/api/filetree/removeDoc", params);
+  }
+
+  public async removeDocByID(id: string) {
+    const params = {
+      "id": id
+    };
+    return await this.siyuanRequest("/api/filetree/removeDocByID", params);
+  }
+
+  public async getHPathByID(id: string) {
+    const params = {
+      "id": id
+    };
+    return await this.siyuanRequest("/api/filetree/getHPathByID", params);
+  }
+
   public async setBlockKey(blockId: string, key: string): Promise<SiyuanData> {
     const attrParams = {
       "id": blockId,
@@ -387,6 +446,7 @@ class KernelApi extends BaseApi {
       }
     };
     return await this.siyuanRequest("/api/attr/setBlockAttrs", attrParams);
+    // return await this.siyuanRequest("/api/attr/set", attrParams);
   }
 
   public async getBlocksWithContent(notebookId: string, fileId: string, content: string) {
@@ -414,23 +474,71 @@ class KernelApi extends BaseApi {
     })
   }
 
-  public async setAttributeViewBlockAttr(avID: string, keyID: string, blockID: string,value:any ) {
+  public async getAttributeViewBoundBlockIDsByItemIDs(avID: string, itemIDs: string[]) {
+    return await this.siyuanRequest("/api/av/getAttributeViewBoundBlockIDsByItemIDs", {
+      avID,
+      itemIDs
+    })
+  }
+
+  public async getAttributeViewItemIDsByBoundIDs(avID: string, blockIDs: string[]) {
+    return await this.siyuanRequest("/api/av/getAttributeViewItemIDsByBoundIDs", {
+      avID,
+      blockIDs
+    })
+  }
+
+  public async setAttributeViewBlockAttr(avID: string, keyID: string, itemID: string,value:any ) {
     return await this.siyuanRequest("/api/av/setAttributeViewBlockAttr", {
       avID,
       keyID,
-      rowID: blockID,
+      itemID,
       value
     })
   }
 
-  public async setExport(options: object) {
-    return await this.siyuanRequest("/api/setting/setExport", options);
-
+  public async batchSetAttributeViewBlockAttrs(avID: string, values: {keyID: string, itemID: string, value: any}[] ) {
+    return await this.siyuanRequest("/api/av/batchSetAttributeViewBlockAttrs", {
+      avID,
+      values
+    })
   }
 
-  public async exportMDContent(blockID: string) {
+  public async moveBlockByPreviousID(id: string, previousID: string): Promise<SiyuanData> {
+    const Params = {
+      id,
+      previousID
+    };
+    return await this.siyuanRequest("/api/block/moveBlock", Params);
+  }
+
+  public async moveBlockByParentID(id: string, parentID: string): Promise<SiyuanData> {
+    const Params = {
+      id,
+      parentID
+    };
+    return await this.siyuanRequest("/api/block/moveBlock", Params);
+  }
+
+  public async transferBlockRef(fromID: string, toID: string, refIDs: string[] = []): Promise<SiyuanData> {
+    const Params = {
+      fromID,
+      toID,
+      refIDs
+    };
+    return await this.siyuanRequest("/api/block/transferBlockRef", Params);
+  }
+
+  public async setExport(options: object) {
+    return await this.siyuanRequest("/api/setting/setExport", options);
+  }
+
+  public async exportMDContent(blockID: string, yfm: boolean) {
     const params = {
-      "id": blockID
+      "id": blockID,
+      "yfm":yfm,
+      "fillCSSVar": true
+      
     };
     return await this.siyuanRequest("/api/export/exportMdContent", params);
   }
