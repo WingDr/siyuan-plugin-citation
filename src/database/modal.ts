@@ -641,14 +641,13 @@ export class ZoteroWebAPIModal extends DataModal {
   private searchDialog!: SearchDialog;
   private userId: string = "0"; // 本地API使用userId 0
 
-  constructor(plugin: SiYuanPluginCitation, zoteroType: ZoteroType, useItemKey?: boolean) {
+  constructor(plugin: SiYuanPluginCitation, zoteroType: ZoteroType) {
     super();
     this.plugin = plugin;
     this.type = zoteroType;
     this.logger = createLogger(`zotero WebAPI modal: ${zoteroType}`);
     this.apiBaseUrl = `http://127.0.0.1:${this._getPort(this.type)}/api`;
     // Web API 模式强制使用 itemKey，不依赖 Better BibTeX
-    this.useItemKey = true;
     this.searchOptions = {
       includeScore: true,
       includeMatches: true,
@@ -677,7 +676,7 @@ export class ZoteroWebAPIModal extends DataModal {
       if (isDev) this.logger.info(`从${this.type} WebAPI接收到数据 =>`, items);
 
       const searchItems = items.map(item => {
-        return new EntryZoteroAdapter(item, this.useItemKey);
+        return new EntryZoteroAdapter(item, true);
       });
       this.fuse = new Fuse(searchItems, this.searchOptions);
       if (isDev) this.logger.info("打开搜索界面, searchItems=>", searchItems);
@@ -712,7 +711,7 @@ export class ZoteroWebAPIModal extends DataModal {
       const children = await this.getChildrenByItemKey(libraryID, itemKey);
       const zoteroData = this._convertWebAPIItemToZoteroData(res, children);
 
-      const zoteroEntry = new EntryZoteroAdapter(zoteroData, this.useItemKey, shortAuthorLimit);
+      const zoteroEntry = new EntryZoteroAdapter(zoteroData, true, shortAuthorLimit);
       const entry = getTemplateVariablesForZoteroEntry(zoteroEntry);
       if (entry.files) entry.files = entry.files.join("\n");
       if (isDev) this.logger.info("文献内容 =>", entry);
@@ -938,3 +937,5 @@ export class ZoteroWebAPIModal extends DataModal {
     };
   }
 }
+
+

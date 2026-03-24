@@ -9,7 +9,7 @@ const sveltePreprocess = require("svelte-preprocess");
 
 module.exports = (env, argv) => {
     // 使用环境变量或默认到当前目录，避免硬编码路径
-    const targetDir = process.env.SIYUAN_PLUGIN_DIR || path.resolve(__dirname);
+    const targetDir = path.join(process.env.SIYUAN_PLUGIN_DIR, "./siyuan-plugin-citation") || path.resolve(__dirname);
     const isPro = argv.mode === "production";
     const plugins = [
         new MiniCssExtractPlugin({

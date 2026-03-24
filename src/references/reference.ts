@@ -294,7 +294,7 @@ export class Reference {
       this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);
       return null;
     }
-    await this.LiteratureNote.updateLiteratureNote(key, entry, noConfirmUserData);
+    await this.LiteratureNote.updateLiteratureNote(key, entry, {noConfirmUserData});
     if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("文献内容刷新完毕, literatureId=>", {literatureId, key, title: entry.title});
     if (needRefresh) this.plugin.noticer.info((this.plugin.i18n.notices as any).refreshSingleLiteratureNoteSuccess, {key});
     return;

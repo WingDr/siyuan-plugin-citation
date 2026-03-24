@@ -42,7 +42,7 @@ export class LiteratureNote {
       // 2. 检查 literaturePool 中是否已存在（使用最终key）
       const existingDocId = this.plugin.literaturePool.get(final_key);
       if (existingDocId) {
-        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("文献文档已存在于literaturePool，key=>", final_key, "id=>", existingDocId);
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("文献文档已存在于literaturePool", { key: final_key, id: existingDocId });
         // 如果已存在，只更新内容，不创建新文档
         this.updateBatches.set(final_key, {entry, noConfirmUserData, mission: null});
         const mission = this.updateLiteratureNote(final_key, entry, {noConfirmUserData, userDataId: ""});
@@ -64,7 +64,7 @@ export class LiteratureNote {
         // 创建前再次检查 literaturePool（双重检查，防止竞争条件，使用最终key）
         const doubleCheckDocId = this.plugin.literaturePool.get(final_key);
         if (doubleCheckDocId) {
-          if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("双重检查发现文献已存在，key=>", final_key, "id=>", doubleCheckDocId);
+          if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("双重检查发现文献已存在", { key: final_key, id: doubleCheckDocId });
           const mission = this.updateLiteratureNote(final_key, entry, {noConfirmUserData, userDataId: ""});
           this.updateBatches.set(final_key, {entry, noConfirmUserData, mission});
           return;
@@ -75,7 +75,7 @@ export class LiteratureNote {
         userDataId = await this._updateEmptyNote(literatureId);
       } else {
         // 文档已存在，更新 literaturePool（使用最终key）
-        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("从数据库查询发现文献已存在，key=>", final_key, "id=>", data[0].id);
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("从数据库查询发现文献已存在", { key: final_key, id: data[0].id });
         this.plugin.literaturePool.set({id: data[0].id, key: final_key});
       }
 
