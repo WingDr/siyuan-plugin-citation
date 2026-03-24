@@ -6,11 +6,12 @@ import{
 } from "../utils/util";
 import { isDev, databaseType, STORAGE_NAME } from "../utils/constants";
 import { createLogger, type ILogger } from "../utils/simple-logger";
-import { 
+import {
   DataModal,
   FilesModal,
   ZoteroModal,
-  ZoteroDBModal
+  ZoteroDBModal,
+  ZoteroWebAPIModal
 } from "./modal";
 
 export type DatabaseType = typeof databaseType[number];
@@ -63,6 +64,14 @@ export class Database {
       }
       case "Juris-M (debug-bridge)": {
         this.dataModal = new ZoteroDBModal(this.plugin, "Juris-M", this.plugin.data[STORAGE_NAME].useItemKey);
+        break;
+      }
+      case "Zotero (Web API)": {
+        this.dataModal = new ZoteroWebAPIModal(this.plugin, "Zotero");
+        break;
+      }
+      case "Juris-M (Web API)": {
+        this.dataModal = new ZoteroWebAPIModal(this.plugin, "Juris-M");
         break;
       }
     }

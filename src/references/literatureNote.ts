@@ -29,28 +29,60 @@ export class LiteratureNote {
     }
 
     public async addLiteratureNotesToUpdateBatch(key: string, entry: any, noConfirmUserData=this.plugin.data[STORAGE_NAME].deleteUserDataWithoutConfirm) {
-      // 判断batch里面是否重复
-      if (this.updateBatches.has(key)) {
-        // this.plugin.noticer.error("文献更新任务已存在");
+      // 计算最终的 key（与 updateLiteratureNote 保持一致）
+      const useItemKey = this.plugin.data[STORAGE_NAME].useItemKey as boolean;
+      const final_key = "1_" + (useItemKey ? entry.itemKey : entry.citekey);
+
+      // 1. 检查batch里面是否重复（使用最终key）
+      if (this.updateBatches.has(final_key)) {
         if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("文献更新任务已存在，batch=>", this.updateBatches);
         return;
       }
-      // 首先进行占位
-      this.updateBatches.set(key, {entry, noConfirmUserData, mission:null});
-      // 检查文档是否存在，不存在则新建
+
+      // 2. 检查 literaturePool 中是否已存在（使用最终key）
+      const existingDocId = this.plugin.literaturePool.get(final_key);
+      if (existingDocId) {
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("文献文档已存在于literaturePool，key=>", final_key, "id=>", existingDocId);
+        // 如果已存在，只更新内容，不创建新文档
+        this.updateBatches.set(final_key, {entry, noConfirmUserData, mission: null});
+        const mission = this.updateLiteratureNote(final_key, entry, {noConfirmUserData, userDataId: ""});
+        this.updateBatches.set(final_key, {entry, noConfirmUserData, mission});
+        return;
+      }
+
+      // 3. 首先进行占位（防止并发，使用最终key）
+      this.updateBatches.set(final_key, {entry, noConfirmUserData, mission:null});
+
+      // 4. 检查文档是否存在，不存在则新建（使用最终key搜索）
       const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
       const refPath = this.plugin.data[STORAGE_NAME].referencePath as string;
-      const res = this.plugin.kernelApi.searchFileWithKey(notebookId, refPath + "/", key);
+      const res = this.plugin.kernelApi.searchFileWithKey(notebookId, refPath + "/", final_key);
       const data = (await res).data as any[];
       let userDataId = "";
+
       if (!data.length) {
-        const literatureId = await this._createEmptyNote(key, entry);
+        // 创建前再次检查 literaturePool（双重检查，防止竞争条件，使用最终key）
+        const doubleCheckDocId = this.plugin.literaturePool.get(final_key);
+        if (doubleCheckDocId) {
+          if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("双重检查发现文献已存在，key=>", final_key, "id=>", doubleCheckDocId);
+          const mission = this.updateLiteratureNote(final_key, entry, {noConfirmUserData, userDataId: ""});
+          this.updateBatches.set(final_key, {entry, noConfirmUserData, mission});
+          return;
+        }
+
+        // 创建时直接使用最终key
+        const literatureId = await this._createEmptyNote(final_key, entry);
         userDataId = await this._updateEmptyNote(literatureId);
+      } else {
+        // 文档已存在，更新 literaturePool（使用最终key）
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("从数据库查询发现文献已存在，key=>", final_key, "id=>", data[0].id);
+        this.plugin.literaturePool.set({id: data[0].id, key: final_key});
       }
-      // 这里仅新建文档不填充内容，在_processExistedLiteratureNote中会被判断为空文档然后填充
-      const mission = this.updateLiteratureNote(key, entry, {noConfirmUserData, userDataId});
+
+      // 这里仅新建文档不填充内容，在_processExistedLiteratureNote中会被判断为空文档然后填充（使用最终key）
+      const mission = this.updateLiteratureNote(final_key, entry, {noConfirmUserData, userDataId});
       // 这里更新内容
-      this.updateBatches.set(key, {entry, noConfirmUserData, mission});
+      this.updateBatches.set(final_key, {entry, noConfirmUserData, mission});
     }
 
     public async processUpdateBatches() {
@@ -73,13 +105,25 @@ export class LiteratureNote {
       const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
       const refPath = this.plugin.data[STORAGE_NAME].referencePath as string;
       const useItemKey = this.plugin.data[STORAGE_NAME].useItemKey as boolean;
-      const res = this.plugin.kernelApi.searchFileWithKey(notebookId, refPath + "/", key);
-      const data = (await res).data as any[];
-      let literatureId = "";
-      if (!data.length) {
-        literatureId = await this._createEmptyNote(key, entry);
-        userDataId = await this._updateEmptyNote(literatureId);
-      } else literatureId = data[0].id;
+
+      // 优先从 literaturePool 获取（新增）
+      let literatureId = this.plugin.literaturePool.get(key);
+
+      if (!literatureId) {
+        // literaturePool 中不存在，查询数据库
+        const res = this.plugin.kernelApi.searchFileWithKey(notebookId, refPath + "/", key);
+        const data = (await res).data as any[];
+
+        if (!data.length) {
+          literatureId = await this._createEmptyNote(key, entry);
+          userDataId = await this._updateEmptyNote(literatureId);
+        } else {
+          literatureId = data[0].id;
+          // 更新 literaturePool
+          this.plugin.literaturePool.set({id: literatureId, key});
+        }
+      }
+
       if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("已存在文献文档，id=>", {literatureId});
       // 保险起见更新一下字典
       this.plugin.literaturePool.set({id: literatureId, key});
@@ -580,6 +624,7 @@ export class LiteratureNote {
       const rootId = String(res.data);
       if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("创建文档，ID =>", rootId);
       // 将文献的基本内容塞到用户文档的自定义属性中
+      // 注意：这里直接使用传入的 key，该 key 应该已经是最终格式（在 addLiteratureNotesToUpdateBatch 中计算）
       await this.plugin.kernelApi.setBlockKey(rootId, key);
       // 新建文件之后也要更新对应字典
       this.plugin.literaturePool.set({id: rootId, key: key});

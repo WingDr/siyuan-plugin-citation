@@ -457,25 +457,48 @@ export class Reference {
     // if (fileId) literatureEnum = await this._getLiteratureEnum(fileId);
     const typeSetting = this.getCurrentTypeSetting(type_name);
     const existNotes = this.plugin.literaturePool.keys;
-    const insertContent = keys.map(async (key, i) => {
-      const idx = existNotes.indexOf(key);
+    const useItemKey = this.plugin.data[STORAGE_NAME].useItemKey as boolean;
+
+    // 先对keys去重，确保每个唯一的key只处理一次
+    const uniqueKeys = Array.from(new Set(keys));
+
+    // 串行处理每个唯一的key，确保文献笔记创建不会并发冲突
+    for (const key of uniqueKeys) {
       const entry = await this.plugin.database.getContentByKey(key);
       if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("从database中获得文献内容 =>", entry);
       if (!entry || !entry.key) {
         if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.error("找不到文献数据", {key, blockID: this.plugin.literaturePool.get(key)});
         if (errorReminder) this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);
+        continue;
+      }
+      // 串行处理，确保前一个key的文献笔记创建完成后再处理下一个
+      await this.LiteratureNote.addLiteratureNotesToUpdateBatch(key, entry);
+    }
+
+    // 等待所有批次处理完成
+    if (!outerBatch) await this.LiteratureNote.processUpdateBatches();
+
+    // 现在按照原始keys的顺序生成引用内容（可以并行，因为文献笔记已经创建完成）
+    const insertContent = keys.map(async (key, i) => {
+      const entry = await this.plugin.database.getContentByKey(key);
+      if (!entry || !entry.key) {
         return null;
       }
-      await this.LiteratureNote.addLiteratureNotesToUpdateBatch(key, entry);
-      // await this.LiteratureNote.updateLiteratureNote(key, entry);
-      const citeId = this.plugin.literaturePool.get(key);
-      const link = this._processMultiCitation(await this.Cite.generateCiteLink(key, idx, typeSetting, false), i, keys.length, typeSetting);
-      const name = await this.Cite.generateLiteratureName(key, typeSetting);
+      // 计算最终的key格式（与 addLiteratureNotesToUpdateBatch 中保持一致）
+      const final_key = "1_" + (useItemKey ? entry.itemKey : entry.citekey);
+      const idx = existNotes.indexOf(final_key);
+
+      // 使用 final_key 从 literaturePool 获取文档 ID
+      const citeId = this.plugin.literaturePool.get(final_key);
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获取文献文档ID", {key, final_key, citeId});
+
+      const link = this._processMultiCitation(await this.Cite.generateCiteLink(final_key, idx, typeSetting, false), i, keys.length, typeSetting);
+      const name = await this.Cite.generateLiteratureName(final_key, typeSetting);
       if (returnDetail) {
         let content = link;
         const customCiteText = this.plugin.data[STORAGE_NAME].customCiteText;
         const useDynamicRefLink = this.plugin.data[STORAGE_NAME].useDynamicRefLink;
-        if (customCiteText) content = await this.Cite.generateCiteLink(key, idx, typeSetting, true);
+        if (customCiteText) content = await this.Cite.generateCiteLink(final_key, idx, typeSetting, true);
         if (customCiteText && useDynamicRefLink) content = name;
         const citeRef = await this.Cite.generateCiteRef(citeId, link, name, typeSetting);
         return {
@@ -487,7 +510,6 @@ export class Reference {
       }
       return await this.Cite.generateCiteRef(citeId, link, name, typeSetting);
     });
-    if (!outerBatch) await this.LiteratureNote.processUpdateBatches();
     return await Promise.all(insertContent);
   }
 

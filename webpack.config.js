@@ -8,7 +8,8 @@ const ZipPlugin = require("zip-webpack-plugin");
 const sveltePreprocess = require("svelte-preprocess");
 
 module.exports = (env, argv) => {
-    const targetDir = "D:/Documents/SiYuan/data/plugins/siyuan-plugin-citation/";
+    // 使用环境变量或默认到当前目录，避免硬编码路径
+    const targetDir = process.env.SIYUAN_PLUGIN_DIR || path.resolve(__dirname);
     const isPro = argv.mode === "production";
     const plugins = [
         new MiniCssExtractPlugin({

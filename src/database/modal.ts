@@ -628,3 +628,313 @@ export class ZoteroDBModal extends DataModal {
     return resData;
   }
 }
+
+/**
+ * ZoteroWebAPIModal - 使用Zotero 7本地WebAPI访问数据
+ * 支持通过HTTP REST API获取items数据
+ */
+export class ZoteroWebAPIModal extends DataModal {
+  private type: ZoteroType;
+  private apiBaseUrl: string;
+  private searchOptions: any;
+  private fuse!: Fuse<any>;
+  private searchDialog!: SearchDialog;
+  private userId: string = "0"; // 本地API使用userId 0
+
+  constructor(plugin: SiYuanPluginCitation, zoteroType: ZoteroType, useItemKey?: boolean) {
+    super();
+    this.plugin = plugin;
+    this.type = zoteroType;
+    this.logger = createLogger(`zotero WebAPI modal: ${zoteroType}`);
+    this.apiBaseUrl = `http://127.0.0.1:${this._getPort(this.type)}/api`;
+    // Web API 模式强制使用 itemKey，不依赖 Better BibTeX
+    this.useItemKey = true;
+    this.searchOptions = {
+      includeScore: true,
+      includeMatches: true,
+      threshold: 0.6,
+      useExtendedSearch: true,
+      ignoreLocation: true,
+      keys: [
+        {name: "keystring", getFn: (entry: { title: string; year: string; authorString: string; }) => entry.title + "\n" + entry.year + "\n" + entry.authorString}
+      ]
+    };
+    if (isDev) this.logger.info("Web API 模式已启用，强制使用 itemKey 作为索引");
+  }
+
+  public async buildModal() {
+    if (isDev) this.logger.info(`Build ${this.type} WebAPI modal successfully`);
+  }
+
+  /**
+   * show searching dialog
+   */
+  public async showSearching(protyle: Protyle, onSelection: (keys: string[]) => void) {
+    this.protyle = protyle;
+    if (await this.checkZoteroRunning()) {
+      if (isDev) this.logger.info(`${this.type} WebAPI已运行`);
+      const items = await this.getAllItems();
+      if (isDev) this.logger.info(`从${this.type} WebAPI接收到数据 =>`, items);
+
+      const searchItems = items.map(item => {
+        return new EntryZoteroAdapter(item, this.useItemKey);
+      });
+      this.fuse = new Fuse(searchItems, this.searchOptions);
+      if (isDev) this.logger.info("打开搜索界面, searchItems=>", searchItems);
+      this.searchDialog = new SearchDialog(this.plugin);
+      const selectedList = this.selectedList.map(key => {
+        const item = searchItems.filter(item => item.key == key)[0];
+        return item ? {
+          key,
+          author: item.author[0] ? item.author[0].family! : item.title!,
+          year: "" + item.year
+        } : {key: "", author: "", year: ""};
+      }).filter(item => item.key != "");
+      this.searchDialog.showSearching(
+        this.search.bind(this),
+        onSelection,
+        selectedList
+      );
+    } else {
+      this.plugin.noticer.error(((this.plugin.i18n.errors as any).zoteroNotRunning as string), {type: this.type});
+    }
+  }
+
+  public async getContentFromKey(key: string, shortAuthorLimit: number = 2) {
+    if (await this.checkZoteroRunning()) {
+      const [libraryID, itemKey] = processKey(key);
+      if (isDev) this.logger.info(`请求${this.type} WebAPI导出数据, reqOpt=>`, {itemKey: itemKey, libraryID: libraryID});
+      const res = await this.getItemByItemKey(libraryID, itemKey);
+      if (isDev) this.logger.info(`请求${this.type} WebAPI数据返回, resJson=>`, res);
+      if (!res || !res.data) return null;
+
+      // 获取附件和注释
+      const children = await this.getChildrenByItemKey(libraryID, itemKey);
+      const zoteroData = this._convertWebAPIItemToZoteroData(res, children);
+
+      const zoteroEntry = new EntryZoteroAdapter(zoteroData, this.useItemKey, shortAuthorLimit);
+      const entry = getTemplateVariablesForZoteroEntry(zoteroEntry);
+      if (entry.files) entry.files = entry.files.join("\n");
+      if (isDev) this.logger.info("文献内容 =>", entry);
+      return entry;
+    } else {
+      this.plugin.noticer.error(((this.plugin.i18n.errors as any).zoteroNotRunning as string), {type: this.type});
+      return null;
+    }
+  }
+
+  public async getCollectedNotesFromKey(key: string) {
+    if (await this.checkZoteroRunning()) {
+      const [libraryID, itemKey] = processKey(key);
+      const notes = await this.getNotesByItemKey(libraryID, itemKey);
+      if (isDev) this.logger.info(`请求${this.type} WebAPI笔记返回, resJson=>`, notes);
+      return (await Promise.all(notes.map(async (singleNote: any, index: number) => {
+        const processor = new NoteProcessor(this.plugin);
+        const noteContent = singleNote.data.note || "";
+        return `\n\n---\n\n###### Note No.${index+1}\t[[Locate]](zotero://select/items/${singleNote.key}/)\n\n\n\n` + await processor.processNote(htmlNotesProcess(noteContent.replace(/\\(.?)/g, (m: any, p1: any) => p1)));
+      }))).join("\n\n");
+    } else {
+      this.plugin.noticer.error(((this.plugin.i18n.errors as any).zoteroNotRunning as string), {type: this.type});
+      return "";
+    }
+  }
+
+  public getTotalKeys(): string[] {
+    return this.plugin.literaturePool.keys;
+  }
+
+  private search(pattern: string) {
+    const adaptedSearchPattern = pattern.split(" ").filter(pt => pt != "").reduce((previousValue, currentValue) => previousValue + ` '${currentValue}`, "");
+    return this.fuse.search(adaptedSearchPattern);
+  }
+
+  private _getPort(type: ZoteroType): "23119" | "24119" {
+    return type === "Zotero" ? "23119" : "24119";
+  }
+
+  private async checkZoteroRunning(): Promise<boolean> {
+    return axios({
+      method: "get",
+      url: `${this.apiBaseUrl}/users/${this.userId}/items?limit=1`,
+      headers: {
+        "Zotero-API-Version": "3"
+      }
+    })
+    .then(res => Array.isArray(res.data))
+    .catch(e => {
+      if (isDev) this.logger.error(e);
+      return false;
+    });
+  }
+
+  private async getAllItems(): Promise<EntryDataZotero[]> {
+    const items: any[] = [];
+    let start = 0;
+    const limit = 100;
+
+    while (true) {
+      const res = await axios({
+        method: "get",
+        url: `${this.apiBaseUrl}/users/${this.userId}/items?start=${start}&limit=${limit}&itemType=-attachment || -note || -annotation`,
+        headers: {
+          "Zotero-API-Version": "3"
+        }
+      });
+
+      if (!res.data || res.data.length === 0) break;
+      items.push(...res.data);
+      if (res.data.length < limit) break;
+      start += limit;
+    }
+
+    if (isDev) this.logger.info(`从WebAPI获取到${items.length}个items`);
+    return items.map(item => this._convertWebAPIItemToZoteroData(item));
+  }
+
+  private async getItemByItemKey(libraryID: number, itemKey: string) {
+    return axios({
+      method: "get",
+      url: `${this.apiBaseUrl}/users/${this.userId}/items/${itemKey}`,
+      headers: {
+        "Zotero-API-Version": "3"
+      }
+    })
+    .then(res => res.data)
+    .catch(e => {
+      if (isDev) this.logger.error("获取item失败", e);
+      return null;
+    });
+  }
+
+  private async getNotesByItemKey(libraryID: number, itemKey: string): Promise<any[]> {
+    return axios({
+      method: "get",
+      url: `${this.apiBaseUrl}/users/${this.userId}/items/${itemKey}/children`,
+      headers: {
+        "Zotero-API-Version": "3"
+      }
+    })
+    .then(res => {
+      return res.data.filter((child: any) => child.data.itemType === "note");
+    })
+    .catch(e => {
+      if (isDev) this.logger.error("获取notes失败", e);
+      return [];
+    });
+  }
+
+  private async getChildrenByItemKey(libraryID: number, itemKey: string): Promise<any[]> {
+    return axios({
+      method: "get",
+      url: `${this.apiBaseUrl}/users/${this.userId}/items/${itemKey}/children`,
+      headers: {
+        "Zotero-API-Version": "3"
+      }
+    })
+    .then(res => res.data)
+    .catch(e => {
+      if (isDev) this.logger.error("获取children失败", e);
+      return [];
+    });
+  }
+
+  /**
+   * 将WebAPI返回的item格式转换为EntryDataZotero格式
+   */
+  private _convertWebAPIItemToZoteroData(webAPIItem: any, children: any[] = []): EntryDataZotero {
+    const data = webAPIItem.data;
+    const library = webAPIItem.library;
+
+    // 处理附件
+    const attachments = children
+      .filter(child => child.data.itemType === "attachment")
+      .map(attach => {
+        const attachData = attach.data;
+        const filePath = attach.links?.enclosure?.href?.replace(/^file:\/\//, "") || "";
+        return {
+          key: attach.key,
+          title: attachData.title || attachData.filename || "Attachment",
+          path: filePath,
+          select: `zotero://select/library/items/${attach.key}`,
+          contentType: attachData.contentType,
+          filename: attachData.filename
+        };
+      });
+
+    // 处理笔记
+    const notes = children
+      .filter(child => child.data.itemType === "note")
+      .map(note => {
+        return {
+          key: note.key,
+          note: note.data.note || "",
+          itemType: "note"
+        };
+      });
+
+    // 处理注释（如果有）
+    const annotations: any[] = [];
+
+    // 从 extra 字段提取 Citation Key
+    // Better BibTeX 可能使用多种格式存储 Citation Key
+    let citekey = "";
+    if (data.extra) {
+      const patterns = [
+        /Citation Key:\s*(.+)/i,     // Better BibTeX 标准格式
+        /bibtex:\s*(.+)/i,            // 旧版格式
+        /bibtex\*:\s*(.+)/i,          // 带星号格式
+        /tex\.ids:\s*(.+)/i,          // tex.ids 格式
+      ];
+
+      for (const pattern of patterns) {
+        const match = data.extra.match(pattern);
+        if (match) {
+          // 提取第一行作为 citekey（避免多行的情况）
+          citekey = match[1].split('\n')[0].trim();
+          break;
+        }
+      }
+    }
+
+    return {
+      abstractNote: data.abstractNote,
+      accessDate: data.accessDate,
+      attachments: attachments,
+      annotations: annotations,
+      citekey: citekey,
+      citationKey: citekey,
+      conferenceName: data.conferenceName,
+      creators: data.creators,
+      thesisType: data.thesisType,
+      date: data.date,
+      dateAdded: data.dateAdded,
+      dateModified: data.dateModified,
+      DOI: data.DOI,
+      edition: data.edition,
+      eprint: data.eprint,
+      eprinttype: data.eprinttype,
+      ISBN: data.ISBN,
+      ISSN: data.ISSN,
+      itemID: library.id,
+      itemKey: webAPIItem.key,
+      itemType: data.itemType,
+      language: data.language,
+      libraryID: library.id,
+      journalAbbreviation: data.journalAbbreviation,
+      notes: notes,
+      numPages: data.numPages,
+      pages: data.pages,
+      place: data.place,
+      primaryClass: data.primaryClass,
+      proceedingsTitle: data.proceedingsTitle,
+      publisher: data.publisher,
+      publicationTitle: data.publicationTitle,
+      relations: data.relations,
+      tags: data.tags,
+      title: data.title,
+      university: data.university,
+      url: data.url,
+      volume: data.volume
+    };
+  }
+}

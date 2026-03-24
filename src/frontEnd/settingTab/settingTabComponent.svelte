@@ -415,7 +415,12 @@
   }
 
   function _checkDebugBridge(dtype: string): boolean {
-    if (["Zotero (debug-bridge)", "Juris-M (debug-bridge)"].indexOf(dtype) != -1) return true;
+    if (["Zotero (debug-bridge)", "Juris-M (debug-bridge)", "Zotero (Web API)", "Juris-M (Web API)"].indexOf(dtype) != -1) return true;
+    else return false;
+  }
+
+  function _checkWebAPI(dtype: string): boolean {
+    if (["Zotero (Web API)", "Juris-M (Web API)"].indexOf(dtype) != -1) return true;
     else return false;
   }
 
@@ -480,6 +485,7 @@
     linkTemplatesGroup = [...linkTemplatesGroup.slice(0, id), ...linkTemplatesGroup.slice(id+1)]
   }
   let isDebugBridge = $derived(_checkDebugBridge(database));
+  let isWebAPI = $derived(_checkWebAPI(database));
 
   async function getAttrViewSuggests(attrViewBlock: string) {
     let res = await plugin.kernelApi.getBlock(attrViewBlock);
@@ -602,22 +608,27 @@
         <Item
           block={false}
           title={(plugin.i18n.settingTab as any).basic.UseItemKeySwitchTitle}
-          text={(plugin.i18n.settingTab as any).basic.UseItemKeySwitchDescription}
+          text={isWebAPI
+            ? "Web API 模式强制使用 itemKey 作为索引（无需 Better BibTeX 插件）。此选项仅对 debug-bridge 模式有效。"
+            : (plugin.i18n.settingTab as any).basic.UseItemKeySwitchDescription}
         >
           {#snippet input()}
                 <Input
-              
+
               block={false}
               normal={true}
               type={ItemType.checkbox}
               settingKey="Checkbox"
-              settingValue={useItemKey}
+              settingValue={isWebAPI ? true : useItemKey}
+              disabled={isWebAPI}
               onchanged={(event) => {
                 if (isDev)
                   logger.info(
                     `Checkbox changed: ${event.detail.key} = ${event.detail.value}`
                   );
-                useItemKey = event.detail.value;
+                if (!isWebAPI) {
+                  useItemKey = event.detail.value;
+                }
               }}
             />
               {/snippet}
