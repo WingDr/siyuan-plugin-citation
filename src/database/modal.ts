@@ -2,7 +2,8 @@ import Fuse from "fuse.js";
 import axios from "axios";
 
 import {
-  Protyle
+  Protyle,
+  getFrontend
 } from "siyuan";
 import SiYuanPluginCitation from "../index";
 import {
@@ -24,7 +25,7 @@ import {
 } from "../frontEnd/searchDialog/searchDialog";
 import { htmlNotesProcess } from "../utils/notes";
 import { createLogger, type ILogger } from "../utils/simple-logger";
-import { isDev, REF_DIR_PATH, STORAGE_NAME } from "../utils/constants";
+import { isDev, REF_DIR_PATH, STORAGE_NAME, workspaceDir } from "../utils/constants";
 import { fileSearch, generateFileLinks } from "../utils/util";
 import { NoteProcessor } from "../references/noteProcessor";
 
@@ -640,6 +641,7 @@ export class ZoteroWebAPIModal extends DataModal {
   private fuse!: Fuse<any>;
   private searchDialog!: SearchDialog;
   private userId: string = "0"; // 本地API使用userId 0
+  private tempAttachmentDir = "/temp/plugins/siyuan-plugin-citation/zotero";
 
   constructor(plugin: SiYuanPluginCitation, zoteroType: ZoteroType) {
     super();
@@ -742,6 +744,18 @@ export class ZoteroWebAPIModal extends DataModal {
     return this.plugin.literaturePool.keys;
   }
 
+  public async getAttachmentByItemKey(itemKey: string): Promise<any> {
+    if (!(await this.checkZoteroRunning())) return null;
+    const attachment = await this.getItemByItemKey(1, itemKey);
+    if (!attachment?.data || attachment.data.itemType !== "attachment") return null;
+    const detail = this._convertWebAPIAttachmentToDetail(attachment);
+    const tempPath = await this.materializeAttachmentToTemp(detail);
+    return {
+      ...detail,
+      path: tempPath
+    };
+  }
+
   private search(pattern: string) {
     const adaptedSearchPattern = pattern.split(" ").filter(pt => pt != "").reduce((previousValue, currentValue) => previousValue + ` '${currentValue}`, "");
     return this.fuse.search(adaptedSearchPattern);
@@ -751,13 +765,23 @@ export class ZoteroWebAPIModal extends DataModal {
     return type === "Zotero" ? "23119" : "24119";
   }
 
+  private getWebAPIHeaders() {
+    return {
+      ...defaultHeaders,
+      "Zotero-API-Version": "3"
+    };
+  }
+
+  private isSearchableWebAPIItem(item: any): boolean {
+    const itemType = item?.data?.itemType;
+    return !item?.data?.parentItem && !["attachment", "note", "annotation"].includes(itemType);
+  }
+
   private async checkZoteroRunning(): Promise<boolean> {
     return axios({
       method: "get",
       url: `${this.apiBaseUrl}/users/${this.userId}/items?limit=1`,
-      headers: {
-        "Zotero-API-Version": "3"
-      }
+      headers: this.getWebAPIHeaders()
     })
     .then(res => Array.isArray(res.data))
     .catch(e => {
@@ -772,16 +796,17 @@ export class ZoteroWebAPIModal extends DataModal {
     const limit = 100;
 
     while (true) {
+      // `/items` 会返回子项（附件、笔记、批注），而 `/items/top` 只返回顶层条目。
+      // 本地 Zotero Web API 实测下，`itemType=-attachment || -note || -annotation`
+      // 仍然可能混入 PDF 附件，因此这里改为 top-level endpoint，并保留本地过滤兜底。
       const res = await axios({
         method: "get",
-        url: `${this.apiBaseUrl}/users/${this.userId}/items?start=${start}&limit=${limit}&itemType=-attachment || -note || -annotation`,
-        headers: {
-          "Zotero-API-Version": "3"
-        }
+        url: `${this.apiBaseUrl}/users/${this.userId}/items/top?start=${start}&limit=${limit}`,
+        headers: this.getWebAPIHeaders()
       });
 
       if (!res.data || res.data.length === 0) break;
-      items.push(...res.data);
+      items.push(...res.data.filter((item: any) => this.isSearchableWebAPIItem(item)));
       if (res.data.length < limit) break;
       start += limit;
     }
@@ -794,9 +819,7 @@ export class ZoteroWebAPIModal extends DataModal {
     return axios({
       method: "get",
       url: `${this.apiBaseUrl}/users/${this.userId}/items/${itemKey}`,
-      headers: {
-        "Zotero-API-Version": "3"
-      }
+      headers: this.getWebAPIHeaders()
     })
     .then(res => res.data)
     .catch(e => {
@@ -809,9 +832,7 @@ export class ZoteroWebAPIModal extends DataModal {
     return axios({
       method: "get",
       url: `${this.apiBaseUrl}/users/${this.userId}/items/${itemKey}/children`,
-      headers: {
-        "Zotero-API-Version": "3"
-      }
+      headers: this.getWebAPIHeaders()
     })
     .then(res => {
       return res.data.filter((child: any) => child.data.itemType === "note");
@@ -826,15 +847,117 @@ export class ZoteroWebAPIModal extends DataModal {
     return axios({
       method: "get",
       url: `${this.apiBaseUrl}/users/${this.userId}/items/${itemKey}/children`,
-      headers: {
-        "Zotero-API-Version": "3"
-      }
+      headers: this.getWebAPIHeaders()
     })
     .then(res => res.data)
     .catch(e => {
       if (isDev) this.logger.error("获取children失败", e);
       return [];
     });
+  }
+
+  private getNodeRuntime() {
+    const runtimeRequire = (globalThis as any).__non_webpack_require__ || (window as any).require;
+    if (!runtimeRequire) return null;
+    return {
+      fs: runtimeRequire("fs/promises"),
+      http: runtimeRequire("http"),
+      https: runtimeRequire("https"),
+      path: runtimeRequire("path"),
+      fileURLToPath: runtimeRequire("url").fileURLToPath
+    };
+  }
+
+  private getAttachmentExtension(detail: any): string {
+    const filename = detail?.filename || "";
+    const matchedExt = filename.match(/(\.[A-Za-z0-9]+)$/)?.[1];
+    if (matchedExt) return matchedExt.toLowerCase();
+
+    switch (detail?.contentType) {
+      case "image/jpeg": return ".jpg";
+      case "image/png": return ".png";
+      case "image/webp": return ".webp";
+      case "image/gif": return ".gif";
+      case "application/pdf": return ".pdf";
+      default: return ".png";
+    }
+  }
+
+  private getTempAttachmentPath(itemKey: string, extension: string) {
+    const tempRelativePath = `${this.tempAttachmentDir}/${itemKey}${extension}`;
+    const runtime = this.getNodeRuntime();
+    const tempAbsolutePath = runtime
+      ? runtime.path.join(workspaceDir, "temp", "plugins", "siyuan-plugin-citation", "zotero", `${itemKey}${extension}`)
+      : `${workspaceDir}/temp/plugins/siyuan-plugin-citation/zotero/${itemKey}${extension}`;
+    return {
+      tempRelativePath,
+      tempAbsolutePath
+    };
+  }
+
+  private async resolveAttachmentSourcePath(downloadUrl: string): Promise<string | null> {
+    const runtime = this.getNodeRuntime();
+    if (!runtime) return null;
+
+    return await new Promise((resolve) => {
+      const isHttps = downloadUrl.startsWith("https://");
+      const client = isHttps ? runtime.https : runtime.http;
+      const req = client.get(downloadUrl, {
+        headers: this.getWebAPIHeaders()
+      }, (res: any) => {
+        res.resume();
+        const location = res.headers?.location as string | undefined;
+        if (res.statusCode !== 302 || !location?.startsWith("file://")) {
+          resolve(null);
+          return;
+        }
+        resolve(runtime.fileURLToPath(location));
+      });
+
+      req.on("error", () => resolve(null));
+    });
+  }
+
+  private async materializeAttachmentToTemp(detail: any): Promise<string> {
+    if (!detail?.downloadUrl) return "";
+    if (["browser-desktop", "browser-mobile", "mobile"].includes(getFrontend())) return "";
+
+    const runtime = this.getNodeRuntime();
+    if (!runtime) return "";
+
+    const extension = this.getAttachmentExtension(detail);
+    const { tempRelativePath, tempAbsolutePath } = this.getTempAttachmentPath(detail.key, extension);
+    if (await this.plugin.kernelApi.getFile(tempRelativePath, "any")) return tempAbsolutePath;
+
+    try {
+      await this.plugin.kernelApi.putFile(this.tempAttachmentDir, true, "");
+      const sourcePath = await this.resolveAttachmentSourcePath(detail.downloadUrl);
+      if (!sourcePath?.length) return "";
+
+      const buffer = await runtime.fs.readFile(sourcePath);
+      await this.plugin.kernelApi.putFile(tempRelativePath, false, new Blob([buffer]));
+      return tempAbsolutePath;
+    } catch (e) {
+      if (isDev) this.logger.error("写入WebAPI attachment临时文件失败", e);
+      return "";
+    }
+  }
+
+  private _convertWebAPIAttachmentToDetail(webAPIItem: any) {
+    const data = webAPIItem?.data ?? {};
+    const itemKey = webAPIItem?.key ?? data.key;
+
+    return {
+      key: itemKey,
+      itemType: data.itemType,
+      path: "",
+      downloadUrl: `${this.apiBaseUrl}/users/${this.userId}/items/${itemKey}/file`,
+      select: `zotero://select/library/items/${itemKey}`,
+      parentKey: data.parentItem,
+      libraryID: webAPIItem?.library?.id,
+      itemID: webAPIItem?.library?.id,
+      ...data
+    };
   }
 
   /**
