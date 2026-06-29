@@ -456,7 +456,6 @@ export class Reference {
     // let literatureEnum = [];
     // if (fileId) literatureEnum = await this._getLiteratureEnum(fileId);
     const typeSetting = this.getCurrentTypeSetting(type_name);
-    const existNotes = this.plugin.literaturePool.keys;
     const useItemKey = this.plugin.data[STORAGE_NAME].useItemKey as boolean;
 
     // 先对keys去重，确保每个唯一的key只处理一次
@@ -477,6 +476,9 @@ export class Reference {
 
     // 等待所有批次处理完成
     if (!outerBatch) await this.LiteratureNote.processUpdateBatches();
+
+    // 批次处理后重新读取文献池，确保包含本轮新建的文档
+    const existNotes = this.plugin.literaturePool.keys;
 
     // 现在按照原始keys的顺序生成引用内容（可以并行，因为文献笔记已经创建完成）
     const insertContent = keys.map(async (key, i) => {
