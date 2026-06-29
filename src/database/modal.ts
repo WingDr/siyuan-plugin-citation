@@ -446,6 +446,7 @@ export class ZoteroDBModal extends DataModal {
   }
 
   public async getContentFromKey (key: string, shortAuthorLimit: number = 2) {
+    console.log("getContentFromKey, Key=>", key);
     const itemKey = await this.checkBeforeRunning(key);
     if (itemKey) {
       const res = await this.getItemByItemKey(...processKey(itemKey));
@@ -506,7 +507,9 @@ export class ZoteroDBModal extends DataModal {
 
   private async checkBeforeRunning(key: string): Promise<string | null | false> {
     if (await this.checkZoteroRunning()) {
+      console.log("checkBeforeRunning, Key=>", key);
       let itemKey = this.useItemKey ? key : await this.getItemKeyByCitekey(...processKey(key));
+      console.log("checkBeforeRunning, itemKey=>", itemKey);
       if (!(await this.checkItemKeyExist(...processKey(itemKey)))) itemKey = this.useItemKey ? await this.getItemKeyByCitekey(...processKey(key)) : key;
       if (!processKey(itemKey)[1]?.length) {
         this.logger.error("不存在key，key=>", {itemKey, key, processed: processKey(key)});
@@ -537,7 +540,7 @@ export class ZoteroDBModal extends DataModal {
   }
 
   private async checkItemKeyExist(libraryID: number, itemKey: string): Promise<boolean> {
-    if (!itemKey.length) return false;
+    if (!itemKey || !itemKey.length) return false;
     return (await this._callZoteroJS("checkItemKeyExist", `
       var key = "${itemKey}";
       var libraryID = ${libraryID};
