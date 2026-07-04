@@ -281,8 +281,18 @@ export class LiteratureNote {
         }]);
         if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("插入数据库api返回", res);
       }
-      // 生成插入数据
-      const dataString = generateFromTemplate(attrViewTemplate, entry);
+      // 生成插入数据（为模板中可能用到的变量提供默认值，避免 entry 缺少字段时 template.js 报 undefined）
+      const dataString = generateFromTemplate(attrViewTemplate, {
+        entry,
+        issued: "",
+        year: "",
+        authorString: "",
+        containerTitle: "",
+        DOI: "",
+        URL: "",
+        zoteroSelectURI: "",
+        ...entry,
+      });
       if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("根据模板生成属性=>", {dataString});
       try { 
         JSON.parse(dataString);
