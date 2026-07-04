@@ -86,13 +86,8 @@
   }
 
   function selectLikeValue(colType: string, contentTpl: string, colorTpl: string): string {
-    if (colType === "mSelect") {
-      return `{"mSelect":[{"content":"{{ ${contentTpl} }}","color":"{{ ${colorTpl} }}"}]}`;
-    }
-    if (colType === "select") {
-      return `{"select":{"content":"{{ ${contentTpl} }}","color":"{{ ${colorTpl} }}"}}`;
-    }
-    return `{"text":{"content":"{{ ${contentTpl} }}"}}`;
+    // 思源单选/多选列统一使用 mSelect 格式，单选最多传一项
+    return `{"mSelect":[{"content":"{{ ${contentTpl} }}","color":"{{ ${colorTpl} }}"}]}`;
   }
 
   function getBuiltinValueSnippet(mode: string, colType: string): string {
