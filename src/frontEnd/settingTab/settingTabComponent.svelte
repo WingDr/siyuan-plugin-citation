@@ -38,6 +38,195 @@
     refreshLiteratureNoteTitle: (titleTemplate: string) => void;
   }
 
+  interface AttrViewColumnConfig {
+    keyID: string;
+    name: string;
+    type: string;
+    mode: string;
+    customValue: string;
+  }
+
+  const attrViewFillOptionDefs = [
+    { key: "", text: "不填充", types: ["*"] },
+    { key: "firstAuthor", text: "第一作者", types: ["select", "mSelect"] },
+    { key: "correspondingAuthor", text: "通讯作者", types: ["select", "mSelect"] },
+    { key: "journal", text: "发表期刊", types: ["select", "mSelect"] },
+    { key: "date", text: "发表日期", types: ["date"] },
+    { key: "zoteroUrl", text: "Zotero URL", types: ["url"] },
+    { key: "url", text: "URL", types: ["url"] },
+    { key: "custom", text: "自定义", types: ["*"] },
+  ];
+
+  function getFillOptionsForType(colType: string): IOptions {
+    return attrViewFillOptionDefs
+      .filter((def) => def.types.includes("*") || def.types.includes(colType))
+      .map((def) => ({ key: def.key, text: def.text }));
+  }
+
+  function isModeAllowedForType(mode: string, colType: string): boolean {
+    if (!mode || mode === "custom") return true;
+    const def = attrViewFillOptionDefs.find((d) => d.key === mode);
+    return !!def && (def.types.includes("*") || def.types.includes(colType));
+  }
+
+  function matchBuiltinModeByName(name: string): string {
+    const map: Record<string, string> = {
+      "第一作者": "firstAuthor",
+      "通讯作者": "correspondingAuthor",
+      "发表期刊": "journal",
+      "发表日期": "date",
+      "zotero url": "zoteroUrl",
+      "zotero_url": "zoteroUrl",
+      "zoterourl": "zoteroUrl",
+      "url": "url",
+      "链接": "url",
+      "网址": "url",
+    };
+    return map[name.trim().toLowerCase()] ?? "";
+  }
+
+  function selectLikeValue(colType: string, contentTpl: string, colorTpl: string): string {
+    if (colType === "mSelect") {
+      return `{"mSelect":[{"content":"{{ ${contentTpl} }}","color":"{{ ${colorTpl} }}"}]}`;
+    }
+    if (colType === "select") {
+      return `{"select":{"content":"{{ ${contentTpl} }}","color":"{{ ${colorTpl} }}"}}`;
+    }
+    return `{"text":{"content":"{{ ${contentTpl} }}"}}`;
+  }
+
+  function getBuiltinValueSnippet(mode: string, colType: string): string {
+    const randColor = "(Math.floor(Math.random() * 13) + 1).toString()";
+    switch (mode) {
+      case "firstAuthor":
+        return selectLikeValue(colType, "authorString ? authorString.split(', ')?.[0]:''", randColor);
+      case "correspondingAuthor":
+        return selectLikeValue(colType, "authorString ? authorString.split(', ').pop():''", randColor);
+      case "journal":
+        return selectLikeValue(colType, "containerTitle? containerTitle: ''", randColor);
+      case "date":
+        return `{"date":{"content":{{ issued && !isNaN(new Date(issued)) ? new Date(issued).getTime() : (year ? new Date(year, 0, 1).getTime() : '') }}, "isNotEmpty":{{ year ? 'true' : 'false' }}, "isNotTime":{{ year ? 'true' : 'false' }}}}`;
+      case "zoteroUrl":
+        return `{"url":{"content":"{{ zoteroSelectURI }}"}}`;
+      case "url":
+        return `{"url":{"content":"{{ DOI ? 'https://doi.org/'+DOI : (URL ? URL : '') }}"}}`;
+      default:
+        return "";
+    }
+  }
+
+  function parseAttrViewTemplate(templateStr: string): Record<string, string> {
+    const result: Record<string, string> = {};
+    if (!templateStr || !templateStr.trim().length) return result;
+    const s = templateStr.trim();
+    if (!s.startsWith("[") || !s.endsWith("]")) return result;
+
+    let i = 1;
+    const len = s.length - 1;
+    while (i < len) {
+      while (i < len && /[\s,]/.test(s[i])) i++;
+      if (i >= len || s[i] !== "{") {
+        i++;
+        continue;
+      }
+      const objStart = i;
+      let depth = 0;
+      let inString = false;
+      let escape = false;
+      for (; i < s.length; i++) {
+        const c = s[i];
+        if (inString) {
+          if (escape) {
+            escape = false;
+          } else if (c === "\\") {
+            escape = true;
+          } else if (c === '"') {
+            inString = false;
+          }
+          continue;
+        }
+        if (c === '"') {
+          inString = true;
+          continue;
+        }
+        // 跳过模板表达式 {{ 和 }}
+        if (c === "{" && s[i + 1] === "{") {
+          i++;
+          continue;
+        }
+        if (c === "}" && s[i + 1] === "}") {
+          i++;
+          continue;
+        }
+        if (c === "{" || c === "[") depth++;
+        else if (c === "}" || c === "]") depth--;
+        if (depth === 0 && c === "}") {
+          i++;
+          break;
+        }
+      }
+      const objStr = s.slice(objStart, i);
+      const keyMatch = objStr.match(/"keyID"\s*:\s*"([^"]+)"/);
+      if (!keyMatch) continue;
+      const valueStart = objStr.indexOf("{", objStr.search(/"value"\s*:/));
+      if (valueStart === -1) continue;
+      let valueEnd = -1;
+      let vDepth = 0;
+      let vInString = false;
+      let vEscape = false;
+      for (let j = valueStart; j < objStr.length; j++) {
+        const c = objStr[j];
+        if (vInString) {
+          if (vEscape) {
+            vEscape = false;
+          } else if (c === "\\") {
+            vEscape = true;
+          } else if (c === '"') {
+            vInString = false;
+          }
+          continue;
+        }
+        if (c === '"') {
+          vInString = true;
+          continue;
+        }
+        // 跳过模板表达式 {{ 和 }}
+        if (c === "{" && objStr[j + 1] === "{") {
+          j++;
+          continue;
+        }
+        if (c === "}" && objStr[j + 1] === "}") {
+          j++;
+          continue;
+        }
+        if (c === "{" || c === "[") vDepth++;
+        else if (c === "}" || c === "]") vDepth--;
+        if (vDepth === 0 && c === "}") {
+          valueEnd = j + 1;
+          break;
+        }
+      }
+      if (valueEnd !== -1) {
+        result[keyMatch[1]] = objStr.slice(valueStart, valueEnd);
+      }
+    }
+    return result;
+  }
+
+  function buildAttrViewTemplate(configs: AttrViewColumnConfig[]): string {
+    const entries = configs
+      .filter((c) => c.mode && (c.mode !== "custom" || c.customValue.trim()))
+      .map((c) => {
+        const valueSnippet =
+          c.mode === "custom" ? c.customValue : getBuiltinValueSnippet(c.mode, c.type);
+        if (!valueSnippet) return null;
+        return `  {\n    "keyID": "${c.keyID}",\n    "value": ${valueSnippet}\n  }`;
+      })
+      .filter((item): item is string => !!item);
+    if (!entries.length) return "";
+    return `[\n${entries.join(",\n")}\n]`;
+  }
+
   let {
     plugin = $bindable(),
     logger,
@@ -129,8 +318,9 @@
   let useWholeDocAsUserData: string = $state()!;
   // 数据库相关设定变量
   let attrViewBlock: string = $state()!;
-  let attrViewTemplate: string = $state()!;
-  let attrViewSuggest: string = $state("");
+  let attrViewColumnConfigs: AttrViewColumnConfig[] = $state([]);
+  let attrViewCustomMap: Record<string, string> = $state({});
+  let attrViewTemplate = $derived(buildAttrViewTemplate(attrViewColumnConfigs));
   // Zotero模板设定变量
   let zoteroLinkTitleTemplate: string = $state()!;
   let zoteroTagTemplate: string = $state()!;
@@ -308,9 +498,10 @@
     shortAuthorLimit = plugin.data[STORAGE_NAME]?.shortAuthorLimit ?? defaultSettingData.shortAuthorLimit;
     // 默认数据库块id
     attrViewBlock = plugin.data[STORAGE_NAME]?.attrViewBlock ?? defaultSettingData.attrViewBlock;
+    // 数据库列配置：优先读取已保存配置，否则从旧 attrViewTemplate 迁移
+    attrViewColumnConfigs = plugin.data[STORAGE_NAME]?.attrViewColumnConfigs ?? defaultSettingData.attrViewColumnConfigs;
+    attrViewCustomMap = parseAttrViewTemplate(plugin.data[STORAGE_NAME]?.attrViewTemplate ?? defaultSettingData.attrViewTemplate);
     getAttrViewSuggests(attrViewBlock);
-    // 默认数据库模板
-    attrViewTemplate = plugin.data[STORAGE_NAME]?.attrViewTemplate ?? defaultSettingData.attrViewTemplate;
     // 默认多个引用的前缀、后缀、连接符
     multiCitePrefix = plugin.data[STORAGE_NAME]?.multiCitePrefix ?? defaultSettingData.multiCitePrefix;
     multiCiteConnector = plugin.data[STORAGE_NAME]?.multiCiteConnector ?? defaultSettingData.multiCiteConnector;
@@ -375,6 +566,7 @@
       multiCiteSuffix,
       attrViewBlock,
       attrViewTemplate,
+      attrViewColumnConfigs: $state.snapshot(attrViewColumnConfigs),
       useWholeDocAsUserData,
       userDataTemplatePath,
       useDefaultCiteType,
@@ -488,17 +680,62 @@
   let isWebAPI = $derived(_checkWebAPI(database));
 
   async function getAttrViewSuggests(attrViewBlock: string) {
-    let res = await plugin.kernelApi.getBlock(attrViewBlock);
-    const content = (res.data as any[])[0].markdown as string;
-    const avIdReg = /.*data-av-id=\"(.*?)\".*/;
-    const avID = content.match(avIdReg)![1];
-    res = await plugin.kernelApi.getAttributeView(avID);
-    const av = (res.data as any).av;
-    if (isDev) console.log("av=>", av);
-    if (!av) attrViewSuggest = "";
-    else attrViewSuggest = av.keyValues.map((item: { key: { id: string; name: string; type: string; }; }) => {
-      return `id: ${item.key.id}, name: ${item.key.name}, type: ${item.key.type}`
-    }).join("<br>");
+    if (!attrViewBlock || !attrViewBlock.trim().length) {
+      attrViewColumnConfigs = [];
+      return;
+    }
+    try {
+      let res = await plugin.kernelApi.getBlock(attrViewBlock);
+      if (!res.data || !(res.data as any[]).length) {
+        attrViewColumnConfigs = [];
+        return;
+      }
+      const content = (res.data as any[])[0].markdown as string;
+      const avIdReg = /.*data-av-id=\"(.*?)\".*/;
+      const match = content.match(avIdReg);
+      if (!match || !match[1]) {
+        attrViewColumnConfigs = [];
+        return;
+      }
+      const avID = match[1];
+      res = await plugin.kernelApi.getAttributeView(avID);
+      const av = (res.data as any).av;
+      if (isDev) console.log("av=>", av);
+      if (!av || !av.keyValues) {
+        attrViewColumnConfigs = [];
+        return;
+      }
+      const savedMap: Record<string, AttrViewColumnConfig> = {};
+      for (const c of attrViewColumnConfigs) savedMap[c.keyID] = c;
+      attrViewColumnConfigs = av.keyValues.map((item: { key: { id: string; name: string; type: string } }) => {
+        const key = item.key;
+        const saved = savedMap[key.id];
+        const migratedCustom = attrViewCustomMap[key.id];
+        let mode = saved?.mode ?? "";
+        let customValue = saved?.customValue ?? "";
+        if (!mode && migratedCustom !== undefined) {
+          mode = "custom";
+          customValue = migratedCustom;
+        }
+        if (!mode) {
+          mode = matchBuiltinModeByName(key.name);
+        }
+        if (!isModeAllowedForType(mode, key.type)) {
+          mode = "";
+          customValue = "";
+        }
+        return {
+          keyID: key.id,
+          name: key.name,
+          type: key.type,
+          mode,
+          customValue,
+        };
+      });
+    } catch (error) {
+      if (isDev) console.error("获取数据库列失败", error);
+      attrViewColumnConfigs = [];
+    }
   }
 </script>
 
@@ -1280,30 +1517,69 @@
               />
                 {/snippet}
           </Item>
-          <!-- 数据库模板 -->
+          <!-- 数据库属性模板 -->
           <Item
             block={true}
             title={(plugin.i18n.settingTab as any).templates.userData.attrViewTemplateInput}
-            text={(plugin.i18n.settingTab as any).templates.userData.attrViewTemplateDescription + attrViewSuggest}
+            text="选择数据库每一列的填充方式，内置选项会根据列类型自动生成对应值；选择“自定义”可填写模板片段。"
           >
             {#snippet input()}
-              <Input
-                block={true}
-                normal={true}
-                rows={10}
-                type={ItemType.textarea}
-                settingKey="Textarea"
-                settingValue={attrViewTemplate}
-                placeholder="Input the literature note template"
-                onchanged={(event) => {
-                  if (isDev)
-                    logger.info(
-                    `Input changed: ${event.detail.key} = ${event.detail.value}`
-                    );
-                  attrViewTemplate = event.detail.value;
-                }}
-              />
-                {/snippet}
+              <div style="width:100%; overflow-x:auto;">
+                {#if attrViewColumnConfigs.length}
+                  <table style="width:100%; border-collapse:collapse; font-size:14px;">
+                    <thead>
+                      <tr style="border-bottom:1px solid var(--b3-border-color);">
+                        <th style="text-align:left; padding:6px;">列名</th>
+                        <th style="text-align:left; padding:6px;">类型</th>
+                        <th style="text-align:left; padding:6px;">填充方式</th>
+                        <th style="text-align:left; padding:6px;">自定义模板</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {#each attrViewColumnConfigs as col, index}
+                        <tr style="border-bottom:1px solid var(--b3-border-color);">
+                          <td style="padding:6px;">{col.name}</td>
+                          <td style="padding:6px;">{col.type}</td>
+                          <td style="padding:6px;">
+                            <Input
+                              block={false}
+                              normal={true}
+                              type={ItemType.select}
+                              settingKey="Select"
+                              settingValue={col.mode}
+                              options={getFillOptionsForType(col.type)}
+                              onchanged={(event) => {
+                                if (isDev) logger.info(`Select changed: ${event.detail.key} = ${event.detail.value}`);
+                                col.mode = event.detail.value;
+                                attrViewColumnConfigs = [...attrViewColumnConfigs];
+                              }}
+                            />
+                          </td>
+                          <td style="padding:6px; min-width:200px;">
+                            {#if col.mode === 'custom'}
+                              <textarea
+                                class="b3-text-field"
+                                style="width:100%; min-width:200px;"
+                                rows="3"
+                                placeholder={"{\"...\": \"...\"}"}
+                                bind:value={col.customValue}
+                                onchange={() => {
+                                  attrViewColumnConfigs = [...attrViewColumnConfigs];
+                                }}
+                              ></textarea>
+                            {:else}
+                              <span style="color:var(--b3-theme-on-surface-light);">—</span>
+                            {/if}
+                          </td>
+                        </tr>
+                      {/each}
+                    </tbody>
+                  </table>
+                {:else}
+                  <div class="b3-label__text">请输入正确的数据库块 ID 以加载列</div>
+                {/if}
+              </div>
+            {/snippet}
           </Item>
         </div>
         {/snippet}

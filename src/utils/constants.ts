@@ -92,6 +92,7 @@ export const defaultSettingData = {
     linkTemplatesGroup: [],
     attrViewBlock: defaultAttrViewBlock,
     attrViewTemplate: defaultAttrViewTemplate,
+    attrViewColumnConfigs: [],
     userDataTemplatePath: defaultUserDataTemplatePath,
     useWholeDocAsUserData: false,
     useDefaultCiteType: true,
