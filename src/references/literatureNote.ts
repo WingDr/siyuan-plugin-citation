@@ -285,8 +285,11 @@ export class LiteratureNote {
       const dataString = generateFromTemplate(attrViewTemplate, {
         entry,
         issued: "",
+        issuedDate: 0,
         year: "",
         authorString: "",
+        firstAuthor: "",
+        lastAuthor: "",
         containerTitle: "",
         DOI: "",
         URL: "",

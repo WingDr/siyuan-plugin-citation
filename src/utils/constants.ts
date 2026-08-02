@@ -93,6 +93,7 @@ export const defaultSettingData = {
     attrViewBlock: defaultAttrViewBlock,
     attrViewTemplate: defaultAttrViewTemplate,
     attrViewColumnConfigs: [],
+    attrViewConfigVersion: 0,
     userDataTemplatePath: defaultUserDataTemplatePath,
     useWholeDocAsUserData: false,
     useDefaultCiteType: true,
