@@ -4,6 +4,12 @@
 
 > A citation plugin that implements basic functionality, hoping to make your SiYuan more academically oriented.
 
+**Updates in 0.4.15**
+
+1. **Redesigned database attribute synchronization settings with per-column built-in and custom mappings, including safe migration of legacy templates**
+2. **Fixed refreshing all literature notes incorrectly processing nested documents; only direct children of the configured library are now refreshed**
+3. **Improved single-select and multi-select attribute writes, template defaults, and handling of special characters**
+
 **"In version 0.4.6, I made significant changes to the citation logic, which may cause some bugs. If you encounter any issues, please report them in time. Thank you very much!!!"**
 
 **Important Updates in 0.4.0**
