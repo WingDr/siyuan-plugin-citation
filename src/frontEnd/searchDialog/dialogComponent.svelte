@@ -27,18 +27,46 @@
 
     function matchHighlight(match: Match) {
         // if (isDev) this.logger.info("搜索匹配=>", match);
-        let contentString = match.value as string;
-        const indices = (match.indices as number[][]).sort((a,b) => b[0] - a[0]);
-        indices.forEach(indice => {
-            contentString = contentString.slice(0, indice[0]) + "<mark>" 
-                            + contentString.slice(indice[0], indice[1]+1) + "</mark>"
-                            + contentString.slice(indice[1]+1);
+        const contentString = match.value as string;
+        const lines = contentString.split("\n");
+        // 计算每行在原始字符串中的起始偏移量
+        const lineOffsets: number[] = [0];
+        for (let i = 0; i < lines.length - 1; i++) {
+            lineOffsets.push(lineOffsets[i] + lines[i].length + 1); // +1 for \n
+        }
+
+        const indices = (match.indices as number[][]).sort((a, b) => b[0] - a[0]);
+
+        // 将全局匹配索引映射到每行的局部索引
+        const lineMatches: {start: number, end: number}[][] = lines.map(() => []);
+        indices.forEach(([globalStart, globalEnd]) => {
+            for (let i = 0; i < lines.length; i++) {
+                const lineStart = lineOffsets[i];
+                const lineEnd = lineStart + lines[i].length - 1;
+                if (globalEnd < lineStart || globalStart > lineEnd) continue;
+
+                const localStart = Math.max(0, globalStart - lineStart);
+                const localEnd = Math.min(lines[i].length - 1, globalEnd - lineStart);
+                lineMatches[i].push({start: localStart, end: localEnd});
+            }
         });
-        const content = contentString.split("\n");
+
+        // 逐行独立包裹 <mark> 标签，确保每行 HTML 完整
+        const highlightedLines = lines.map((line, i) => {
+            let result = line;
+            const sorted = lineMatches[i].sort((a, b) => b.start - a.start);
+            sorted.forEach(({start, end}) => {
+                result = result.slice(0, start) + "<mark>"
+                        + result.slice(start, end + 1) + "</mark>"
+                        + result.slice(end + 1);
+            });
+            return result;
+        });
+
         return {
-            title: content[0],
-            year: content[1],
-            authorString: content[2]
+            title: highlightedLines[0],
+            year: highlightedLines[1],
+            authorString: highlightedLines[2]
         };
     }
 
@@ -62,7 +90,7 @@
 
     function clickReaction(ev: MouseEvent) {
         const target = ev.target as HTMLElement;
-        const key = target.parentElement!.getAttribute("data-search-id")!;
+        const key = target.closest('[data-search-id]')!.getAttribute("data-search-id")!;
         onSelection([key]);
         confirm();
     }

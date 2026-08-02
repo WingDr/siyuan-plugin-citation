@@ -231,9 +231,9 @@ export class ExportManager {
         "./exportTemp.md",
         "-o", "exportTemp.tex",
         "--lua-filter", dataDir + "/plugins/siyuan-plugin-citation/scripts/math.lua",
-        "--lua-filter", dataDir + "/plugins/siyuan-plugin-citation/scripts/latex.lua",
+        // "--lua-filter", dataDir + "/plugins/siyuan-plugin-citation/scripts/latex.lua",
         "--wrap=none",
-        "--template", "D:/Documents/OneDrive/杂项/模板/pandoc_template.tex",
+        // "--template", "D:/Documents/OneDrive/杂项/模板/pandoc_template.tex",
         "--standalone",
         ...additionalParams
       ])

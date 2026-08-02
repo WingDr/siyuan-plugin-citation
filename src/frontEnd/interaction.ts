@@ -137,23 +137,23 @@ export class InteractionManager {
         supportDatabase: ["Juris-M (debug-bridge)", "Zotero (debug-bridge)"],
       }
     ];
-    Object.keys(LaTexEnvironments).forEach(key => {
-      const name = LaTexEnvironments[key as keyof typeof LaTexEnvironments];
-      this.protyleSlashs.push({
-        filter: [name.toLowerCase(), name, name.toUpperCase()],
-        html: `<div class = "b3-list-item__first">
-          <svg class="b3-list-item__graphic">
-            <use xlink:href="#iconRef"></use>
-          </svg>
-          <span class="b3-list-item__text">${name}</span>
-        </div>`,
-        id: `insert-env-${key.toLowerCase()}`,
-        callback: async (protyle: Protyle) => {
-          protyle.insert(`> [!${key}] ${name} \n> `, false, true);
-        },
-        // supportDatabase: ["Juris-M (debug-bridge)", "Zotero (debug-bridge)"],
-      });
-    });
+    // Object.keys(LaTexEnvironments).forEach(key => {
+    //   const name = LaTexEnvironments[key as keyof typeof LaTexEnvironments];
+    //   this.protyleSlashs.push({
+    //     filter: [name.toLowerCase(), name, name.toUpperCase()],
+    //     html: `<div class = "b3-list-item__first">
+    //       <svg class="b3-list-item__graphic">
+    //         <use xlink:href="#iconRef"></use>
+    //       </svg>
+    //       <span class="b3-list-item__text">${name}</span>
+    //     </div>`,
+    //     id: `insert-env-${key.toLowerCase()}`,
+    //     callback: async (protyle: Protyle) => {
+    //       protyle.insert(`> [!${key}] ${name} \n> `, false, true);
+    //     },
+    //     // supportDatabase: ["Juris-M (debug-bridge)", "Zotero (debug-bridge)"],
+    //   });
+    // });
     this.commands = [
       {
         langKey: "addCitation",
@@ -218,6 +218,20 @@ export class InteractionManager {
         hotkey: "",
         callback: async () => {
           return this.plugin.reference.checkUnlinkedLiteratures();
+        }
+      },
+      {
+        langKey: "clearAllUnlinkedLiterature",
+        hotkey: "",
+        callback: async () => {
+          return this.plugin.reference.clearAllUnlinkedLiteratures();
+        }
+      },
+      {
+        langKey: "checkDuplicatedLiterature",
+        hotkey: "",
+        callback: async () => {
+          return this.plugin.reference.checkDuplicatedLiteratures();
         }
       }
       // {

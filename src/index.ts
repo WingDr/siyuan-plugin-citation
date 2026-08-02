@@ -101,32 +101,32 @@ export default class SiYuanPluginCitation extends Plugin {
         // this.eventBus.emit("Refresh", {type: "literature note", refreshAll: true, confirmUserData: false});
     }
 
-    updateProtyleToolbar(toolbar: Array<string | IMenuItem>): Array<string | IMenuItem> {
-        toolbar.push("|");
-        const LaTexRefTypes = ["eqref", "ref"];
-        LaTexRefTypes.forEach(refType => {
-            toolbar.push({
-                name: `insert-ref-${refType.toLowerCase()}`,
-                icon: (refType === "ref") ? "iconLatexRef" : "iconLatexEqref",
-                tipPosition: "n",
-                tip: refType,
-                click: (protyle: Protyle) => {
-                    // 获取选中的内容（优先获取HTML，然后转换为Markdown）
-                    let selectedMarkdown = '';
-                    try {
-                        // 尝试获取选中的内容
-                        const selection = window.getSelection();
-                        // 获取选区中的文本
-                        selectedMarkdown = selection ? selection.toString() : '';
-                    } catch (error) {
-                        console.error('Failed to get selected content:', error);
-                    }
-                    protyle.insert(`[${refType == "ref" ? "→" : "⇒"}${selectedMarkdown}](latex:\\${refType}{${selectedMarkdown}})`, false, true);
-                }
-            });
-        });
-        return toolbar;
-    }
+    // updateProtyleToolbar(toolbar: Array<string | IMenuItem>): Array<string | IMenuItem> {
+    //     toolbar.push("|");
+    //     const LaTexRefTypes = ["eqref", "ref"];
+    //     LaTexRefTypes.forEach(refType => {
+    //         toolbar.push({
+    //             name: `insert-ref-${refType.toLowerCase()}`,
+    //             icon: (refType === "ref") ? "iconLatexRef" : "iconLatexEqref",
+    //             tipPosition: "n",
+    //             tip: refType,
+    //             click: (protyle: Protyle) => {
+    //                 // 获取选中的内容（优先获取HTML，然后转换为Markdown）
+    //                 let selectedMarkdown = '';
+    //                 try {
+    //                     // 尝试获取选中的内容
+    //                     const selection = window.getSelection();
+    //                     // 获取选区中的文本
+    //                     selectedMarkdown = selection ? selection.toString() : '';
+    //                 } catch (error) {
+    //                     console.error('Failed to get selected content:', error);
+    //                 }
+    //                 protyle.insert(`[${refType == "ref" ? "→" : "⇒"}${selectedMarkdown}](latex:\\${refType}{${selectedMarkdown}})`, false, true);
+    //             }
+    //         });
+    //     });
+    //     return toolbar;
+    // }
 
     openSetting(): void {
         this.settingTab.openSetting();

@@ -10,7 +10,7 @@ import {
   generateFromTemplate
 } from "../utils/templates";
 import { type ILogger, createLogger } from "../utils/simple-logger";
-import { loadLocalRef } from "../utils/util";
+import { loadLocalRef, sleep } from "../utils/util";
 import { Cite } from "./cite";
 import { LiteratureNote } from "./literatureNote";
 import type { ISpanItem } from "src/utils/types";
@@ -294,7 +294,7 @@ export class Reference {
       this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);
       return null;
     }
-    await this.LiteratureNote.updateLiteratureNote(key, entry, noConfirmUserData);
+    await this.LiteratureNote.updateLiteratureNote(key, entry, {noConfirmUserData});
     if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("文献内容刷新完毕, literatureId=>", {literatureId, key, title: entry.title});
     if (needRefresh) this.plugin.noticer.info((this.plugin.i18n.notices as any).refreshSingleLiteratureNoteSuccess, {key});
     return;
@@ -350,36 +350,78 @@ export class Reference {
     if (loadRef) await loadLocalRef(this.plugin);
   }
 
+  public async checkDuplicatedLiteratures() {
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("开始手动检查重复文献引用");
+    const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
+    const loadResult = await loadLocalRef(this.plugin);
+    const duplicates = loadResult?.duplicates ?? [];
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("检测到重复文献引用数量=>", {count: duplicates.length, duplicates});
+    if (!duplicates.length) {
+      this.plugin.noticer.info((this.plugin.i18n.notices as any).checkDuplicatedLiteratureNoDuplicate);
+      return {duplicates: [], handled: 0};
+    }
+    for (const duplicate of duplicates) {
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("处理重复文献引用=>", duplicate);
+      await this.plugin.kernelApi.renameDoc(notebookId, duplicate.path, "\u{1F501} " + duplicate.title);
+      await this.plugin.kernelApi.setBlockAttr(duplicate.id, {"custom-literature-unlinked": "true"});
+    }
+    await loadLocalRef(this.plugin);
+    this.plugin.noticer.info((this.plugin.i18n.notices as any).checkDuplicatedLiteratureSuccess, {size: duplicates.length});
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("手动检查重复文献引用完成=>", {handled: duplicates.length});
+    return {duplicates, handled: duplicates.length};
+  }
+
+  public async clearAllUnlinkedLiteratures() {
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("开始手动清除全部文献 unlink 状态");
+    const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
+    const refPath = this.plugin.data[STORAGE_NAME].referencePath as string;
+    const res = await this.plugin.kernelApi.getUnlinkedLiteratureDocs(notebookId, refPath + "/");
+    const literatureDocs = (res.data as any[]) ?? [];
+    let cleared = 0;
+    for (const file of literatureDocs) {
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("清除文献 unlink 状态=>", {id: file.id, path: file.path});
+      await this.plugin.kernelApi.setBlockAttr(file.id, {"custom-literature-unlinked": ""});
+      cleared += 1;
+    }
+    await loadLocalRef(this.plugin);
+    this.plugin.noticer.info((this.plugin.i18n.notices as any).clearAllUnlinkedLiteratureSuccess, {size: cleared});
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("手动清除全部文献 unlink 状态完成=>", {cleared});
+    return {cleared};
+  }
+
   public async checkUnlinkedLiteratures() {
     // 遍历目前的所有文献，检查其中未连接的文献，并给标题加上标记。基本和refreshTitle一致，但是如果没有问题就不修改标题
     const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
+    const batchSize = 20;
     // 在刷新之前先更新一下文献池
     await loadLocalRef(this.plugin);
     const unlinkedList = [];
-    const pList = this.plugin.literaturePool.keys.map(async key => {
-      const entry = await this.plugin.database.getContentByKey(key);
-      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("从database中获得文献内容 =>", entry);
-      if (entry === false) return null; // 说明服务器请求失败，而不是找不到文献数据
-      else if (!entry) {
-        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.error("找不到文献数据", {key, blockID: this.plugin.literaturePool.get(key)});
-        this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);
-        // 在zotero里对应不到了，把文档名改成unlinked
-        const literatureId = this.plugin.literaturePool.get(key);
-        // 解除文献绑定
-        this.unbindDocumentFromLiterature(literatureId, false);
-        const res = await this.plugin.kernelApi.getBlock(literatureId);
-        await this.plugin.kernelApi.renameDoc(notebookId, (res.data as any[])[0].path , "\u274C "+(res.data as any[])[0].content);
-        unlinkedList.push(key);
-      }
-    });
-    return await Promise.all(pList).then(async () => {
-      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("已检查所有文件链接可用性");
-      this.plugin.noticer.info((this.plugin.i18n.notices as any).checkUnlinkedSuccess, {size: this.plugin.literaturePool.size, unlinked: unlinkedList.length});
-      await loadLocalRef(this.plugin);
-      return this.plugin.literaturePool.content;
-    }).catch(e => {
-      this.logger.error(e);
-    });
+    const keys = this.plugin.literaturePool.keys;
+    for (let i = 0; i < keys.length; i += batchSize) {
+      const batchKeys = keys.slice(i, i + batchSize);
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("开始检查失效文献批次=>", {start: i, size: batchKeys.length});
+      await Promise.all(batchKeys.map(async key => {
+        const entry = await this.plugin.database.getContentByKey(key);
+        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("从database中获得文献内容 =>", entry);
+        if (entry === false) return null; // 说明服务器请求失败，而不是找不到文献数据
+        else if (!entry) {
+          if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.error("找不到文献数据", {key, blockID: this.plugin.literaturePool.get(key)});
+          this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);
+          // 在zotero里对应不到了，把文档名改成unlinked
+          const literatureId = this.plugin.literaturePool.get(key);
+          // 解除文献绑定
+          this.unbindDocumentFromLiterature(literatureId, false);
+          const res = await this.plugin.kernelApi.getBlock(literatureId);
+          await this.plugin.kernelApi.renameDoc(notebookId, (res.data as any[])[0].path , "\u274C "+(res.data as any[])[0].content);
+          unlinkedList.push(key);
+        }
+      }));
+      if (i + batchSize < keys.length) await sleep(500);
+    }
+    if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("已检查所有文件链接可用性");
+    this.plugin.noticer.info((this.plugin.i18n.notices as any).checkUnlinkedSuccess, {size: this.plugin.literaturePool.size, unlinked: unlinkedList.length});
+    await loadLocalRef(this.plugin);
+    return this.plugin.literaturePool.content;
   }
 
   // Extra Functions
@@ -414,26 +456,51 @@ export class Reference {
     // let literatureEnum = [];
     // if (fileId) literatureEnum = await this._getLiteratureEnum(fileId);
     const typeSetting = this.getCurrentTypeSetting(type_name);
-    const existNotes = this.plugin.literaturePool.keys;
-    const insertContent = keys.map(async (key, i) => {
-      const idx = existNotes.indexOf(key);
+    const useItemKey = this.plugin.data[STORAGE_NAME].useItemKey as boolean;
+
+    // 先对keys去重，确保每个唯一的key只处理一次
+    const uniqueKeys = Array.from(new Set(keys));
+
+    // 串行处理每个唯一的key，确保文献笔记创建不会并发冲突
+    for (const key of uniqueKeys) {
       const entry = await this.plugin.database.getContentByKey(key);
       if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("从database中获得文献内容 =>", entry);
       if (!entry || !entry.key) {
         if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.error("找不到文献数据", {key, blockID: this.plugin.literaturePool.get(key)});
         if (errorReminder) this.plugin.noticer.error((this.plugin.i18n.errors as any).getLiteratureFailed);
+        continue;
+      }
+      // 串行处理，确保前一个key的文献笔记创建完成后再处理下一个
+      await this.LiteratureNote.addLiteratureNotesToUpdateBatch(key, entry);
+    }
+
+    // 等待所有批次处理完成
+    if (!outerBatch) await this.LiteratureNote.processUpdateBatches();
+
+    // 批次处理后重新读取文献池，确保包含本轮新建的文档
+    const existNotes = this.plugin.literaturePool.keys;
+
+    // 现在按照原始keys的顺序生成引用内容（可以并行，因为文献笔记已经创建完成）
+    const insertContent = keys.map(async (key, i) => {
+      const entry = await this.plugin.database.getContentByKey(key);
+      if (!entry || !entry.key) {
         return null;
       }
-      await this.LiteratureNote.addLiteratureNotesToUpdateBatch(key, entry);
-      // await this.LiteratureNote.updateLiteratureNote(key, entry);
-      const citeId = this.plugin.literaturePool.get(key);
-      const link = this._processMultiCitation(await this.Cite.generateCiteLink(key, idx, typeSetting, false), i, keys.length, typeSetting);
-      const name = await this.Cite.generateLiteratureName(key, typeSetting);
+      // 计算最终的key格式（与 addLiteratureNotesToUpdateBatch 中保持一致）
+      const final_key = "1_" + (useItemKey ? entry.itemKey : entry.citekey);
+      const idx = existNotes.indexOf(final_key);
+
+      // 使用 final_key 从 literaturePool 获取文档 ID
+      const citeId = this.plugin.literaturePool.get(final_key);
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获取文献文档ID", {key, final_key, citeId});
+
+      const link = this._processMultiCitation(await this.Cite.generateCiteLink(final_key, idx, typeSetting, false), i, keys.length, typeSetting);
+      const name = await this.Cite.generateLiteratureName(final_key, typeSetting);
       if (returnDetail) {
         let content = link;
         const customCiteText = this.plugin.data[STORAGE_NAME].customCiteText;
         const useDynamicRefLink = this.plugin.data[STORAGE_NAME].useDynamicRefLink;
-        if (customCiteText) content = await this.Cite.generateCiteLink(key, idx, typeSetting, true);
+        if (customCiteText) content = await this.Cite.generateCiteLink(final_key, idx, typeSetting, true);
         if (customCiteText && useDynamicRefLink) content = name;
         const citeRef = await this.Cite.generateCiteRef(citeId, link, name, typeSetting);
         return {
@@ -445,7 +512,6 @@ export class Reference {
       }
       return await this.Cite.generateCiteRef(citeId, link, name, typeSetting);
     });
-    if (!outerBatch) await this.LiteratureNote.processUpdateBatches();
     return await Promise.all(insertContent);
   }
 

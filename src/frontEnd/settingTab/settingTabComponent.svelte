@@ -16,6 +16,16 @@
   import { type DatabaseType } from "../../database/database";
 
   import { ItemType, type IOptions } from "./item/item";
+  import {
+    ATTR_VIEW_CONFIG_VERSION,
+    buildAttrViewTemplate,
+    getFillModeKeysForType,
+    reconcileAttrViewColumns,
+    selectAttrViewDataForSave,
+    type AttrViewColumnConfig,
+    type AttrViewLoadState,
+    type AttrViewPersistedData,
+  } from "./attrViewConfig";
 
   import Panels from "./panel/Panels.svelte";
   import Panel from "./panel/Panel.svelte";
@@ -46,6 +56,22 @@
     reloadDatabase,
     refreshLiteratureNoteTitle
   }: Props = $props();
+
+  function getAttrViewConfigI18n(): any {
+    return (plugin.i18n.settingTab as any).templates.userData.attrViewConfig;
+  }
+
+  function getFillOptionsForType(colType: string): IOptions {
+    const labels = getAttrViewConfigI18n().fillModes;
+    return getFillModeKeysForType(colType).map((key) => ({
+      key,
+      text: labels[key || "none"],
+    }));
+  }
+
+  function cloneAttrViewConfigs(configs: AttrViewColumnConfig[]): AttrViewColumnConfig[] {
+    return configs.map((config) => ({ ...config }));
+  }
 
   /**
    * 设置面板的设计
@@ -129,8 +155,18 @@
   let useWholeDocAsUserData: string = $state()!;
   // 数据库相关设定变量
   let attrViewBlock: string = $state()!;
-  let attrViewTemplate: string = $state()!;
-  let attrViewSuggest: string = $state("");
+  let attrViewColumnConfigs: AttrViewColumnConfig[] = $state([]);
+  let attrViewLoadState: AttrViewLoadState = $state("idle");
+  let attrViewMigrationError: boolean = $state(false);
+  let attrViewLoadedBlock = "";
+  let attrViewRequestId = 0;
+  let settingsInitialized = false;
+  let originalAttrViewData: AttrViewPersistedData = {
+    block: "",
+    template: "",
+    configs: [],
+    version: 0,
+  };
   // Zotero模板设定变量
   let zoteroLinkTitleTemplate: string = $state()!;
   let zoteroTagTemplate: string = $state()!;
@@ -308,9 +344,18 @@
     shortAuthorLimit = plugin.data[STORAGE_NAME]?.shortAuthorLimit ?? defaultSettingData.shortAuthorLimit;
     // 默认数据库块id
     attrViewBlock = plugin.data[STORAGE_NAME]?.attrViewBlock ?? defaultSettingData.attrViewBlock;
-    getAttrViewSuggests(attrViewBlock);
-    // 默认数据库模板
-    attrViewTemplate = plugin.data[STORAGE_NAME]?.attrViewTemplate ?? defaultSettingData.attrViewTemplate;
+    originalAttrViewData = {
+      block: attrViewBlock,
+      template: plugin.data[STORAGE_NAME]?.attrViewTemplate ?? defaultSettingData.attrViewTemplate,
+      configs: cloneAttrViewConfigs(
+        plugin.data[STORAGE_NAME]?.attrViewColumnConfigs ?? defaultSettingData.attrViewColumnConfigs
+      ),
+      version: Number(
+        plugin.data[STORAGE_NAME]?.attrViewConfigVersion ?? defaultSettingData.attrViewConfigVersion
+      ),
+    };
+    attrViewColumnConfigs = cloneAttrViewConfigs(originalAttrViewData.configs);
+    await getAttrViewSuggests(attrViewBlock, true);
     // 默认多个引用的前缀、后缀、连接符
     multiCitePrefix = plugin.data[STORAGE_NAME]?.multiCitePrefix ?? defaultSettingData.multiCitePrefix;
     multiCiteConnector = plugin.data[STORAGE_NAME]?.multiCiteConnector ?? defaultSettingData.multiCiteConnector;
@@ -349,6 +394,13 @@
     multiCiteSuffix = linkTemplatesGroup[0].multiCiteSuffix;
     nameTemplate = linkTemplatesGroup[0].nameTemplate;
     const storage_group = $state.snapshot(linkTemplatesGroup);
+    const attrViewData = selectAttrViewDataForSave(
+      attrViewLoadState,
+      attrViewBlock,
+      attrViewLoadedBlock,
+      cloneAttrViewConfigs($state.snapshot(attrViewColumnConfigs)),
+      originalAttrViewData,
+    );
     const settingData = {
       referenceNotebook,
       referencePath,
@@ -373,8 +425,10 @@
       multiCitePrefix,
       multiCiteConnector,
       multiCiteSuffix,
-      attrViewBlock,
-      attrViewTemplate,
+      attrViewBlock: attrViewData.block,
+      attrViewTemplate: attrViewData.template,
+      attrViewColumnConfigs: attrViewData.configs,
+      attrViewConfigVersion: attrViewData.version,
       useWholeDocAsUserData,
       userDataTemplatePath,
       useDefaultCiteType,
@@ -415,7 +469,12 @@
   }
 
   function _checkDebugBridge(dtype: string): boolean {
-    if (["Zotero (debug-bridge)", "Juris-M (debug-bridge)"].indexOf(dtype) != -1) return true;
+    if (["Zotero (debug-bridge)", "Juris-M (debug-bridge)", "Zotero (Web API)", "Juris-M (Web API)"].indexOf(dtype) != -1) return true;
+    else return false;
+  }
+
+  function _checkWebAPI(dtype: string): boolean {
+    if (["Zotero (Web API)", "Juris-M (Web API)"].indexOf(dtype) != -1) return true;
     else return false;
   }
 
@@ -423,11 +482,12 @@
     const file = await plugin.kernelApi.getFile("/data/plugins/siyuan-plugin-citation/plugin.json", "json");
     pluginVersion = (file as any).version;
     await initializeData();
+    settingsInitialized = true;
   });
 
   onDestroy(() => {
     if (isDev) logger.info("关闭设置界面");
-    _saveData();
+    if (settingsInitialized) _saveData();
   });
 
   function clickCardSetting(event: any) {
@@ -480,19 +540,75 @@
     linkTemplatesGroup = [...linkTemplatesGroup.slice(0, id), ...linkTemplatesGroup.slice(id+1)]
   }
   let isDebugBridge = $derived(_checkDebugBridge(database));
+  let isWebAPI = $derived(_checkWebAPI(database));
 
-  async function getAttrViewSuggests(attrViewBlock: string) {
-    let res = await plugin.kernelApi.getBlock(attrViewBlock);
-    const content = (res.data as any[])[0].markdown as string;
-    const avIdReg = /.*data-av-id=\"(.*?)\".*/;
-    const avID = content.match(avIdReg)![1];
-    res = await plugin.kernelApi.getAttributeView(avID);
-    const av = (res.data as any).av;
-    if (isDev) console.log("av=>", av);
-    if (!av) attrViewSuggest = "";
-    else attrViewSuggest = av.keyValues.map((item: { key: { id: string; name: string; type: string; }; }) => {
-      return `id: ${item.key.id}, name: ${item.key.name}, type: ${item.key.type}`
-    }).join("<br>");
+  async function getAttrViewSuggests(requestedBlock: string, initial = false) {
+    const blockID = requestedBlock.trim();
+    const requestId = ++attrViewRequestId;
+    attrViewMigrationError = false;
+
+    if (!blockID) {
+      if (initial) {
+        attrViewLoadState = "idle";
+      } else {
+        attrViewColumnConfigs = [];
+        attrViewLoadedBlock = "";
+        attrViewLoadState = "cleared";
+      }
+      return;
+    }
+
+    attrViewLoadState = "loading";
+    try {
+      let res = await plugin.kernelApi.getBlock(blockID);
+      if (!res.data || !(res.data as any[]).length) throw new Error("attribute view block not found");
+
+      const content = (res.data as any[])[0].markdown as string;
+      const match = content.match(/.*data-av-id=\"(.*?)\".*/);
+      if (!match?.[1]) throw new Error("attribute view id not found");
+
+      res = await plugin.kernelApi.getAttributeView(match[1]);
+      const av = (res.data as any)?.av;
+      if (!av?.keyValues) throw new Error("attribute view columns not found");
+      if (requestId !== attrViewRequestId) return;
+
+      const sourceData = initial
+        ? originalAttrViewData
+        : blockID === attrViewLoadedBlock
+          ? {
+              block: blockID,
+              template: buildAttrViewTemplate(attrViewColumnConfigs),
+              configs: cloneAttrViewConfigs(attrViewColumnConfigs),
+              version: ATTR_VIEW_CONFIG_VERSION,
+            }
+          : { block: blockID, template: "", configs: [], version: 0 };
+      const columns = av.keyValues.map((item: { key: { id: string; name: string; type: string } }) => ({
+        id: item.key.id,
+        name: item.key.name,
+        type: item.key.type,
+      }));
+      const reconciled = reconcileAttrViewColumns(
+        columns,
+        sourceData.configs,
+        sourceData.template,
+        sourceData.version,
+      );
+      if (reconciled.status === "error") {
+        attrViewLoadState = "error";
+        attrViewMigrationError = true;
+        return;
+      }
+
+      attrViewBlock = blockID;
+      attrViewColumnConfigs = reconciled.configs;
+      attrViewLoadedBlock = blockID;
+      attrViewLoadState = "ready";
+      if (isDev) logger.info("数据库列加载成功", { blockID, status: reconciled.status });
+    } catch (error) {
+      if (requestId !== attrViewRequestId) return;
+      attrViewLoadState = "error";
+      if (isDev) logger.error("获取数据库列失败", error);
+    }
   }
 </script>
 
@@ -602,22 +718,27 @@
         <Item
           block={false}
           title={(plugin.i18n.settingTab as any).basic.UseItemKeySwitchTitle}
-          text={(plugin.i18n.settingTab as any).basic.UseItemKeySwitchDescription}
+          text={isWebAPI
+            ? "Web API 模式强制使用 itemKey 作为索引（无需 Better BibTeX 插件）。此选项仅对 debug-bridge 模式有效。"
+            : (plugin.i18n.settingTab as any).basic.UseItemKeySwitchDescription}
         >
           {#snippet input()}
                 <Input
-              
+
               block={false}
               normal={true}
               type={ItemType.checkbox}
               settingKey="Checkbox"
-              settingValue={useItemKey}
+              settingValue={isWebAPI ? true : useItemKey}
+              disabled={isWebAPI}
               onchanged={(event) => {
                 if (isDev)
                   logger.info(
                     `Checkbox changed: ${event.detail.key} = ${event.detail.value}`
                   );
-                useItemKey = event.detail.value;
+                if (!isWebAPI) {
+                  useItemKey = event.detail.value;
+                }
               }}
             />
               {/snippet}
@@ -1263,36 +1384,83 @@
                     logger.info(
                     `Input changed: ${event.detail.key} = ${event.detail.value}`
                   );
-                  attrViewBlock = event.detail.value; 
-                  getAttrViewSuggests(attrViewBlock);
+                  attrViewBlock = event.detail.value;
+                  await getAttrViewSuggests(attrViewBlock);
                 }}
               />
                 {/snippet}
           </Item>
-          <!-- 数据库模板 -->
+          <!-- 数据库属性模板 -->
           <Item
             block={true}
             title={(plugin.i18n.settingTab as any).templates.userData.attrViewTemplateInput}
-            text={(plugin.i18n.settingTab as any).templates.userData.attrViewTemplateDescription + attrViewSuggest}
+            text={getAttrViewConfigI18n().description}
           >
             {#snippet input()}
-              <Input
-                block={true}
-                normal={true}
-                rows={10}
-                type={ItemType.textarea}
-                settingKey="Textarea"
-                settingValue={attrViewTemplate}
-                placeholder="Input the literature note template"
-                onchanged={(event) => {
-                  if (isDev)
-                    logger.info(
-                    `Input changed: ${event.detail.key} = ${event.detail.value}`
-                    );
-                  attrViewTemplate = event.detail.value;
-                }}
-              />
-                {/snippet}
+              <div style="width:100%; overflow-x:auto;">
+                {#if attrViewLoadState === 'loading'}
+                  <div class="b3-label__text">{getAttrViewConfigI18n().loading}</div>
+                {:else if attrViewLoadState === 'error'}
+                  <div class="b3-label__text" style="color:var(--b3-theme-error);">
+                    {attrViewMigrationError
+                      ? getAttrViewConfigI18n().migrationError
+                      : getAttrViewConfigI18n().loadError}
+                  </div>
+                {:else if attrViewLoadState === 'ready' && attrViewColumnConfigs.length}
+                  <table style="width:100%; border-collapse:collapse; font-size:14px;">
+                    <thead>
+                      <tr style="border-bottom:1px solid var(--b3-border-color);">
+                        <th style="text-align:left; padding:6px;">{getAttrViewConfigI18n().columnName}</th>
+                        <th style="text-align:left; padding:6px;">{getAttrViewConfigI18n().columnType}</th>
+                        <th style="text-align:left; padding:6px;">{getAttrViewConfigI18n().fillMode}</th>
+                        <th style="text-align:left; padding:6px;">{getAttrViewConfigI18n().customTemplate}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {#each attrViewColumnConfigs as col, index}
+                        <tr style="border-bottom:1px solid var(--b3-border-color);">
+                          <td style="padding:6px;">{col.name}</td>
+                          <td style="padding:6px;">{col.type}</td>
+                          <td style="padding:6px;">
+                            <Input
+                              block={false}
+                              normal={true}
+                              type={ItemType.select}
+                              settingKey="Select"
+                              settingValue={col.mode}
+                              options={getFillOptionsForType(col.type)}
+                              onchanged={(event) => {
+                                if (isDev) logger.info(`Select changed: ${event.detail.key} = ${event.detail.value}`);
+                                col.mode = event.detail.value;
+                                attrViewColumnConfigs = [...attrViewColumnConfigs];
+                              }}
+                            />
+                          </td>
+                          <td style="padding:6px; min-width:200px;">
+                            {#if col.mode === 'custom'}
+                              <textarea
+                                class="b3-text-field"
+                                style="width:100%; min-width:200px;"
+                                rows="3"
+                                placeholder={"{\"...\": \"...\"}"}
+                                bind:value={col.customValue}
+                                onchange={() => {
+                                  attrViewColumnConfigs = [...attrViewColumnConfigs];
+                                }}
+                              ></textarea>
+                            {:else}
+                              <span style="color:var(--b3-theme-on-surface-light);">—</span>
+                            {/if}
+                          </td>
+                        </tr>
+                      {/each}
+                    </tbody>
+                  </table>
+                {:else}
+                  <div class="b3-label__text">{getAttrViewConfigI18n().empty}</div>
+                {/if}
+              </div>
+            {/snippet}
           </Item>
         </div>
         {/snippet}

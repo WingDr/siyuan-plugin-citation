@@ -24,6 +24,7 @@
  */
 
 import { BaseApi, type SiyuanData } from "./base-api";
+import { buildLiteratureDocInPathStatement } from "./literature-doc-query";
 import { siyuanApiToken, siyuanApiUrl } from "../utils/constants";
 import { fetchPost } from "siyuan";
 /**
@@ -240,19 +241,7 @@ class KernelApi extends BaseApi {
 
   public async getLiteratureDocInPath(notebook: string, dir_hpath: string, offset: number, limit: number): Promise<SiyuanData> {
     const params = {
-      "stmt": `SELECT 
-          b.id, b.root_id, b.box, b."path", b.hpath, b.name, b.content, a.value as literature_key, c.value as literature_unlink
-        FROM blocks b 
-          left outer join (
-            select * FROM "attributes" WHERE name = "custom-literature-key"
-          ) as a on b.id = a.block_id 
-          left outer join (
-            select * FROM "attributes" WHERE name = "custom-literature-unlinked"
-          ) as c on b.id = c.block_id 
-        WHERE 
-          b.box like '${notebook}' and 
-          b.hpath like '${dir_hpath}%' and 
-          b.type like 'd' limit ${limit}, ${offset}`
+      "stmt": buildLiteratureDocInPathStatement(notebook, dir_hpath, offset, limit)
     };
     return await this.siyuanRequest("/api/query/sql", params);
   }
@@ -262,6 +251,22 @@ class KernelApi extends BaseApi {
       "stmt": `SELECT * FROM blocks WHERE box like '${notebook}' and hpath like '${hpath}%' and id = '${docID}'`
     };
     return ((await this.siyuanRequest("/api/query/sql", params)).data as any[]).length > 0;
+  }
+
+  public async getUnlinkedLiteratureDocs(notebook: string, dir_hpath: string): Promise<SiyuanData> {
+    const params = {
+      "stmt": `SELECT
+          b.id, b.root_id, b.box, b."path", b.hpath, b.name, b.content, a.value as literature_unlink
+        FROM blocks b
+          inner join (
+            select * FROM "attributes" WHERE name = "custom-literature-unlinked" and value != ""
+          ) as a on b.id = a.block_id
+        WHERE
+          b.box like '${notebook}' and
+          b.hpath like '${dir_hpath}%' and
+          b.type like 'd'`
+    };
+    return await this.siyuanRequest("/api/query/sql", params);
   }
 
   public async getLiteratureUserData(literatureId: string) {

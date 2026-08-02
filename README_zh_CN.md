@@ -25,7 +25,7 @@
 ## 名词说明
 
 1. **笔记本**：即思源笔记文档树中的笔记本，文献库只能放置在其中一个已经打开的笔记本中，如果切换文献库所在笔记本那么原本笔记本中的文献库将失效。
-2. **数据库**：文献的原始数据来源，目前支持数据文件（BibTex和CSL-JSON）、Zotero/Juris-M（使用better-bibtex插件）和Zotero/Juris-M（使用debug-bridge插件）三种数据来源。其中数据文件在每次启动软件时都会重新导入，但是如果在使用中文件本身产生变化，需要【重新载入数据库】（通过设置面板或命令）或者【重启思源软件】才能生效。
+2. **数据库**：文献的原始数据来源，目前支持数据文件（BibTex和CSL-JSON）、Zotero/Juris-M（使用better-bibtex插件）、Zotero/Juris-M（使用debug-bridge插件）以及 Zotero/Juris-M（使用 Web API）四种数据来源。其中数据文件在每次启动软件时都会重新导入，但是如果在使用中文件本身产生变化，需要【重新载入数据库】（通过设置面板或命令）或者【重启思源软件】才能生效。
 3. **文献库**：存放已经插入引用连接的文献内容的位置，本质上是一个*处于特定路径的文档*，它的子文档为所有引用过的文献内容，该文档本身的内容不会被修改，但是在插入引用时会增添和刷新它的子文档。
 4. **文献内容**：根据文献的原始数据和设置界面填写的“*文献内容模板*”生成的文档，*新建文档的标题和命名为该文献的citekey或者itemKey*。目前该文档的内容在每次引用对应文献时都会刷新，因此 **请不要在文档属性修改自定义属性literature-key**，目前文献内容已经支持用户数据区域，详见[文献内容详解](#文献内容详解)，**非用户数据区域请不要填入个人内容**。
 5. **引用链接**：在文档中插入（也可以选择直接复制到剪贴板）的引用链接，该链接指向文献库中对应的文献内容，其锚文本为通过文献原始数据和设置界面填写的“*引用模板*”生成的文本。
@@ -34,31 +34,31 @@
 
 ### 决定选择哪种数据来源
 
-目前可以使用的文献数据来源包括数据文件（BibTex和CSL-JSON）、Zotero/Juris-M（使用better-bibtex插件）和Zotero/Juris-M（使debug-bridge插件）三种，下表给出了三种数据来源之间的对比：
+目前可以使用的文献数据来源包括数据文件（BibTex和CSL-JSON）、Zotero/Juris-M（使用better-bibtex插件）、Zotero/Juris-M（使用debug-bridge插件）以及 Zotero/Juris-M（使用 Web API）四种，下表给出了几种数据来源之间的对比：
 
-| 数据来源 | BibTex和CSL-JSON | Zotero/Juris-M<br>使用better-bibtex插件 | Zotero/Juris-M<br>使用debug-bridge插件 |
-|:----|:----:|:----:|:----:|
-| 文献标识 | <b>citekey</b><br>允许多个文件<br>自行保证唯一性 | <b>citekey</b><br>由BBT生成 | <b>citekey / itemKey</b><br>citekey由BBT生成<br>itemKey由Zotero生成 |
-| 搜索面板 | Citation插件面板 | Zotero面板 | Citation插件面板 / Zotero面板 （可选） |
-| 初始化速度 | 慢 | 快 | 快 |
-| 搜索/插入速度 | 快 | 慢 | 快（Citation插件面板） |
-| 兼容Zotero 7 | - | √ | √ |
-| 兼容其它文献管理软件 | ✓ | × | × |
-| 支持导入pdf标注<br>（annotations） | × | × | ✓ |
-| 支持从Zotero拖入选中/批注时自动引用 | × | ✓ | ✓ |
-| 支持通过搜索面板<br>一次性插入多篇文献 | × | ✓ | ×（Citation插件面板）<br>✓ （Zotero面板） |
-| 同时修改相邻的多个引用 | × | × | ✓ |
-| 插入在Zotero中<br>选中的条目 | × | × | ✓ |
-| 支持在Zotero条目中<br>插入跳转思源链接 | × | × | ✓ |
-| 支持在Zotero条目中<br>插入自定义标签 | × | × | ✓ |
-| 导出带有引用的word文档 | × | × | ✓ |
-| 导出带引用的LaTex | × | × | ✓（同时要求安装better-bibtex插件） |
+| 数据来源 | BibTex和CSL-JSON | Zotero/Juris-M<br>使用better-bibtex插件 | Zotero/Juris-M<br>使用debug-bridge插件 | Zotero/Juris-M<br>使用 Web API |
+|:----|:----:|:----:|:----:|:----:|
+| 文献标识 | <b>citekey</b><br>允许多个文件<br>自行保证唯一性 | <b>citekey</b><br>由BBT生成 | <b>citekey / itemKey</b><br>citekey由BBT生成<br>itemKey由Zotero生成 | <b>itemKey</b><br>由 Zotero 自动生成 |
+| 搜索面板 | Citation插件面板 | Zotero面板 | Citation插件面板 / Zotero面板 （可选） | Citation插件面板 |
+| 初始化速度 | 慢 | 快 | 快 | 快 |
+| 搜索/插入速度 | 快 | 慢 | 快（Citation插件面板） | 快 |
+| 兼容Zotero 7 | - | √ | √ | √ |
+| 兼容其它文献管理软件 | ✓ | × | × | × |
+| 支持导入pdf标注<br>（annotations） | × | × | ✓ | × |
+| 支持从Zotero拖入选中/批注时自动引用 | × | ✓ | ✓ | ✓ |
+| 支持通过搜索面板<br>一次性插入多篇文献 | × | ✓ | ×（Citation插件面板）<br>✓ （Zotero面板） | ✓ |
+| 同时修改相邻的多个引用 | × | × | ✓ | ✓ |
+| 插入在Zotero中<br>选中的条目 | × | × | ✓ | ✓ |
+| 支持在Zotero条目中<br>插入跳转思源链接 | × | × | ✓ | ✓ |
+| 支持在Zotero条目中<br>插入自定义标签 | × | × | ✓ | ✓ |
+| 导出带有引用的word文档 | × | × | ✓ | ✓ |
+| 导出带引用的LaTex | × | × | ✓（同时要求安装better-bibtex插件） | ✓（同时要求安装better-bibtex插件） |
 
 ### 对插件进行基本设置
 1. 进入设置界面：点击`设置-集市-已下载-文献引用`插件开关旁边的齿轮按钮进入设置界面，也可以通过在顶栏插件按钮点击后的菜单中点击`文献引用`直接进入插件的设置界面。
 2. 选择存放[文献内容](#名词说明)的[笔记本](#名词说明)：只能下拉选择已经在文档树中打开的笔记本，如果之前设置的笔记本本次启动未打开，那么将无法使用本插件。
 3. 填写[文献库](#名词说明)路径：路径以`/`开头，例如`/References`或者`/Assets/References`，注意该路径本质上为文档所在路径，不要在最后加`/`。**注意：如果更换了文献库的路径，之前路径上的文献库将失效。此外，请确保该文档存在，因为[本插件不会自动创建文献库文档](#文献库路径不存在)**
-4. 选择[数据库](#名词说明)类型：选择使用的数据库的类型，如果使用数据文件请参考[使用数据文件作为文献数据来源](#如果你使用bibtex和csl-json文件作为文献数据的来源)，如果使用Zotero/Juris-M（使用better-bibtex插件）请参考[使用Zotero/Juris-M（使用better-bibtex插件）作为文献数据来源](#如果你使用-zoterojuris-m-better-bibtex-作为文献数据来源)，如果使用Zotero/Juris-M（使用better-bibtex插件）请参考[使用Zotero/Juris-M（使用debug-bridge插件）作为文献数据来源](#如果你使用-zoterojuris-m-debug-bridge-作为文献数据来源)。
+4. 选择[数据库](#名词说明)类型：选择使用的数据库的类型，如果使用数据文件请参考[使用数据文件作为文献数据来源](#如果你使用bibtex和csl-json文件作为文献数据的来源)，如果使用Zotero/Juris-M（使用better-bibtex插件）请参考[使用Zotero/Juris-M（使用better-bibtex插件）作为文献数据来源](#如果你使用-zoterojuris-m-better-bibtex-作为文献数据来源)，如果使用Zotero/Juris-M（使用debug-bridge插件）请参考[使用Zotero/Juris-M（使用debug-bridge插件）作为文献数据来源](#如果你使用-zoterojuris-m-debug-bridge-作为文献数据来源)，如果使用Zotero/Juris-M（使用 Web API）请参考[使用Zotero/Juris-M（使用 Web API）作为文献数据来源](#如果你使用-zoterojuris-m-web-api-作为文献数据来源)。
 5. 如果你选择Zotero/Juris-M（使debug-bridge插件）作为文献数据来源，推荐开启“使用itemKey作为索引”选项
 6. 填写[文献内容文档标题]模板：填写生成文献内容文档的标题模板，模板的具体写法参考[模板写法](#怎么写模板)。
 7. 填写[文献内容](#名词说明)模板：填写生成文献内容文档的文本内容模板，模板的具体写法参考[模板写法](#怎么写模板)。
@@ -89,6 +89,17 @@
 - 在插件的设置面板中，数据库类型处选择`Zotero (debug-bridge)`或者`Juris-M (debug-bridge)`。
 - 在设置面板的“debug-bridge插件”栏中，输入设置时配置的密码，并选择使用SiYuan（Citation插件面板）或者Zotero面板作为搜索面板。
 - 在使用前确保你的 Zotero 或者 Juris-M 是打开的。
+
+### 如果你使用 Zotero/Juris-M (Web API) 作为文献数据来源
+
+- **确保你使用的是 Zotero 7 / Juris-M，通过`设置-高级-允许此计算机上的其它应用与zotero通信`，并且本地 Web API 可以正常访问。该模式不要求安装 Better BibTeX 或 debug-bridge。**
+- 在插件的设置面板中，数据库类型处选择`Zotero (Web API)`或者`Juris-M (Web API)`。
+- Web API 模式**固定使用 itemKey 作为索引**，适合希望减少前置插件依赖、追求简单配置的用户。
+- 在使用前确保你的 Zotero 或者 Juris-M 是打开的。
+- 当前适用范围：
+  - 文献条目、附件、笔记的读取已经支持；
+  - 在思源桌面端中，基础附件导入可用；
+  - PDF annotations 目前仍是有限支持，如果你需要最完整的标注工作流，仍推荐使用 `debug-bridge` 模式。
 
 
 ## 目前有什么功能
@@ -292,6 +303,14 @@
 
 在0.3.6版本后，通过在浏览器上安装[CORS Unblock 插件](https://webextension.org/listing/access-control.html)可以使用浏览器前端与zotero通信。
 
+对于 `Zotero/Juris-M (Web API)` 模式，目前的可用范围如下：
+
+- **最佳支持**：思源桌面端，且 Zotero 与思源运行在同一台机器上
+- **可尝试使用**：网页版 / Docker 版，只要浏览器能够访问 Zotero 本地 API 端口，或者通过局域网访问对应端口，并且正确处理 CORS
+- **暂不保证**：无法直接访问 Zotero 本地端口的移动端、纯浏览器环境
+
+此外，Web API 模式中的部分附件导入逻辑依赖桌面端的 Node/Electron 环境，因此当前最完整的体验仍在思源桌面端。
+
 ## 打开“自定义引用”的开关后会发生什么
 
 [引用链接模板](#对插件进行设置)将变为完全自定义引用的格式，即引用链接模板生成的内容不再为锚文本，而是将**直接插入文档**。此时，为了避免对用户自身内容的影响，插件的刷新引用功能将**不会对链接（即双括号）外的部分进行维护**。
@@ -314,32 +333,47 @@
 
 ## 使用数据库统计文献信息
 
-从0.4.0版本开始，文献引用插件支持在引用的同时更新数据库，并按一定模板规则更新数据库数据。如果要开启该功能，需要在设置面板中进行一定的配置。
-1. 在`数据库块id`中填入想要更新的数据库所在块的id。
-2. 此时`数据库属性模板`的说明中将会显示如下的数据库列详细信息，然后以json格式填写数据库属性模板。注意这里根据模板生成的json格式数据会直接作为`/api/av/setAttributeViewBlockAttr`这个api的传入参数，所以数据库没有更新可能是因为json内部一些数据的格式错误导致的。
+从 0.4.0 版本开始，文献引用插件支持在引用文献的同时把文献文档加入思源数据库，并更新数据库属性。
+
+1. 在`数据库块 ID`中填入目标数据库所在块的 ID。
+2. 等待插件加载数据库列。
+3. 在表格中为每一列选择填充方式。不需要由插件维护的列请选择`不填充`。
+
+内置填充方式包括：
+
+- 单选/多选列：第一作者、末位作者、发表期刊；
+- 日期列：发表日期；
+- URL 列：URL、Zotero URL；
+- 所有列类型：自定义。
+
+内置模式会自动处理空值和 JSON 特殊字符。旧版本的数据库属性模板会在数据库列成功加载后迁移为逐列的`自定义`配置；旧模板中没有配置的列不会被自动启用。如果数据库加载或迁移失败，插件会保留原始配置，不会用空配置覆盖。
 
 ![](./assets/database.png)
 
-### 数据库属性模板
+### 自定义数据库属性
 
-数据库属性模板为标准的json列表格式（请确保在模板填入数据后为正确的json格式，否则可能报错）。一个json块的基本形式为：
+选择`自定义`时，只需要填写该列的 `value` 对象，不需要填写 `keyID` 和外层列表。例如文本列可以填写：
+
 ```json
 {
-  "keyID": "<设置面板中显示的列id>",
-  "value": {
-    <不同列类型（type）对应的写入值>
+  "text": {
+    "content": {{ JSON.stringify(title || "") }}
   }
 }
 ```
-json列表的格式为：
+
+多选标签列可以填写：
+
 ```json
-[<json块>, <json块>, ... , <json块>]
+{
+  "mSelect": {{ JSON.stringify(tags ? tags.split(", ").map(content => ({ content })) : []) }}
+}
 ```
-**注意：**
-1. 只有在逗号、大括号或中括号后可换行。
-2. 请勿在最后一个json块后添加逗号。
+
+字符串请使用 `JSON.stringify(...)` 输出，不要把 `{{ ... }}` 直接放在 JSON 双引号中，否则文献字段包含引号、反斜杠或换行时会生成无效 JSON。
 
 列类型对应写入值如下：
+
 | 列类型 | 写入值 |
 | :---- | :---- |
 | block | 文档的块，**不要写入这个列** |
@@ -353,41 +387,6 @@ json列表的格式为：
 | checkbox | {"checkbox": {"content": {"checked": <是否选中，值为true/false>}}} |
 | date | {"date": {"content": "<日期，Unix时间格式>", "content2": "<结束日期，Unix时间格式>", "isNotTime": <是否显示具体时间，值为true/false>}} |
 | mAsset | {"mAsset": [{"content": "<素材1在data文件夹中的地址，通常为“assets/”开头>", "name": "<素材1命名>", "type": "<素材1类型，目前只有image/file>"}, {"content": "<素材2地址>", "name": "<素材2命名>", "type": "<素材2类型>"}, ... , {"content": "<素材N地址>", "name": "<素材N命名>", "type": "<素材N类型>"}]} |
-
-
-以下给出一个例子，对应的列类型即上面的示例图片所展示的。
-```json
-[{
-  "keyID": "20241213145643-93lsu79",
-  "value": {
-    "number": {
-          "content": {{ year ? year + ".0" : 0 }},
-          "isNotEmpty": {{ year ? "true" : "false" }}
-    }
-  }
-},{
-  "keyID": "20241213154218-0xmwul5",
-  "value": {
-    "text": {"content": "{{ authorString }}"}
-  }
-},{
-  "keyID": "20241213154247-n49kxja",
-  "value": {
-    "mSelect": [{"content": "{{ containerTitle }}"}]
-  }
-},{
-  "keyID": "20241213154804-8m6pn1p",
-  "value": {
-    "url": {"content": "{{ zoteroSelectURI }}"}
-  }
-},{
-  "keyID": "20241213154948-lsl87m9",
-  "value": {
-    "mSelect": {{ tags ? "[" + tags.split(", ").map(tag => `{ "content": "${tag}" }`).join(",") + "]" : "[]" }}
-  }
-}
-]
-```
 
 ## 扩展：从zotero反过来索引到思源中的文献内容文档
 
