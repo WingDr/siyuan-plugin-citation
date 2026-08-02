@@ -97,7 +97,28 @@
         "attrViewBlockInput": "Database block id",
         "attrViewBlockDescription": "The id of the database that needed to be update during citation",
         "attrViewTemplateInput": "Database attribute template",
-        "attrViewTemplateDescription": "Add the content document of the literature to the specified database during the citation, and adjust the database properties according to this template. The following will dynamically display the corresponding relationship between the database block ID and column names:<br>"
+        "attrViewTemplateDescription": "Add the content document of the literature to the specified database during the citation, and adjust the database properties according to this template. The following will dynamically display the corresponding relationship between the database block ID and column names:<br>",
+        "attrViewConfig": {
+          "description": "Choose how each database column is filled. Built-in modes generate safe values for the column type; Custom accepts the value template object for that column.",
+          "loading": "Loading database columns…",
+          "loadError": "Unable to load database columns. Existing settings were not changed. Check the database block ID and try again.",
+          "migrationError": "The legacy database attribute template could not be migrated safely. The original template was preserved and will not be overwritten.",
+          "empty": "Enter a valid database block ID to load its columns.",
+          "columnName": "Column",
+          "columnType": "Type",
+          "fillMode": "Fill mode",
+          "customTemplate": "Custom template",
+          "fillModes": {
+            "none": "Do not fill",
+            "firstAuthor": "First author",
+            "lastAuthor": "Last author",
+            "journal": "Journal",
+            "date": "Publication date",
+            "zoteroUrl": "Zotero URL",
+            "url": "URL",
+            "custom": "Custom"
+          }
+        }
       }
     },
     "debug_bridge": {
