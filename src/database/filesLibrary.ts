@@ -17,6 +17,8 @@ export const TEMPLATE_VARIABLES = {
   citekey: "Unique citekey",
   abstract: "",
   authorString: "Comma-separated list of author names",
+  firstAuthor: "First author name",
+  lastAuthor: "Last author name",
   containerTitle:
     "Title of the container holding the reference (e.g. book title for a book chapter, or the journal title for a journal article)",
   DOI: "",
@@ -31,6 +33,7 @@ export const TEMPLATE_VARIABLES = {
   titleShort: "",
   URL: "",
   year: "Publication year",
+  issuedDate: "Publication date as a Unix timestamp in milliseconds",
   files: "Pathes of attached files",
   zoteroSelectURI: "URI to open the reference in Zotero",
 };
@@ -59,6 +62,8 @@ export class Library {
       abstract: entry.abstract,
       author: entry.author,
       authorString: entry.authorString,
+      firstAuthor: formatAuthorName(entry.author?.[0]),
+      lastAuthor: formatAuthorName(entry.author?.at(-1)),
       annotations: entry.annotations,
       annotationList: entry.annotationList,
       containerTitle: entry.containerTitle,
@@ -83,6 +88,7 @@ export class Library {
       shortAuthor: entry.shortAuthor,
       URL: entry.URL,
       year: entry.year?.toString(),
+      issuedDate: entry.issuedDate?.getTime() ?? 0,
       zoteroSelectURI: entry.zoteroSelectURI,
     };
 
@@ -136,6 +142,10 @@ export function loadEntries(
 export interface Author {
   given?: string;
   family?: string;
+}
+
+export function formatAuthorName(author?: Author): string {
+  return author ? [author.given, author.family].filter(Boolean).join(" ") : "";
 }
 
 export interface File {

@@ -1,5 +1,5 @@
 import moment, { max } from "moment";
-import { Entry, type Author, type IIndexable, type File, type SingleNote } from "./filesLibrary";
+import { Entry, formatAuthorName, type Author, type IIndexable, type File, type SingleNote } from "./filesLibrary";
 import { htmlNotesProcess } from "../utils/notes";
 import { filePathProcess, fileNameProcess } from "../utils/util";
 
@@ -382,6 +382,8 @@ export function getTemplateVariablesForZoteroEntry(entry: EntryZoteroAdapter): R
     abstract: entry.abstract,
     author: entry.author,
     authorString: entry.authorString,
+    firstAuthor: formatAuthorName(entry.author?.[0]),
+    lastAuthor: formatAuthorName(entry.author?.at(-1)),
     annotations: entry.annotations,
     annotationList: entry.annotationList,
     containerTitle: entry.containerTitle,
@@ -407,6 +409,7 @@ export function getTemplateVariablesForZoteroEntry(entry: EntryZoteroAdapter): R
     shortAuthor: entry.shortAuthor,
     URL: entry.URL,
     year: entry.year?.toString(),
+    issuedDate: entry.issuedDate?.getTime() ?? 0,
     itemKey: entry.itemKey,
     zoteroSelectURI: entry.zoteroSelectURI,
   };

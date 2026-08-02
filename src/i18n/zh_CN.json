@@ -97,7 +97,28 @@
         "attrViewBlockInput": "数据库块id",
         "attrViewBlockDescription": "需要更新的数据库所在块id",
         "attrViewTemplateInput": "数据库属性模板",
-        "attrViewTemplateDescription": "在引用时将文献内容文档添加进指定数据库，并按照该模板对数据库属性进行幅值，以下将动态展示数据库块的id和列名称的对应关系：<br>"
+        "attrViewTemplateDescription": "在引用时将文献内容文档添加进指定数据库，并按照该模板对数据库属性进行幅值，以下将动态展示数据库块的id和列名称的对应关系：<br>",
+        "attrViewConfig": {
+          "description": "选择数据库每一列的填充方式。内置选项会根据列类型生成安全的属性值；选择“自定义”可填写该列的 value 模板对象。",
+          "loading": "正在加载数据库列……",
+          "loadError": "无法加载数据库列，原有配置不会被修改。请检查数据库块 ID 后重试。",
+          "migrationError": "旧数据库属性模板无法安全迁移，原始模板已保留且不会被覆盖。请检查模板格式。",
+          "empty": "请输入正确的数据库块 ID 以加载列。",
+          "columnName": "列名",
+          "columnType": "类型",
+          "fillMode": "填充方式",
+          "customTemplate": "自定义模板",
+          "fillModes": {
+            "none": "不填充",
+            "firstAuthor": "第一作者",
+            "lastAuthor": "末位作者",
+            "journal": "发表期刊",
+            "date": "发表日期",
+            "zoteroUrl": "Zotero URL",
+            "url": "URL",
+            "custom": "自定义"
+          }
+        }
       }
     },
     "debug_bridge": {

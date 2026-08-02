@@ -5,6 +5,9 @@
   "main": ".src/index.js",
   "scripts": {
     "lint": "eslint . --fix --cache",
+    "test": "npm run test:attr-view && npm run test:literature-doc-query",
+    "test:attr-view": "ts-node --transpile-only --project tsconfig.test.json tests/attrViewConfig.test.ts",
+    "test:literature-doc-query": "ts-node --transpile-only --project tsconfig.test.json tests/literatureDocQuery.test.ts",
     "dev": "webpack --mode development",
     "build": "webpack --mode production"
   },
