@@ -4,6 +4,7 @@ import {
   STORAGE_NAME
 } from "./constants";
 import { createLogger } from "./simple-logger";
+import { isDirectChildDocument } from "../api/literature-doc-query";
 import { type INoticer } from "./noticer";
 
 interface ReadDirRes {
@@ -82,11 +83,13 @@ export async function loadLocalRef(plugin: SiYuanPluginCitation): Promise<LoadLo
        * 2. key在文档的命名中
        * 3. key在文档的自定义字段“custom-literature-key”中
        */
-      const literatureDocs  = (await plugin.kernelApi.getLiteratureDocInPath(notebookId, refPath + "/", offset, limit)).data as any[];
-      if (literatureDocs.length < limit) {
+      const queriedDocs = (await plugin.kernelApi.getLiteratureDocInPath(notebookId, refPath, offset, limit)).data as any[];
+      if (queriedDocs.length < limit) {
         // 已经提取到所有了
         cont = false;
       }
+      // SQL 已限制为直接子文档；这里再做一次防御性过滤，避免后端方言或路径异常把更深层子文档带入文献池。
+      const literatureDocs = queriedDocs.filter(file => isDirectChildDocument(refPath, file.hpath));
       const pList = literatureDocs.map(async file => {
         let key = "";
         const literatureKey = file.literature_key;
