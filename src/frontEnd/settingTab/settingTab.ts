@@ -28,7 +28,7 @@ export class SettingTab {
       logger: this.logger,
       reloadDatabase: async (database: string) => {
         if (isDev) this.logger.info("reload database");
-        await this.plugin.database.buildDatabase(database as DatabaseType);
+        await this.plugin.database.reloadDatabase(database as DatabaseType);
         return await this.plugin.reference.checkRefDirExist();
       },
       refreshLiteratureNoteTitle: async (titleTemplate: string) => {

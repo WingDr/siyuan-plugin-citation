@@ -77,7 +77,12 @@ export class Database {
     }
     await this.dataModal.buildModal();
     if (isDev) this.logger.info("载入引用");
-    loadLocalRef(this.plugin);
+    await loadLocalRef(this.plugin);
+  }
+
+  public async reloadDatabase(type: DatabaseType) {
+    this.type = null;
+    return await this.buildDatabase(type);
   }
 
 

@@ -195,7 +195,7 @@ export class InteractionManager {
         hotkey: "",
         callback: async () => {
           await this.plugin.reference.checkRefDirExist();
-          return this.plugin.database.buildDatabase(this.plugin.data[STORAGE_NAME].database as DatabaseType);
+          return this.plugin.database.reloadDatabase(this.plugin.data[STORAGE_NAME].database as DatabaseType);
         }
       },
       {
