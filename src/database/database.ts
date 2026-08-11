@@ -200,6 +200,7 @@ export class Database {
   }
 
   private async insertCiteLinkBySelection(keys: string[]) {
+    if (!keys.length) return;
     const fileId = (this.protyle as any).protyle.block.rootID;
     await this.plugin.reference.checkRefDirExist();
     if (this.plugin.isRefPathExist) {
