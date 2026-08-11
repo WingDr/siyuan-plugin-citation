@@ -39,21 +39,10 @@ export class LiteratureNote {
         return;
       }
 
-      // 2. 检查 literaturePool 中是否已存在（使用最终key）
-      const existingDocId = this.plugin.literaturePool.get(final_key);
-      if (existingDocId) {
-        if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("文献文档已存在于literaturePool", { key: final_key, id: existingDocId });
-        // 如果已存在，只更新内容，不创建新文档
-        this.updateBatches.set(final_key, {entry, noConfirmUserData, mission: null});
-        const mission = this.updateLiteratureNote(final_key, entry, {noConfirmUserData, userDataId: ""});
-        this.updateBatches.set(final_key, {entry, noConfirmUserData, mission});
-        return;
-      }
-
-      // 3. 首先进行占位（防止并发，使用最终key）
+      // 2. 首先进行占位（防止并发，使用最终key）
       this.updateBatches.set(final_key, {entry, noConfirmUserData, mission:null});
 
-      // 4. 检查文档是否存在，不存在则新建（使用最终key搜索）
+      // 3. 从数据库检查文档是否存在，不存在则新建（使用最终key搜索）
       const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
       const refPath = this.plugin.data[STORAGE_NAME].referencePath as string;
       const res = this.plugin.kernelApi.searchFileWithKey(notebookId, refPath + "/", final_key);
@@ -61,15 +50,7 @@ export class LiteratureNote {
       let userDataId = "";
 
       if (!data.length) {
-        // 创建前再次检查 literaturePool（双重检查，防止竞争条件，使用最终key）
-        const doubleCheckDocId = this.plugin.literaturePool.get(final_key);
-        if (doubleCheckDocId) {
-          if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("双重检查发现文献已存在", { key: final_key, id: doubleCheckDocId });
-          const mission = this.updateLiteratureNote(final_key, entry, {noConfirmUserData, userDataId: ""});
-          this.updateBatches.set(final_key, {entry, noConfirmUserData, mission});
-          return;
-        }
-
+        this.plugin.literaturePool.delete(final_key);
         // 创建时直接使用最终key
         const literatureId = await this._createEmptyNote(final_key, entry);
         userDataId = await this._updateEmptyNote(literatureId);
