@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
     // "inlineSourceMap": true,
     "inlineSources": true,
     "target": "ESNext",
@@ -15,7 +14,7 @@
     ],
     "allowJs": true,
     /* Bundler mode */
-    "moduleResolution": "Node",
+    "moduleResolution": "Bundler",
     "importHelpers": true,
     "allowImportingTsExtensions": true,
     "allowSyntheticDefaultImports": true,
