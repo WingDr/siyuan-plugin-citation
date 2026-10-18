@@ -200,7 +200,9 @@ export class Database {
   }
 
   private async insertCiteLinkBySelection(keys: string[]) {
-    if (!keys.length) return;
+    // 过滤掉 null/undefined/空字符串，避免空选择时触发引用类型菜单
+    const validKeys = keys.filter(key => key && key.length > 0);
+    if (!validKeys.length) return;
     const fileId = (this.protyle as any).protyle.block.rootID;
     await this.plugin.reference.checkRefDirExist();
     if (this.plugin.isRefPathExist) {
@@ -213,7 +215,7 @@ export class Database {
             label: tmp.name,
             icon: "iconRef",
             click: async () => {
-              const content = await this.plugin.reference.processReferenceContents(keys, fileId, tmp.name);
+              const content = await this.plugin.reference.processReferenceContents(validKeys, fileId, tmp.name);
               this.plugin.reference.insertContent(this.protyle, content.join(""), this.refStartNode, this.refEndNode);
             }
           });
@@ -226,7 +228,7 @@ export class Database {
           y: rect.top
         });
       } else {
-        const content = await this.plugin.reference.processReferenceContents(keys, fileId, linkTempGroup[0].name);
+        const content = await this.plugin.reference.processReferenceContents(validKeys, fileId, linkTempGroup[0].name);
         this.plugin.reference.insertContent(this.protyle, content.join(""), this.refStartNode, this.refEndNode);
       }
     }
