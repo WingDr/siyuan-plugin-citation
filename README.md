@@ -17,7 +17,6 @@
 2. **Support for multiple citation styles**
 3. **Compatibility with latest debug-bridge-1.0, updated communication details (backward compatible)**
 4. **Support exporting Word documents and LaTeX with Zotero citations**
-5. **Import Word documents with active Zotero fields as SiYuan literature references**
 5. **Database synchronization support (template creation requires understanding of SiYuan's database)**
 
 **Special thanks to [Geo123abc](https://github.com/Geo123abc) for creating the [tutorial video](https://www.bilibili.com/video/BV17u411j79z/?vd_source=b4b4ca14b1a866918dcef4ca52896f03).**
@@ -139,16 +138,9 @@ Currently, you can use four different sources for literature data: Data Files (B
     - Word with citations
     - LaTeX with citations (requires BBT)
   - `Bind to literature`: Bind the current document to the selected literature. The content will be automatically treated as user data. If another document is already bound to the selected literature, they will be automatically merged.
-  - `Import Word with Zotero citations`: Select a `.docx` file to import as a child of the current document. The same command is available in the command palette. Existing titles receive a numeric suffix.
   - `Unbind from literature` (only for library documents): Remove the binding from the selected literature. After this, all operations from this plugin will no longer affect this document.
 - Citation Link Right-Click Menu:
   - `Change Citation Style`: Convert selected citation(s) to specified style
-
-Right-click a single document in the document tree to access the plugin's Export submenu (Word, Markdown and LaTeX) and Import Word with Zotero citations. Both actions use the selected tree document without opening it first; imported documents are created underneath it.
-
-Word import converts active Zotero fields in the body, footnotes and endnotes into static SiYuan literature references. Text colors are preserved during both Word import and export, including colored superscripts and subscripts. Ordinary superscripts and subscripts use native SiYuan text marks, so author affiliations and chemical subscripts display without enabling optional inline syntax. It matches personal-library items by Zotero item key, DOI or citekey, reuses existing notes, and creates missing notes from your literature template. Citations use the plugin's first citation-type template. Multi-item citations become separate clickable references with their prefixes, suffixes and locators. Template parentheses and group delimiters belong to the reference anchors, so re-exporting consumes them without leaving extra punctuation. Unmatched, ambiguous or malformed fields keep their original text, with a completion count. Zotero-generated Bibliography fields are skipped by default to prevent duplicate lists on re-export; ordinary bibliography text without a Zotero field is retained. Body formatting, tables and embedded images are converted through SiYuan's Pandoc; complex Word formatting and page layout may differ.
-
-Use Zotero Web API or debug-bridge with Zotero running and a configured literature library. BibTeX/CSL-JSON sources can match by DOI or citekey; direct Better BibTeX mode matches items already represented by SiYuan literature notes. Group-library citations remain plain text. Unrefreshed exports from this plugin containing only numeric IDs require the original Zotero library and debug-bridge mode. Unlinked plain-text citations cannot be restored automatically. Save legacy `.doc` files as `.docx` before importing.
 
 
 ![ ](./assets/protyleslash.png)
