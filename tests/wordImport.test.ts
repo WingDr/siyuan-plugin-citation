@@ -8,6 +8,7 @@ import { DOMParser, XMLSerializer } from "@xmldom/xmldom";
 import { zipSync, unzipSync, strToU8, strFromU8 } from "fflate";
 import { CitationMatcher, citationItemText, markdownText, prepareZoteroWord, staticReference } from "../src/import/zoteroWord";
 import { LiteraturePool, getLiteratureKey } from "../src/references/pool";
+import { formatMultiCitation, renderCiteLink } from "../src/references/citationFormat";
 
 Object.assign(globalThis, { DOMParser, XMLSerializer });
 const tests: Array<[string, () => void | Promise<void>]> = [];
@@ -52,13 +53,43 @@ test("simple fields, multiple citations, tables and footnotes are recognized", (
   assert.deepEqual(unzipSync(result.data)["word/media/image.png"], new Uint8Array([1, 2, 3]));
 });
 
-test("bibliographies and non-Zotero fields remain intact", () => {
-  const body = complex([item()]).replace("ZOTERO_ITEM CSL_CITATION", "ZOTERO_BIBL") +
+test("Zotero bibliography fields are omitted without removing surrounding text or other fields", () => {
+  const body = text("Before bibliography ") + complex([item()], "Bibliography entry").replace("ZOTERO_ITEM CSL_CITATION", "ZOTERO_BIBL") +
+    text(" after bibliography") +
+    `<w:fldSimple w:instr=" ADDIN ZOTERO_BIBL {} CSL_BIBLIOGRAPHY">${text("Simple bibliography entry")}</w:fldSimple>` +
     `<w:fldSimple w:instr="PAGE">${text("4")}</w:fldSimple>`;
   const result = prepareZoteroWord(archive(body), "T");
   assert.equal(result.citations.length, 0);
-  assert.match(outputXML(result.data), /ZOTERO_BIBL/);
+  assert.equal(result.removedBibliographies, 2);
+  assert.doesNotMatch(outputXML(result.data), /ZOTERO_BIBL|Bibliography entry|Simple bibliography entry/);
+  assert.match(outputXML(result.data), /Before bibliography /);
+  assert.match(outputXML(result.data), / after bibliography/);
   assert.match(outputXML(result.data), /PAGE/);
+});
+
+test("multi-paragraph bibliography is omitted while ordinary reference text is retained", () => {
+  const bibliography = complex([item()], "BIBLIOGRAPHYENTRIES")
+    .replace("ZOTERO_ITEM CSL_CITATION", "ZOTERO_BIBL")
+    .replace("BIBLIOGRAPHYENTRIES", "Entry one</w:t></w:r></w:p><w:p><w:r><w:t>Entry two");
+  const result = prepareZoteroWord(archive(text("Plain bibliography text") + bibliography + text("After list")), "T");
+  assert.equal(result.removedBibliographies, 1);
+  assert.doesNotMatch(outputXML(result.data), /Entry one|Entry two/);
+  assert.match(outputXML(result.data), /Plain bibliography text/);
+  assert.match(outputXML(result.data), /After list/);
+});
+
+test("templates own all brackets and separators inside the individual reference anchors", () => {
+  const first = {shortAuthor: "Lanz and Kathman et al.", containerTitle: "Nature", year: "2026"};
+  const second = {shortAuthor: "Nair and Karigo et al.", containerTitle: "Cell", year: "2023"};
+  const settings = {linkTemplate: "({{shortAuthor}}, {{containerTitle}}, {{year}})", multiCitePrefix: "", multiCiteConnector: "", multiCiteSuffix: ""};
+  const labels = [first, second].map((entry, i) => formatMultiCitation(renderCiteLink(settings.linkTemplate, entry, "id", i), i, 2, settings));
+  assert.deepEqual(labels, ["(Lanz and Kathman et al., Nature, 2026)", "(Nair and Karigo et al., Cell, 2023)"]);
+  const refs = labels.map((label, i) => staticReference(`20261110000000-${i ? "bbbbbbb" : "aaaaaaa"}`, label)).join("");
+  assert.equal(refs, '((20261110000000-aaaaaaa "(Lanz and Kathman et al., Nature, 2026)"))((20261110000000-bbbbbbb "(Nair and Karigo et al., Cell, 2023)"))');
+  const grouped = {multiCitePrefix: "(", multiCiteConnector: "; ", multiCiteSuffix: ")"};
+  assert.equal(formatMultiCitation("A", 0, 2, grouped), "(A; ");
+  assert.equal(formatMultiCitation("B", 1, 2, grouped), "B)");
+  assert.equal(formatMultiCitation("A", 0, 1, grouped), "(A)");
 });
 
 test("malformed and unterminated fields preserve visible text and report failures", () => {
@@ -84,8 +115,8 @@ test("empty, invalid and ordinary DOCX input is handled", () => {
 });
 
 const entries = [
-  { key: "1_Smith2024", itemKey: "ABCDEFGH", citekey: "Smith2024", DOI: "10.1000/ABC", title: "Title A", entry: {data: {itemID: 42, libraryID: 1}} },
-  { key: "1_Jones2025", itemKey: "IJKLMNOP", citekey: "Jones2025", title: "Title B", entry: {data: {itemID: 43, libraryID: 1}} },
+  { key: "1_Smith2024", itemKey: "ABCDEFGH", citekey: "Smith2024", DOI: "10.1000/ABC", title: "Title A", entry: {data: {id: 42, itemID: 42, libraryID: 1}} },
+  { key: "1_Jones2025", itemKey: "IJKLMNOP", citekey: "Jones2025", title: "Title B", entry: {data: {id: 43, itemID: 43, libraryID: 1}} },
 ];
 
 test("item URIs outrank foreign numeric IDs; DOI and citekey are fallbacks", () => {
@@ -112,7 +143,7 @@ test("static anchors escape quotes; individual citations retain prefix/suffix/lo
   assert.equal(getLiteratureKey({citekey: "Smith2024", itemKey: "ABCDEFGH"}, false), "1_Smith2024");
 });
 
-// Execute the real converter for the import manager; mock only SiYuan's host APIs.
+// Use real import/export conversion; replace the host APIs and literature-note creation.
 test("real Pandoc import retains images, table, footnotes, citations and repeat-import identity", async () => {
   const dir = mkdtempSync(join(tmpdir(), "citation-import-test-"));
   const Module = require("node:module");
@@ -132,13 +163,14 @@ test("real Pandoc import retains images, table, footnotes, citations and repeat-
   const originalUpdate = LiteratureNote.prototype.updateLiteratureNote;
   try {
     writeFileSync(join(dir, "image.png"), Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=", "base64"));
-    writeFileSync(join(dir, "source.md"), '# Heading\n\nBefore CITATIONONE after. CLUSTER UNKNOWN\n\n| Column | Value |\n|---|---|\n| A | B |\n\n![picture](image.png)\n\nWith note[^1].\n\n[^1]: Footnote CITATIONFOOT\n');
+    writeFileSync(join(dir, "source.md"), '# Heading\n\nBefore CITATIONONE after. CLUSTER UNKNOWN\n\n| Column | Value |\n|---|---|\n| A | B |\n\n![picture](image.png)\n\nWith note[^1].\n\nBIBLIOGRAPHY\n\n[^1]: Footnote CITATIONFOOT\n');
     execFileSync("pandoc", ["source.md", "-o", "source.docx"], {cwd: dir});
     const files = unzipSync(readFileSync(join(dir, "source.docx")));
     files["word/document.xml"] = strToU8(strFromU8(files["word/document.xml"])
       .replace("CITATIONONE", `</w:t></w:r>${complex([item()], "[1]", true)}<w:r><w:t>`)
       .replace("CLUSTER", `</w:t></w:r>${complex([item(), item("IJKLMNOP")], "[1,2]")}<w:r><w:t>`)
-      .replace("UNKNOWN", `</w:t></w:r>${complex([item("XXXXXXXX")], "[99]")}<w:r><w:t>`));
+      .replace("UNKNOWN", `</w:t></w:r>${complex([item("XXXXXXXX")], "[99]")}<w:r><w:t>`)
+      .replace("BIBLIOGRAPHY", `</w:t></w:r>${complex([], "Duplicate bibliography entry").replace("ZOTERO_ITEM CSL_CITATION", "ZOTERO_BIBL")}<w:r><w:t>`));
     files["word/footnotes.xml"] = strToU8(strFromU8(files["word/footnotes.xml"])
       .replace("CITATIONFOOT", `</w:t></w:r>${complex([item()], "(Smith, 2024, p. 12)")}<w:r><w:t>`));
     const file = new File([new Uint8Array(zipSync(files)).buffer], "Example.docx");
@@ -150,12 +182,16 @@ test("real Pandoc import retains images, table, footnotes, citations and repeat-
     let noteCreations = 0;
     const plugin: any = {
       app: {}, i18n: messages, literaturePool: pool,
-      data: {"menu-config": {referenceNotebook: "box", referencePath: "/References", useItemKey: false}},
+      data: {"menu-config": {
+        referenceNotebook: "box", referencePath: "/References", useItemKey: false,
+        linkTemplate: "unused global template",
+        linkTemplatesGroup: [{name: "default", linkTemplate: "({{shortAuthor}}, {{containerTitle}}, {{year}})"}],
+      }},
       reference: {checkRefDirExist: async () => { plugin.isRefPathExist = true; }},
       noticer: {info: (...args: any[]) => notices.push(args), error: (...args: any[]) => errors.push(args)},
       database: {
         getImportEntries: async () => entries,
-        getContentByKey: async (key: string) => ({...entries.find(e => e.key === key), shortAuthor: key.includes("Smith") ? "Smith" : "Jones", year: "2024"}),
+        getContentByKey: async (key: string) => ({...entries.find(e => e.key === key), shortAuthor: key.includes("Smith") ? "Smith" : "Jones", containerTitle: "Nature", year: "2024"}),
       },
       kernelApi: {
         getBlock: async () => ({data: [{type: "d", box: "box", hpath: "/Parent's document"}]}),
@@ -195,25 +231,69 @@ test("real Pandoc import retains images, table, footnotes, citations and repeat-
     const md = created[0].md;
     assert.match(md, /# Heading/);
     assert.match(md, /\| Column/);
-    assert.match(md, /Before \(\(20261110000000-aaaaaaa "\[1\]"\)\) after/);
+    assert.ok(md.includes('Before ((20261110000000-aaaaaaa "(Smith, Nature, 2024)")) after'));
+    const expectedCluster = '((20261110000000-aaaaaaa "(Smith, Nature, 2024)"))((20261110000000-bbbbbbb "(Jones, Nature, 2024)"))';
+    assert.ok(md.includes(expectedCluster));
+    assert.ok(!md.includes(`(${expectedCluster})`));
     assert.match(md, /\(\(20261110000000-bbbbbbb/);
     assert.ok(md.includes("\\[99\\]"));
     assert.match(md, /Footnote/);
-    assert.match(md, /Smith, 2024, p\. 12/);
+    assert.match(md, /Footnote \(\(20261110000000-aaaaaaa "\(Smith, Nature, 2024\)"\)\)/);
     assert.match(md, /assets\/word-[a-f0-9]+-media-media-[^)]+\.png/);
-    assert.doesNotMatch(md, /SIYUANCITATION|ZOTERO_ITEM|CSL_CITATION/);
+    assert.doesNotMatch(md, /SIYUANCITATION|ZOTERO_ITEM|CSL_CITATION|ZOTERO_BIBL|Duplicate bibliography entry/);
     assert.ok([...storage.keys()].some(path => path.startsWith("/data/assets/word-")));
     assert.equal(noteCreations, 2);
     assert.deepEqual(notices.find(([message]) => message === messages.wordImport.done)?.[1], {converted: 3, unresolved: 1});
+
+    // Export the imported anchors through the real Word exporter and Lua filters.
+    // The host export endpoint is represented by its documented block-ref markers.
+    const exportedMarkdown = md.replace(/\(\((\d{14}-[a-z0-9]{7}) "([^"]*)"\)\)/g,
+      (_, id, anchor) => `[\\\\exportRef{${anchor}}](siyuan://blocks/${id})`);
+    const projectRoot = join(__dirname, "..");
+    (globalThis as any).document = {createElement: () => ({click() {}})};
+    (globalThis as any).window.URL = {createObjectURL: () => "blob:word-test", revokeObjectURL() {}};
+    (globalThis as any).window.siyuan.config.export = {};
+    const exportPlugin = {...plugin, kernelApi: {
+      ...plugin.kernelApi,
+      getBlock: async () => ({data: [{content: "Roundtrip"}]}),
+      exportMDContent: async () => ({data: {content: exportedMarkdown}}),
+      setExport: async () => ({code: 0}),
+      pandoc: async (_: string, args: string[]) => {
+        const source = storage.get("/temp/convert/pandoc/citation/exportTemp.md")!;
+        writeFileSync(join(dir, "exportTemp.md"), await source.text());
+        const params = args.map(arg => /\/scripts\/(citation|math)\.lua$/.test(arg)
+          ? join(projectRoot, "scripts", arg.endsWith("citation.lua") ? "citation.lua" : "math.lua") : arg);
+        execFileSync("pandoc", params, {cwd: dir});
+        return {code: 0};
+      },
+    }};
+    const { ExportManager } = require("../src/export/exportManager");
+    await new ExportManager(exportPlugin).export("imported", "word");
+    const roundtrip = prepareZoteroWord(readFileSync(join(dir, "exportTemp.docx")), "ROUNDTRIP");
+    assert.equal(roundtrip.citations.length, 3);
+    assert.deepEqual(roundtrip.citations.map(cite => cite.items.map(item => item.id)), [[42], [42, 43], [42]]);
+    const doc = new DOMParser().parseFromString(outputXML(roundtrip.data), "application/xml");
+    const visibleText = Array.from(doc.getElementsByTagNameNS(ns, "t")).map(node => node.textContent).join("");
+    // Both the per-item parentheses and any cluster punctuation were inside refs.
+    assert.doesNotMatch(visibleText, /[();]|Smith|Jones|Duplicate bibliography entry/);
+
     await manager.importWord(file, "parent");
     assert.deepEqual(errors, []);
     assert.equal(noteCreations, 2);
     assert.equal(created[1].path, "/Parent's document/Example (2)");
     assert.equal(opened.length, 2);
+    // Custom reference templates already contain their own block references.
+    plugin.data["menu-config"].linkTemplatesGroup[0] = {
+      name: "custom", customCiteText: true,
+      linkTemplate: '(({{citeFileID}} "({{shortAuthor}}, {{year}})"))',
+    };
+    await manager.importWord(file, "parent");
+    assert.deepEqual(errors, []);
+    assert.ok(created[2].md.includes('((20261110000000-aaaaaaa "(Smith, 2024)"))((20261110000000-bbbbbbb "(Jones, 2024)"))'));
     // Failed conversion must never create an empty destination document.
     plugin.kernelApi.pandoc = async () => {throw new Error("converter failed");};
     await manager.importWord(file, "parent");
-    assert.equal(created.length, 2);
+    assert.equal(created.length, 3);
     assert.equal(errors.length, 1);
     assert.match(errors[0][1].error, /converter failed/);
   } finally {

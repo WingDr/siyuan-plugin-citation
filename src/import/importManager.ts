@@ -1,8 +1,9 @@
 import { openTab } from "siyuan";
 import type SiYuanPluginCitation from "../index";
-import { STORAGE_NAME } from "../utils/constants";
+import { defaultLinkTemplate, STORAGE_NAME } from "../utils/constants";
 import { LiteratureNote } from "../references/literatureNote";
 import { getLiteratureKey } from "../references/pool";
+import { formatMultiCitation, renderCiteLink } from "../references/citationFormat";
 import { CitationMatcher, citationItemText, markdownText, prepareZoteroWord, staticReference, type ImportEntry } from "./zoteroWord";
 
 export class ImportManager {
@@ -65,6 +66,8 @@ export class ImportManager {
       const matcher = new CitationMatcher(entries as ImportEntry[]);
       const notes = new LiteratureNote(this.plugin);
       const resolved = new Map<string, { id: string; entry: ImportEntry }>();
+      const config = this.plugin.data[STORAGE_NAME];
+      const typeSetting = config.linkTemplatesGroup?.[0] ?? config;
       let converted = 0;
       let unresolved = prepared.malformed;
       for (const citation of prepared.citations) {
@@ -78,7 +81,7 @@ export class ImportManager {
             const match = matches[i]!;
             let reference = resolved.get(match.key);
             if (!reference) {
-              const entry = await this.plugin.database.getContentByKey(match.key);
+              const entry = await this.plugin.database.getContentByKey(match.key, typeSetting.shortAuthorLimit);
               if (!entry) break;
               const useItemKey = this.plugin.data[STORAGE_NAME].useItemKey;
               const finalKey = getLiteratureKey(entry, useItemKey);
@@ -92,12 +95,14 @@ export class ImportManager {
               reference = { id, entry };
               resolved.set(match.key, reference);
             }
-            const text = matches.length === 1 && citation.text
-              ? citation.text : citationItemText(citation.items[i], reference.entry);
-            links.push(staticReference(reference.id, text));
+            const index = this.plugin.literaturePool.ids.indexOf(reference.id);
+            const label = renderCiteLink(typeSetting.linkTemplate ?? defaultLinkTemplate, reference.entry, reference.id, index);
+            const text = citationItemText(citation.items[i], reference.entry, label);
+            const anchor = formatMultiCitation(text, i, matches.length, typeSetting);
+            links.push(typeSetting.customCiteText ? anchor : staticReference(reference.id, anchor));
           }
           if (links.length === matches.length) {
-            replacement = links.length === 1 ? links[0] : `(${links.join("; ")})`;
+            replacement = links.join("");
             converted++;
           } else unresolved++;
         } else unresolved++;

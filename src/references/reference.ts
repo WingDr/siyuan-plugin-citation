@@ -14,6 +14,7 @@ import { loadLocalRef, sleep } from "../utils/util";
 import { Cite } from "./cite";
 import { LiteratureNote } from "./literatureNote";
 import { getLiteratureKey } from "./pool";
+import { formatMultiCitation } from "./citationFormat";
 import type { ISpanItem } from "src/utils/types";
 
 // 根据输入更新文献库和引用文档，并维护本文档中的引用次序
@@ -495,7 +496,7 @@ export class Reference {
       const citeId = this.plugin.literaturePool.get(final_key);
       if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获取文献文档ID", {key, final_key, citeId});
 
-      const link = this._processMultiCitation(await this.Cite.generateCiteLink(final_key, idx, typeSetting, false), i, keys.length, typeSetting);
+      const link = formatMultiCitation(await this.Cite.generateCiteLink(final_key, idx, typeSetting, false), i, keys.length, typeSetting);
       const name = await this.Cite.generateLiteratureName(final_key, typeSetting);
       if (returnDetail) {
         let content = link;
@@ -539,16 +540,6 @@ export class Reference {
         return true;
     }
     else return false;
-  }
-
-  private _processMultiCitation(link: string, idx:number, full_length:number, typeSetting: any): string {
-    const prefix = typeSetting.multiCitePrefix ?? "" ;
-    const connector = typeSetting.multiCiteConnector ?? "";
-    const suffix = typeSetting.multiCiteSuffix ?? "";
-    if (full_length == 1) return prefix + link + suffix;
-    else if (idx == 0) return prefix + link + connector;
-    else if (idx == full_length-1) return link + suffix;
-    else return link + connector; 
   }
 
   // Group: 获取当前文档内容

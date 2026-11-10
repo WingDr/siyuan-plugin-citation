@@ -1,5 +1,5 @@
 import { dataDir, isDev, STORAGE_NAME, workspaceDir } from "../utils/constants";
-import SiYuanPluginCitation from "../index";
+import type SiYuanPluginCitation from "../index";
 import { createLogger, type ILogger } from "../utils/simple-logger";
 
 export const exportTypes = ["markdown", "word", "latex"] as const;

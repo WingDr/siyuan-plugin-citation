@@ -25,6 +25,8 @@ export function prepareZoteroWord(data: Uint8Array, token: string) {
   if (!files["word/document.xml"]) throw new Error("Invalid DOCX: word/document.xml");
   const citations: WordCitation[] = [];
   let malformed = 0;
+  let removedBibliographies = 0;
+  const isBibliography = (instruction: string) => /^\s*ADDIN\s+ZOTERO_BIBL\b/.test(instruction);
   for (const path of Object.keys(files)) {
     // Footnotes/endnotes can contain citations too; do not import deleted revisions.
     if (!/^word\/(document|footnotes|endnotes)\.xml$/.test(path)) continue;
@@ -57,6 +59,11 @@ export function prepareZoteroWord(data: Uint8Array, token: string) {
       if (word && (name === "del" || name === "moveFrom")) return;
       if (word && name === "fldSimple") {
         const instruction = element.getAttributeNS(WORD_NS, "instr") || "";
+        if (isBibliography(instruction)) {
+          element.parentNode!.removeChild(element);
+          removedBibliographies++;
+          return;
+        }
         const text = Array.from(element.getElementsByTagNameNS(WORD_NS, "t")).map(el => el.textContent).join("");
         const marker = register(instruction, text);
         if (marker) {
@@ -76,6 +83,11 @@ export function prepareZoteroWord(data: Uint8Array, token: string) {
         if (field && type === "separate") field.result = true;
         if (field && type === "end") {
           stack.pop();
+          if (isBibliography(field.instruction)) {
+            for (const node of field.nodes) node.parentNode?.removeChild(node);
+            removedBibliographies++;
+            return;
+          }
           const marker = register(field.instruction, field.text);
           if (marker) {
             const value = doc.createElementNS(WORD_NS, "w:t");
@@ -105,7 +117,7 @@ export function prepareZoteroWord(data: Uint8Array, token: string) {
     malformed += stack.filter(field => /ZOTERO_ITEM/.test(field.instruction)).length;
     files[path] = strToU8(new XMLSerializer().serializeToString(doc));
   }
-  return { data: zipSync(files), citations, malformed };
+  return { data: zipSync(files), citations, malformed, removedBibliographies };
 }
 
 export interface ImportEntry {
@@ -178,8 +190,8 @@ export function markdownText(text: string): string {
   return text.replace(/&/g, "&amp;").replace(/[\\`*_[\]<>]/g, "\\$&");
 }
 
-export function citationItemText(item: ZoteroCitationItem, entry: ImportEntry): string {
-  const label = [entry.shortAuthor, entry.year].filter(Boolean).join(" ") || entry.title || entry.citekey || entry.itemKey || entry.key;
+export function citationItemText(item: ZoteroCitationItem, entry: ImportEntry, label =
+  [entry.shortAuthor, entry.year].filter(Boolean).join(" ") || entry.title || entry.citekey || entry.itemKey || entry.key): string {
   const locator = item.locator ? `, ${item.label || "page"} ${item.locator}` : "";
   return `${item.prefix || ""}${label}${locator}${item.suffix || ""}`;
 }
