@@ -82,6 +82,66 @@ test("multi-paragraph bibliography and ordinary reference text are retained in o
   assert.match(outputXML(result.data), /After list/);
 });
 
+test("numbered bibliography paragraphs become one ordered list without changing ordinary paragraphs or existing lists", () => {
+  const dir = mkdtempSync(join(tmpdir(), "citation-bibliography-list-"));
+  try {
+    writeFileSync(join(dir, "source.md"), "Before references\n\nBIBLIOGRAPHY\n\n3\\. ordinary numbered paragraph\n\n1. Existing list\n2. Existing second item\n");
+    execFileSync(pandocBin, ["source.md", "-o", "source.docx"], {cwd: dir});
+    const files = unzipSync(readFileSync(join(dir, "source.docx")));
+    const doc = new DOMParser().parseFromString(strFromU8(files["word/document.xml"]), "application/xml");
+    const placeholder = Array.from(doc.getElementsByTagNameNS(ns, "t")).find(node => node.textContent === "BIBLIOGRAPHY")!;
+    const paragraph = placeholder.parentNode!.parentNode!;
+    const props = '<w:pPr><w:pStyle w:val="TestBibliography"/></w:pPr>';
+    const bibliography = new DOMParser().parseFromString(`<w:body xmlns:w="${ns}">
+      <w:p>${props}<w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText> ADDIN ZOTERO_BIBL {} CSL_BIBLIOGRAPHY</w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r>
+        ${text("\u200d1.")}<w:r><w:tab/></w:r>${text("Author One. ")}
+        <w:r><w:rPr><w:i/><w:color w:val="EE0000"/></w:rPr><w:t>Nature</w:t></w:r>${text(" (2026).")}</w:p>
+      <w:p>${props}<w:r><w:rPr><w:color w:val="123456"/></w:rPr><w:t>[2]</w:t></w:r><w:r><w:tab/></w:r>${text("Author Two. Cell (2023).")}</w:p>
+      <w:p>${props}${text("3)")}<w:r><w:tab/></w:r>${text("Author Three. Journal (2024).")}</w:p>
+      <w:p>${props}${text("Smith, A. An unnumbered reference (2025).")}<w:r><w:fldChar w:fldCharType="end"/></w:r></w:p>
+    </w:body>`, "application/xml");
+    for (const block of Array.from(bibliography.documentElement.childNodes)) {
+      if (block.nodeType === 1) paragraph.parentNode!.insertBefore(doc.importNode(block, true), paragraph);
+    }
+    paragraph.parentNode!.removeChild(paragraph);
+    const styles = new DOMParser().parseFromString(strFromU8(files["word/styles.xml"]), "application/xml");
+    const style = styles.createElementNS(ns, "w:style");
+    style.setAttributeNS(ns, "w:type", "paragraph");
+    style.setAttributeNS(ns, "w:styleId", "TestBibliography");
+    const name = styles.createElementNS(ns, "w:name");
+    name.setAttributeNS(ns, "w:val", "Bibliography");
+    style.appendChild(name);
+    styles.documentElement.appendChild(style);
+    files["word/document.xml"] = strToU8(new XMLSerializer().serializeToString(doc));
+    files["word/styles.xml"] = strToU8(new XMLSerializer().serializeToString(styles));
+    writeFileSync(join(dir, "prepared.docx"), prepareZoteroWord(zipSync(files), "BIBLIST").data);
+    const markdown = execFileSync(pandocBin, ["prepared.docx", "--from=docx+styles", "--to=markdown", "--wrap=none",
+      "--lua-filter", join(__dirname, "../scripts/import-word.lua")], {cwd: dir, encoding: "utf8"});
+    assert.match(markdown, /^1\.\s+Author One/m);
+    assert.match(markdown, /^2\.\s+Author Two/m);
+    assert.match(markdown, /^3\.\s+Author Three/m);
+    assert.ok(markdown.includes("3\\. ordinary numbered paragraph"), markdown);
+    assert.match(markdown, /Smith, A\. An unnumbered reference/);
+    assert.match(markdown, /color: #EE0000/);
+    assert.doesNotMatch(markdown, /\u200d|ZOTERO_BIBL/);
+    writeFileSync(join(dir, "imported.md"), markdown);
+    const ast = JSON.parse(execFileSync(pandocBin, ["imported.md", "--to=json"], {cwd: dir, encoding: "utf8"}));
+    const lists = ast.blocks.filter((block: any) => block.t === "OrderedList");
+    assert.equal(lists.length, 2);
+    assert.equal(lists[0].c[1].length, 3);
+    assert.equal(lists[1].c[1].length, 2);
+    execFileSync(pandocBin, ["imported.md", "-o", "export.docx", "--lua-filter", join(__dirname, "../scripts/export-word.lua")], {cwd: dir});
+    const result = unzipSync(applyWordColors(readFileSync(join(dir, "export.docx"))));
+    const exported = new DOMParser().parseFromString(strFromU8(result["word/document.xml"]), "application/xml");
+    const entries = Array.from(exported.getElementsByTagNameNS(ns, "p")).filter(node =>
+      Array.from(node.getElementsByTagNameNS(ns, "t")).map(text => text.textContent).join("").startsWith("Author "));
+    assert.equal(entries.length, 3);
+    assert.ok(entries.every(node => node.getElementsByTagNameNS(ns, "numPr").length === 1));
+  } finally {
+    rmSync(dir, {recursive: true, force: true});
+  }
+});
+
 test("templates own all brackets and separators inside the individual reference anchors", () => {
   const first = {shortAuthor: "Lanz and Kathman et al.", containerTitle: "Nature", year: "2026"};
   const second = {shortAuthor: "Nair and Karigo et al.", containerTitle: "Cell", year: "2023"};

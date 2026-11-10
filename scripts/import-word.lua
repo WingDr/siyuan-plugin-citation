@@ -8,6 +8,78 @@ local function escape_html(text)
   return text:gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;"):gsub('"', "&quot;")
 end
 
+local function numbered_bibliography_entry(block)
+  if block.t ~= "Div" or (block.attributes["custom-style"] or ""):lower() ~= "bibliography" then return nil end
+  if #block.content ~= 1 or (block.content[1].t ~= "Para" and block.content[1].t ~= "Plain") then return nil end
+  local paragraph = block.content[1]:clone()
+  local original = pandoc.utils.stringify(paragraph.content)
+  local text = original
+  -- Zotero can prefix its first bibliography number with an invisible joiner.
+  while true do
+    local before = text
+    text = text:gsub("^%s+", "")
+    for _, codepoint in ipairs({0x200B, 0x200C, 0x200D, 0xFEFF}) do
+      text = text:gsub("^" .. utf8.char(codepoint), "")
+    end
+    if text == before then break end
+  end
+  local number, remaining = text:match("^(%d+)[%.)]%s+(.+)$")
+  if not number then number, remaining = text:match("^%[(%d+)%]%s+(.+)$") end
+  if not number then return nil end
+  local prefix_bytes = #original - #remaining
+
+  -- Remove the displayed number across runs/spans, preserving the entry's markup.
+  local function strip_prefix(inlines)
+    local result = pandoc.Inlines({})
+    for _, inline in ipairs(inlines) do
+      if prefix_bytes == 0 then
+        result:insert(inline)
+      elseif inline.t == "Str" then
+        local count = math.min(prefix_bytes, #inline.text)
+        inline.text = inline.text:sub(count + 1)
+        prefix_bytes = prefix_bytes - count
+        if inline.text ~= "" then result:insert(inline) end
+      elseif inline.t == "Space" or inline.t == "SoftBreak" then
+        prefix_bytes = prefix_bytes - 1
+      elseif inline.content then
+        inline.content = strip_prefix(inline.content)
+        if #inline.content > 0 then result:insert(inline) end
+      else
+        result:insert(inline)
+      end
+    end
+    return result
+  end
+  paragraph.content = strip_prefix(paragraph.content)
+  if prefix_bytes ~= 0 then return nil end
+  return {number = tonumber(number), blocks = {paragraph}}
+end
+
+local function bibliography_lists(blocks)
+  local result = pandoc.Blocks({})
+  local items, first, last = {}, nil, nil
+  local function flush()
+    if #items > 0 then
+      result:insert(pandoc.OrderedList(items, pandoc.ListAttributes(first, "Decimal", "Period")))
+      items, first, last = {}, nil, nil
+    end
+  end
+  for _, block in ipairs(blocks) do
+    local entry = numbered_bibliography_entry(block)
+    if entry then
+      if last and entry.number ~= last + 1 then flush() end
+      first = first or entry.number
+      last = entry.number
+      table.insert(items, entry.blocks)
+    else
+      flush()
+      result:insert(block)
+    end
+  end
+  flush()
+  return result
+end
+
 local function span_color(element)
   if element.t ~= "Span" then return nil end
   return (element.attributes["custom-style"] or ""):match("^SiyuanCitationColor_(%x%x%x%x%x%x)_%d+$")
@@ -65,7 +137,7 @@ local function text_marks(element, kind, color)
   return pandoc.RawInline("markdown", table.concat(output)), false
 end
 
-return {{
+return {{Blocks = bibliography_lists}, {
   traverse = "topdown",
   Superscript = function(element) return text_marks(element, "sup") end,
   Subscript = function(element) return text_marks(element, "sub") end,
