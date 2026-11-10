@@ -12,6 +12,7 @@ import { generateFromTemplate } from "../utils/templates";
 import { cleanEmptyKey } from "../utils/util";
 import { confirm, getFrontend } from "siyuan";
 import { NoteProcessor } from "./noteProcessor";
+import { getLiteratureKey } from "./pool";
 
 export class LiteratureNote {
     plugin: SiYuanPluginCitation;
@@ -31,7 +32,7 @@ export class LiteratureNote {
     public async addLiteratureNotesToUpdateBatch(key: string, entry: any, noConfirmUserData=this.plugin.data[STORAGE_NAME].deleteUserDataWithoutConfirm) {
       // 计算最终的 key（与 updateLiteratureNote 保持一致）
       const useItemKey = this.plugin.data[STORAGE_NAME].useItemKey as boolean;
-      const final_key = "1_" + (useItemKey ? entry.itemKey : entry.citekey);
+      const final_key = getLiteratureKey(entry, useItemKey);
 
       // 1. 检查batch里面是否重复（使用最终key）
       if (this.updateBatches.has(final_key)) {
@@ -110,7 +111,7 @@ export class LiteratureNote {
       this.plugin.literaturePool.set({id: literatureId, key});
       await this._processExistedLiteratureNote(literatureId, key, entry, {noConfirmUserData, userDataId});
       // 最后更新一下key的形式
-      const new_key = "1_" + (useItemKey ? entry.itemKey : entry.citekey);
+      const new_key = getLiteratureKey(entry, useItemKey);
       await this.plugin.kernelApi.setBlockKey(literatureId, new_key);
       this.plugin.literaturePool.set({id: literatureId, key:new_key});
       this.plugin.kernelApi.setBlockEntry(literatureId, JSON.stringify(cleanEmptyKey(Object.assign({}, entry))));
@@ -609,6 +610,8 @@ export class LiteratureNote {
       const titleTemplate = this.plugin.data[STORAGE_NAME].titleTemplate as string;
       //文件不存在就新建文件
       let noteTitle = generateFromTemplate(titleTemplate, entry);
+      // A Word import may contain Zotero items without a Better BibTeX citekey.
+      noteTitle = noteTitle.trim() || entry.citekey || entry.itemKey || entry.title || key;
       noteTitle = noteTitle.replace(DISALLOWED_FILENAME_CHARACTERS_RE, "_");
       if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("生成文件标题 =>", noteTitle);
       // 创建新文档

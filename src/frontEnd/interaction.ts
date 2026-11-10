@@ -156,6 +156,11 @@ export class InteractionManager {
     // });
     this.commands = [
       {
+        langKey: "importZoteroWord",
+        hotkey: "",
+        editorCallback: (p) => this.plugin.importManager.chooseWord(p.block.rootID)
+      },
+      {
         langKey: "addCitation",
         hotkey: "⌥⇧A",
         editorCallback: (p) => {
@@ -242,6 +247,12 @@ export class InteractionManager {
       // },
     ];
     this.menuItems = [
+      {
+        place: ["BreadcrumbMore", "TitleIcon"],
+        iconHTML: '<svg class="b3-menu__icon"><use xlink:href="#iconDownload"></use></svg>',
+        label: this.plugin.i18n.importZoteroWord,
+        clickCallback: (id) => this.plugin.importManager.chooseWord(id)
+      },
       {
         place: ["BreadcrumbMore", "TitleIcon"],
         iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconRefresh"></use></svg>',

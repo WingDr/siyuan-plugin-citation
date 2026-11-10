@@ -40,6 +40,15 @@ export abstract class DataModal {
   public abstract getCollectedNotesFromKey(key: string):any;
   public abstract showSearching(protyle:Protyle | null, onSelection: (keys: string[]) => void): void;
   public abstract getTotalKeys(): string[];
+  /** Metadata for matching Word citations, without opening the search dialog. */
+  public async getImportEntries(): Promise<Record<string, any>[]> {
+    const entries = [];
+    for (const key of this.getTotalKeys()) {
+      const entry = await this.getContentFromKey(key);
+      if (entry) entries.push(entry);
+    }
+    return entries;
+  }
   public async getSelectedItems(): Promise<string[]> {
     if (isDev) this.logger.info("该数据模型无法执行此方法，modal=>", this);
     return [];
@@ -68,6 +77,10 @@ export class FilesModal extends DataModal {
   private fuse!: Fuse<any> | null;
   private searchDialog!: SearchDialog;
   private library!: Library | null;
+
+  public async getImportEntries() {
+    return this.library ? this.library.entryList.map(entry => this.library!.getTemplateVariablesForCitekey(entry.id)) : [];
+  }
 
   constructor(plugin: SiYuanPluginCitation) {
     super();
@@ -354,6 +367,8 @@ export class ZoteroModal extends DataModal {
 
 interface SearchItem {
   libraryID: number,
+  itemID?: number,
+  DOI?: string,
   itemKey: string,
   citationKey?: string,
   creators: any[],
@@ -362,6 +377,16 @@ interface SearchItem {
 }
 
 export class ZoteroDBModal extends DataModal {
+  public async getImportEntries() {
+    const items = await this.getAllItems();
+    return items.map(item => ({
+      key: `${item.libraryID}_${this.useItemKey ? item.itemKey : (item.citationKey || item.itemKey)}`,
+      itemKey: item.itemKey,
+      citekey: item.citationKey,
+      DOI: item.DOI,
+      entry: { data: item },
+    }));
+  }
   private type: ZoteroType;
   private absZoteroJSPath: string;
   private searchOptions: any;
@@ -638,6 +663,16 @@ export class ZoteroDBModal extends DataModal {
  * 支持通过HTTP REST API获取items数据
  */
 export class ZoteroWebAPIModal extends DataModal {
+  public async getImportEntries() {
+    return (await this.getAllItems()).map(item => ({
+      key: `1_${item.itemKey}`,
+      itemKey: item.itemKey,
+      citekey: item.citationKey || item.citekey,
+      DOI: item.DOI,
+      // Web API library.id is a user ID, not a local Zotero library/item ID.
+      entry: { data: { libraryID: 1 } },
+    }));
+  }
   private type: ZoteroType;
   private apiBaseUrl: string;
   private searchOptions: any;

@@ -13,6 +13,7 @@ import { type ILogger, createLogger } from "../utils/simple-logger";
 import { loadLocalRef, sleep } from "../utils/util";
 import { Cite } from "./cite";
 import { LiteratureNote } from "./literatureNote";
+import { getLiteratureKey } from "./pool";
 import type { ISpanItem } from "src/utils/types";
 
 // 根据输入更新文献库和引用文档，并维护本文档中的引用次序
@@ -487,7 +488,7 @@ export class Reference {
         return null;
       }
       // 计算最终的key格式（与 addLiteratureNotesToUpdateBatch 中保持一致）
-      const final_key = "1_" + (useItemKey ? entry.itemKey : entry.citekey);
+      const final_key = getLiteratureKey(entry, useItemKey);
       const idx = existNotes.indexOf(final_key);
 
       // 使用 final_key 从 literaturePool 获取文档 ID

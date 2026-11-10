@@ -181,6 +181,10 @@ export class Database {
     return this.dataModal.getTotalKeys();
   }
 
+  public async getImportEntries() {
+    return this.dataModal.getImportEntries();
+  }
+
   public async updateDataSourceItem(key: string, content: {[attr: string]: any}) {
     return this.dataModal.updateDataSourceItem(key, content);
   }
