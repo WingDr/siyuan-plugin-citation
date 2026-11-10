@@ -147,6 +147,26 @@ test("citation markers use the baseline while adjacent superscripts and subscrip
   }
 });
 
+test("Word author affiliations and chemical subscripts use native SiYuan marks without optional syntax", () => {
+  const dir = mkdtempSync(join(tmpdir(), "citation-native-script-test-"));
+  try {
+    writeFileSync(join(dir, "source.md"), "Author^1,2#^, Author^6\\*^\n\n^1^Institute\n\n^\\#^Equal contribution. H~2~O, x^2^, ^**bold**^ and `literal ^caret^ ~tilde~`.\n");
+    execFileSync("pandoc", ["source.md", "-o", "source.docx"], {cwd: dir});
+    const markdown = execFileSync("pandoc", ["source.docx", "--to=markdown", "--wrap=none",
+      "--lua-filter", join(__dirname, "../scripts/import-word.lua")], {cwd: dir, encoding: "utf8"});
+    assert.ok(markdown.includes('Author<span data-type="sup">1,2#</span>'), markdown);
+    assert.ok(markdown.includes('Author<span data-type="sup">6*</span>'), markdown);
+    assert.ok(markdown.includes('<span data-type="sup">1</span>Institute'), markdown);
+    assert.ok(markdown.includes('<span data-type="sup">#</span>Equal contribution'), markdown);
+    assert.ok(markdown.includes('H<span data-type="sub">2</span>O'), markdown);
+    assert.ok(markdown.includes('x<span data-type="sup">2</span>'), markdown);
+    assert.ok(markdown.includes('**<span data-type="sup">bold</span>**'), markdown);
+    assert.ok(markdown.includes('`literal ^caret^ ~tilde~`'), markdown);
+  } finally {
+    rmSync(dir, {recursive: true, force: true});
+  }
+});
+
 const entries = [
   { key: "1_Smith2024", itemKey: "ABCDEFGH", citekey: "Smith2024", DOI: "10.1000/ABC", title: "Title A", entry: {data: {id: 42, itemID: 42, libraryID: 1}} },
   { key: "1_Jones2025", itemKey: "IJKLMNOP", citekey: "Jones2025", title: "Title B", entry: {data: {id: 43, itemID: 43, libraryID: 1}} },
@@ -196,7 +216,7 @@ test("real Pandoc import retains images, table, footnotes, citations and repeat-
   const originalUpdate = LiteratureNote.prototype.updateLiteratureNote;
   try {
     writeFileSync(join(dir, "image.png"), Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=", "base64"));
-    writeFileSync(join(dir, "source.md"), '# Heading\n\nBefore CITATIONONE after. CLUSTER UNKNOWN\n\n| Column | Value |\n|---|---|\n| A | B |\n\n![picture](image.png)\n\nWith note[^1].\n\nBIBLIOGRAPHY\n\n[^1]: Footnote CITATIONFOOT\n');
+    writeFileSync(join(dir, "source.md"), '# Heading\n\nBefore CITATIONONE after. CLUSTER UNKNOWN\n\nAuthor^1,2#^ and H~2~O.\n\n| Column | Value |\n|---|---|\n| A | B |\n\n![picture](image.png)\n\nWith note[^1].\n\nBIBLIOGRAPHY\n\n[^1]: Footnote CITATIONFOOT\n');
     execFileSync("pandoc", ["source.md", "-o", "source.docx"], {cwd: dir});
     const files = unzipSync(readFileSync(join(dir, "source.docx")));
     files["word/document.xml"] = strToU8(strFromU8(files["word/document.xml"])
@@ -231,7 +251,8 @@ test("real Pandoc import retains images, table, footnotes, citations and repeat-
         putFile: async (path: string, _: boolean, blob: Blob) => {storage.set(path, blob); return {code: 0};},
         pandoc: async (subdir: string, args: string[]) => {
           writeFileSync(join(dir, "input.docx"), new Uint8Array(await storage.get(`/temp/convert/pandoc/${subdir}/input.docx`)!.arrayBuffer()));
-          execFileSync("pandoc", args, {cwd: dir});
+          const params = args.map(arg => /\/scripts\/import-word\.lua$/.test(arg) ? join(__dirname, "../scripts/import-word.lua") : arg);
+          execFileSync("pandoc", params, {cwd: dir});
           return {code: 0};
         },
         getFile: async (path: string, type: string) => {
@@ -265,6 +286,7 @@ test("real Pandoc import retains images, table, footnotes, citations and repeat-
     assert.match(md, /# Heading/);
     assert.match(md, /\| Column/);
     assert.ok(md.includes('Before ((20261110000000-aaaaaaa "(Smith, Nature, 2024)")) after'));
+    assert.ok(md.includes('Author<span data-type="sup">1,2#</span> and H<span data-type="sub">2</span>O.'), md);
     const expectedCluster = '((20261110000000-aaaaaaa "(Smith, Nature, 2024)"))((20261110000000-bbbbbbb "(Jones, Nature, 2024)"))';
     assert.ok(md.includes(expectedCluster));
     assert.ok(!md.includes(`(${expectedCluster})`));
