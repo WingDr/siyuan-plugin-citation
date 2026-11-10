@@ -1,4 +1,4 @@
-import { dataDir, isDev, STORAGE_NAME, workspaceDir } from "../utils/constants";
+import { dataDir, isDev, STORAGE_NAME } from "../utils/constants";
 import type SiYuanPluginCitation from "../index";
 import { createLogger, type ILogger } from "../utils/simple-logger";
 import { applyWordColors, prepareWordMarkdown } from "./wordColors";
@@ -119,8 +119,6 @@ export class ExportManager {
           const following = this.getNeighborCites(content.slice(match!.index! + match![0].length), citeBlockIDs)
           totalStr = following ? match![0] + following.totalStr : match![0];
           const keys = following ? [match![2], ...following.keys] : [match![2]];
-          const links = following ? [match![1], ...following.links] : [match![1]];
-          console.log({totalStr, keys, links})
           if (keys.length == 1) {
             if (citeBlockIDs.indexOf(keys[0]) != -1) {
               const key = this.plugin.literaturePool.get(match![2]);

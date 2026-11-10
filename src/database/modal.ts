@@ -1,5 +1,6 @@
 import Fuse from "fuse.js";
 import axios from "axios";
+import type { ImportEntry } from "../import/types";
 
 import {
   Protyle,
@@ -41,8 +42,8 @@ export abstract class DataModal {
   public abstract showSearching(protyle:Protyle | null, onSelection: (keys: string[]) => void): void;
   public abstract getTotalKeys(): string[];
   /** Metadata for matching Word citations, without opening the search dialog. */
-  public async getImportEntries(): Promise<Record<string, any>[]> {
-    const entries = [];
+  public async getImportEntries(): Promise<ImportEntry[]> {
+    const entries: ImportEntry[] = [];
     for (const key of this.getTotalKeys()) {
       const entry = await this.getContentFromKey(key);
       if (entry) entries.push(entry);
@@ -78,8 +79,13 @@ export class FilesModal extends DataModal {
   private searchDialog!: SearchDialog;
   private library!: Library | null;
 
-  public async getImportEntries() {
-    return this.library ? this.library.entryList.map(entry => this.library!.getTemplateVariablesForCitekey(entry.id)) : [];
+  public async getImportEntries(): Promise<ImportEntry[]> {
+    const library = this.library;
+    if (!library) return [];
+    return library.entryList.map(entry => ({
+      ...library.getTemplateVariablesForCitekey(entry.id),
+      key: entry.key,
+    }));
   }
 
   constructor(plugin: SiYuanPluginCitation) {
@@ -377,7 +383,7 @@ interface SearchItem {
 }
 
 export class ZoteroDBModal extends DataModal {
-  public async getImportEntries() {
+  public async getImportEntries(): Promise<ImportEntry[]> {
     const items = await this.getAllItems();
     return items.map(item => ({
       key: `${item.libraryID}_${this.useItemKey ? item.itemKey : (item.citationKey || item.itemKey)}`,
@@ -663,7 +669,7 @@ export class ZoteroDBModal extends DataModal {
  * 支持通过HTTP REST API获取items数据
  */
 export class ZoteroWebAPIModal extends DataModal {
-  public async getImportEntries() {
+  public async getImportEntries(): Promise<ImportEntry[]> {
     return (await this.getAllItems()).map(item => ({
       key: `1_${item.itemKey}`,
       itemKey: item.itemKey,

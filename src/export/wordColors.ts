@@ -1,6 +1,5 @@
-import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
-
-const WORD_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+import { strToU8, unzipSync, zipSync } from "fflate";
+import { parseWordXml, WORD_NS, wordChild } from "../word/xml";
 
 /** Native text marks contain literal text, including affiliation stars and hashes. */
 export function prepareWordMarkdown(markdown: string): string {
@@ -16,18 +15,18 @@ export function prepareWordMarkdown(markdown: string): string {
 export function applyWordColors(data: Uint8Array): Uint8Array {
   const files = unzipSync(data);
   if (!files["word/styles.xml"]) return data;
-  const document = new DOMParser().parseFromString(strFromU8(files["word/styles.xml"]), "application/xml");
+  const document = parseWordXml(files["word/styles.xml"], "word/styles.xml");
   let changed = false;
   for (const style of Array.from(document.getElementsByTagNameNS(WORD_NS, "style"))) {
-    const name = style.getElementsByTagNameNS(WORD_NS, "name")[0]?.getAttributeNS(WORD_NS, "val") || "";
+    const name = wordChild(style, "name")?.getAttributeNS(WORD_NS, "val") || "";
     const color = name.match(/^SiyuanExportColor_([A-F0-9]{6})$/)?.[1];
     if (!color) continue;
-    let properties = style.getElementsByTagNameNS(WORD_NS, "rPr")[0];
+    let properties = wordChild(style, "rPr");
     if (!properties) {
       properties = document.createElementNS(WORD_NS, "w:rPr");
       style.appendChild(properties);
     }
-    let value = properties.getElementsByTagNameNS(WORD_NS, "color")[0];
+    let value = wordChild(properties, "color");
     if (!value) {
       value = document.createElementNS(WORD_NS, "w:color");
       properties.appendChild(value);

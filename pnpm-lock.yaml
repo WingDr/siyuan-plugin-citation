@@ -13,7 +13,7 @@ importers:
         version: 9.0.29
       axios:
         specifier: ^1.13.6
-        version: 1.13.6(debug@4.3.7(supports-color@8.1.1))
+        version: 1.13.6
       fflate:
         specifier: ^0.8.3
         version: 0.8.3
@@ -35,10 +35,10 @@ importers:
         version: 24.0.10
       '@typescript-eslint/eslint-plugin':
         specifier: 8.13.0
-        version: 8.13.0(@typescript-eslint/parser@8.13.0(eslint@9.16.0(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.7.2))(eslint@9.16.0(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.7.2)
+        version: 8.13.0(@typescript-eslint/parser@8.13.0(eslint@9.16.0)(typescript@5.7.2))(eslint@9.16.0)(typescript@5.7.2)
       '@typescript-eslint/parser':
         specifier: 8.13.0
-        version: 8.13.0(eslint@9.16.0(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.7.2)
+        version: 8.13.0(eslint@9.16.0)(typescript@5.7.2)
       '@xmldom/xmldom':
         specifier: ^0.9.12
         version: 0.9.12
@@ -53,7 +53,7 @@ importers:
         version: 3.2.0(webpack@5.97.0)
       eslint:
         specifier: ^9.16.0
-        version: 9.16.0(supports-color@8.1.1)
+        version: 9.16.0
       mini-css-extract-plugin:
         specifier: 2.3.0
         version: 2.3.0(webpack@5.97.0)
@@ -86,7 +86,7 @@ importers:
         version: 5.7.2
       webpack:
         specifier: ^5.97.0
-        version: 5.97.0(esbuild@0.19.12)(webpack-cli@5.1.4)
+        version: 5.97.0(webpack-cli@5.1.4)
       webpack-cli:
         specifier: ^5.1.4
         version: 5.1.4(webpack@5.97.0)
@@ -897,7 +897,7 @@ packages:
     hasBin: true
 
   epubjs@https://codeload.github.com/zotero/epub.js/tar.gz/a6139d586b66d404f3da2b846598960c0394afc5:
-    resolution: {gitHosted: true, integrity: sha512-6bY5ThKK3dL0f1I6pqZO0KkCOh5KGrybGAlkdGSE7y1ddrQ03nLKaxUnmcYRZ6Z8vYgJRnByq1WM4RhdJw0p7w==, tarball: https://codeload.github.com/zotero/epub.js/tar.gz/a6139d586b66d404f3da2b846598960c0394afc5}
+    resolution: {tarball: https://codeload.github.com/zotero/epub.js/tar.gz/a6139d586b66d404f3da2b846598960c0394afc5}
     version: 0.3.93
 
   es-define-property@1.0.1:
@@ -967,7 +967,6 @@ packages:
   eslint@9.16.0:
     resolution: {integrity: sha512-whp8mSQI4C8VXd+fLgSM0lh3UlmcFtVwUQjyKCFfsp+2ItAIYhlq/hqGahGqHE6cv9unM41VlqKk2VtKYR2TaA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'
@@ -1434,8 +1433,9 @@ packages:
   path-webpack@0.0.3:
     resolution: {integrity: sha512-AmeDxedoo5svf7aB3FYqSAKqMxys014lVKBzy1o/5vv9CtU7U4wgGWL1dA2o6MOzcD53ScN4Jmiq6VbtLz1vIQ==}
 
-  pdfjs-dist@https://codeload.github.com/zotero-plugin-dev/zotero-pdfjs-types/tar.gz/c0cf0d7462e50ea65919835f89983e1704611993:
-    resolution: {gitHosted: true, integrity: sha512-uN/GGXbNyt+nNUpqeypPY4G4kpbII51UkAX5BheV+Dit6N4+KGxO3QW+MlZj3NnEg+C13YnBaSRFa3O8Y6Fr4w==, tarball: https://codeload.github.com/zotero-plugin-dev/zotero-pdfjs-types/tar.gz/c0cf0d7462e50ea65919835f89983e1704611993}
+  pdfjs-dist@https://codeload.github.com/zotero-plugin-dev/zotero-pdfjs-types/tar.gz/16a81ee97a2369ddd661e68fc4acbc5211fa00e8:
+    resolution: {tarball: https://codeload.github.com/zotero-plugin-dev/zotero-pdfjs-types/tar.gz/16a81ee97a2369ddd661e68fc4acbc5211fa00e8}
+    version: 0.0.0
     engines: {node: '>=18'}
 
   picocolors@1.1.1:
@@ -1985,17 +1985,17 @@ snapshots:
   '@esbuild/win32-x64@0.19.12':
     optional: true
 
-  '@eslint-community/eslint-utils@4.4.1(eslint@9.16.0(supports-color@8.1.1))':
+  '@eslint-community/eslint-utils@4.4.1(eslint@9.16.0)':
     dependencies:
-      eslint: 9.16.0(supports-color@8.1.1)
+      eslint: 9.16.0
       eslint-visitor-keys: 3.4.3
 
   '@eslint-community/regexpp@4.12.1': {}
 
-  '@eslint/config-array@0.19.1(supports-color@8.1.1)':
+  '@eslint/config-array@0.19.1':
     dependencies:
       '@eslint/object-schema': 2.1.5
-      debug: 4.3.7(supports-color@8.1.1)
+      debug: 4.3.7
       minimatch: 3.1.2
     transitivePeerDependencies:
       - supports-color
@@ -2004,10 +2004,10 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
 
-  '@eslint/eslintrc@3.2.0(supports-color@8.1.1)':
+  '@eslint/eslintrc@3.2.0':
     dependencies:
       ajv: 6.12.6
-      debug: 4.3.7(supports-color@8.1.1)
+      debug: 4.3.7
       espree: 10.3.0
       globals: 14.0.0
       ignore: 5.3.2
@@ -2214,15 +2214,15 @@ snapshots:
 
   '@types/unist@2.0.11': {}
 
-  '@typescript-eslint/eslint-plugin@8.13.0(@typescript-eslint/parser@8.13.0(eslint@9.16.0(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.7.2))(eslint@9.16.0(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.7.2)':
+  '@typescript-eslint/eslint-plugin@8.13.0(@typescript-eslint/parser@8.13.0(eslint@9.16.0)(typescript@5.7.2))(eslint@9.16.0)(typescript@5.7.2)':
     dependencies:
       '@eslint-community/regexpp': 4.12.1
-      '@typescript-eslint/parser': 8.13.0(eslint@9.16.0(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.7.2)
+      '@typescript-eslint/parser': 8.13.0(eslint@9.16.0)(typescript@5.7.2)
       '@typescript-eslint/scope-manager': 8.13.0
-      '@typescript-eslint/type-utils': 8.13.0(eslint@9.16.0(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.7.2)
-      '@typescript-eslint/utils': 8.13.0(eslint@9.16.0(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.7.2)
+      '@typescript-eslint/type-utils': 8.13.0(eslint@9.16.0)(typescript@5.7.2)
+      '@typescript-eslint/utils': 8.13.0(eslint@9.16.0)(typescript@5.7.2)
       '@typescript-eslint/visitor-keys': 8.13.0
-      eslint: 9.16.0(supports-color@8.1.1)
+      eslint: 9.16.0
       graphemer: 1.4.0
       ignore: 5.3.2
       natural-compare: 1.4.0
@@ -2232,14 +2232,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/parser@8.13.0(eslint@9.16.0(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.7.2)':
+  '@typescript-eslint/parser@8.13.0(eslint@9.16.0)(typescript@5.7.2)':
     dependencies:
       '@typescript-eslint/scope-manager': 8.13.0
       '@typescript-eslint/types': 8.13.0
-      '@typescript-eslint/typescript-estree': 8.13.0(supports-color@8.1.1)(typescript@5.7.2)
+      '@typescript-eslint/typescript-estree': 8.13.0(typescript@5.7.2)
       '@typescript-eslint/visitor-keys': 8.13.0
-      debug: 4.3.7(supports-color@8.1.1)
-      eslint: 9.16.0(supports-color@8.1.1)
+      debug: 4.3.7
+      eslint: 9.16.0
     optionalDependencies:
       typescript: 5.7.2
     transitivePeerDependencies:
@@ -2250,11 +2250,11 @@ snapshots:
       '@typescript-eslint/types': 8.13.0
       '@typescript-eslint/visitor-keys': 8.13.0
 
-  '@typescript-eslint/type-utils@8.13.0(eslint@9.16.0(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.7.2)':
+  '@typescript-eslint/type-utils@8.13.0(eslint@9.16.0)(typescript@5.7.2)':
     dependencies:
-      '@typescript-eslint/typescript-estree': 8.13.0(supports-color@8.1.1)(typescript@5.7.2)
-      '@typescript-eslint/utils': 8.13.0(eslint@9.16.0(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.7.2)
-      debug: 4.3.7(supports-color@8.1.1)
+      '@typescript-eslint/typescript-estree': 8.13.0(typescript@5.7.2)
+      '@typescript-eslint/utils': 8.13.0(eslint@9.16.0)(typescript@5.7.2)
+      debug: 4.3.7
       ts-api-utils: 1.4.3(typescript@5.7.2)
     optionalDependencies:
       typescript: 5.7.2
@@ -2264,11 +2264,11 @@ snapshots:
 
   '@typescript-eslint/types@8.13.0': {}
 
-  '@typescript-eslint/typescript-estree@8.13.0(supports-color@8.1.1)(typescript@5.7.2)':
+  '@typescript-eslint/typescript-estree@8.13.0(typescript@5.7.2)':
     dependencies:
       '@typescript-eslint/types': 8.13.0
       '@typescript-eslint/visitor-keys': 8.13.0
-      debug: 4.3.7(supports-color@8.1.1)
+      debug: 4.3.7
       fast-glob: 3.3.2
       is-glob: 4.0.3
       minimatch: 9.0.5
@@ -2279,13 +2279,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@8.13.0(eslint@9.16.0(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.7.2)':
+  '@typescript-eslint/utils@8.13.0(eslint@9.16.0)(typescript@5.7.2)':
     dependencies:
-      '@eslint-community/eslint-utils': 4.4.1(eslint@9.16.0(supports-color@8.1.1))
+      '@eslint-community/eslint-utils': 4.4.1(eslint@9.16.0)
       '@typescript-eslint/scope-manager': 8.13.0
       '@typescript-eslint/types': 8.13.0
-      '@typescript-eslint/typescript-estree': 8.13.0(supports-color@8.1.1)(typescript@5.7.2)
-      eslint: 9.16.0(supports-color@8.1.1)
+      '@typescript-eslint/typescript-estree': 8.13.0(typescript@5.7.2)
+      eslint: 9.16.0
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -2415,17 +2415,17 @@ snapshots:
 
   '@webpack-cli/configtest@2.1.1(webpack-cli@5.1.4)(webpack@5.97.0)':
     dependencies:
-      webpack: 5.97.0(esbuild@0.19.12)(webpack-cli@5.1.4)
+      webpack: 5.97.0(webpack-cli@5.1.4)
       webpack-cli: 5.1.4(webpack@5.97.0)
 
   '@webpack-cli/info@2.0.2(webpack-cli@5.1.4)(webpack@5.97.0)':
     dependencies:
-      webpack: 5.97.0(esbuild@0.19.12)(webpack-cli@5.1.4)
+      webpack: 5.97.0(webpack-cli@5.1.4)
       webpack-cli: 5.1.4(webpack@5.97.0)
 
   '@webpack-cli/serve@2.0.5(webpack-cli@5.1.4)(webpack@5.97.0)':
     dependencies:
-      webpack: 5.97.0(esbuild@0.19.12)(webpack-cli@5.1.4)
+      webpack: 5.97.0(webpack-cli@5.1.4)
       webpack-cli: 5.1.4(webpack@5.97.0)
 
   '@xmldom/xmldom@0.9.12': {}
@@ -2487,9 +2487,9 @@ snapshots:
 
   asynckit@0.4.0: {}
 
-  axios@1.13.6(debug@4.3.7(supports-color@8.1.1)):
+  axios@1.13.6:
     dependencies:
-      follow-redirects: 1.15.11(debug@4.3.7(supports-color@8.1.1))
+      follow-redirects: 1.15.11
       form-data: 4.0.5
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
@@ -2579,7 +2579,7 @@ snapshots:
       normalize-path: 3.0.0
       schema-utils: 4.2.0
       serialize-javascript: 6.0.2
-      webpack: 5.97.0(esbuild@0.19.12)(webpack-cli@5.1.4)
+      webpack: 5.97.0(webpack-cli@5.1.4)
 
   core-util-is@1.0.3: {}
 
@@ -2602,7 +2602,7 @@ snapshots:
       postcss-value-parser: 4.2.0
       semver: 7.6.3
     optionalDependencies:
-      webpack: 5.97.0(esbuild@0.19.12)(webpack-cli@5.1.4)
+      webpack: 5.97.0(webpack-cli@5.1.4)
 
   cssesc@3.0.0: {}
 
@@ -2613,11 +2613,9 @@ snapshots:
       es5-ext: 0.10.64
       type: 2.7.3
 
-  debug@4.3.7(supports-color@8.1.1):
+  debug@4.3.7:
     dependencies:
       ms: 2.1.3
-    optionalDependencies:
-      supports-color: 8.1.1
 
   deep-is@0.1.4: {}
 
@@ -2697,7 +2695,7 @@ snapshots:
       esbuild: 0.19.12
       get-tsconfig: 4.8.1
       loader-utils: 2.0.4
-      webpack: 5.97.0(esbuild@0.19.12)(webpack-cli@5.1.4)
+      webpack: 5.97.0(webpack-cli@5.1.4)
       webpack-sources: 1.4.3
 
   esbuild@0.19.12:
@@ -2744,13 +2742,13 @@ snapshots:
 
   eslint-visitor-keys@4.2.0: {}
 
-  eslint@9.16.0(supports-color@8.1.1):
+  eslint@9.16.0:
     dependencies:
-      '@eslint-community/eslint-utils': 4.4.1(eslint@9.16.0(supports-color@8.1.1))
+      '@eslint-community/eslint-utils': 4.4.1(eslint@9.16.0)
       '@eslint-community/regexpp': 4.12.1
-      '@eslint/config-array': 0.19.1(supports-color@8.1.1)
+      '@eslint/config-array': 0.19.1
       '@eslint/core': 0.9.1
-      '@eslint/eslintrc': 3.2.0(supports-color@8.1.1)
+      '@eslint/eslintrc': 3.2.0
       '@eslint/js': 9.16.0
       '@eslint/plugin-kit': 0.2.4
       '@humanfs/node': 0.16.6
@@ -2761,7 +2759,7 @@ snapshots:
       ajv: 6.12.6
       chalk: 4.1.2
       cross-spawn: 7.0.6
-      debug: 4.3.7(supports-color@8.1.1)
+      debug: 4.3.7
       escape-string-regexp: 4.0.0
       eslint-scope: 8.2.0
       eslint-visitor-keys: 4.2.0
@@ -2881,9 +2879,7 @@ snapshots:
 
   flatted@3.3.2: {}
 
-  follow-redirects@1.15.11(debug@4.3.7(supports-color@8.1.1)):
-    optionalDependencies:
-      debug: 4.3.7(supports-color@8.1.1)
+  follow-redirects@1.15.11: {}
 
   form-data@4.0.5:
     dependencies:
@@ -3109,7 +3105,7 @@ snapshots:
   mini-css-extract-plugin@2.3.0(webpack@5.97.0):
     dependencies:
       schema-utils: 3.3.0
-      webpack: 5.97.0(esbuild@0.19.12)(webpack-cli@5.1.4)
+      webpack: 5.97.0(webpack-cli@5.1.4)
 
   minimatch@3.1.2:
     dependencies:
@@ -3190,7 +3186,7 @@ snapshots:
 
   path-webpack@0.0.3: {}
 
-  pdfjs-dist@https://codeload.github.com/zotero-plugin-dev/zotero-pdfjs-types/tar.gz/c0cf0d7462e50ea65919835f89983e1704611993: {}
+  pdfjs-dist@https://codeload.github.com/zotero-plugin-dev/zotero-pdfjs-types/tar.gz/16a81ee97a2369ddd661e68fc4acbc5211fa00e8: {}
 
   picocolors@1.1.1: {}
 
@@ -3305,7 +3301,7 @@ snapshots:
     dependencies:
       klona: 2.0.6
       neo-async: 2.6.2
-      webpack: 5.97.0(esbuild@0.19.12)(webpack-cli@5.1.4)
+      webpack: 5.97.0(webpack-cli@5.1.4)
     optionalDependencies:
       sass: 1.82.0
 
@@ -3425,16 +3421,14 @@ snapshots:
       '@templatejs/parser': 3.1.4
       '@templatejs/runtime': 3.1.4
 
-  terser-webpack-plugin@5.3.10(esbuild@0.19.12)(webpack@5.97.0):
+  terser-webpack-plugin@5.3.10(webpack@5.97.0):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
       jest-worker: 27.5.1
       schema-utils: 3.3.0
       serialize-javascript: 6.0.2
       terser: 5.36.0
-      webpack: 5.97.0(esbuild@0.19.12)(webpack-cli@5.1.4)
-    optionalDependencies:
-      esbuild: 0.19.12
+      webpack: 5.97.0(webpack-cli@5.1.4)
 
   terser@5.36.0:
     dependencies:
@@ -3550,7 +3544,7 @@ snapshots:
       import-local: 3.2.0
       interpret: 3.1.1
       rechoir: 0.8.0
-      webpack: 5.97.0(esbuild@0.19.12)(webpack-cli@5.1.4)
+      webpack: 5.97.0(webpack-cli@5.1.4)
       webpack-merge: 5.10.0
 
   webpack-merge@5.10.0:
@@ -3566,7 +3560,7 @@ snapshots:
 
   webpack-sources@3.2.3: {}
 
-  webpack@5.97.0(esbuild@0.19.12)(webpack-cli@5.1.4):
+  webpack@5.97.0(webpack-cli@5.1.4):
     dependencies:
       '@types/eslint-scope': 3.7.7
       '@types/estree': 1.0.6
@@ -3588,7 +3582,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 3.3.0
       tapable: 2.2.1
-      terser-webpack-plugin: 5.3.10(esbuild@0.19.12)(webpack@5.97.0)
+      terser-webpack-plugin: 5.3.10(webpack@5.97.0)
       watchpack: 2.4.2
       webpack-sources: 3.2.3
     optionalDependencies:
@@ -3622,7 +3616,7 @@ snapshots:
 
   zip-webpack-plugin@4.0.2(webpack-sources@3.2.3)(webpack@5.97.0):
     dependencies:
-      webpack: 5.97.0(esbuild@0.19.12)(webpack-cli@5.1.4)
+      webpack: 5.97.0(webpack-cli@5.1.4)
       webpack-sources: 3.2.3
       yazl: 2.5.1
 
@@ -3631,4 +3625,4 @@ snapshots:
       '@types/bluebird': 3.5.42
       '@types/react': 18.3.28
       epubjs: https://codeload.github.com/zotero/epub.js/tar.gz/a6139d586b66d404f3da2b846598960c0394afc5
-      pdfjs-dist: https://codeload.github.com/zotero-plugin-dev/zotero-pdfjs-types/tar.gz/c0cf0d7462e50ea65919835f89983e1704611993
+      pdfjs-dist: https://codeload.github.com/zotero-plugin-dev/zotero-pdfjs-types/tar.gz/16a81ee97a2369ddd661e68fc4acbc5211fa00e8

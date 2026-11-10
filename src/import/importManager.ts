@@ -4,7 +4,10 @@ import { dataDir, defaultLinkTemplate, STORAGE_NAME } from "../utils/constants";
 import { LiteratureNote } from "../references/literatureNote";
 import { getLiteratureKey } from "../references/pool";
 import { formatMultiCitation, renderCiteLink } from "../references/citationFormat";
-import { CitationMatcher, citationItemText, markdownText, prepareZoteroWord, staticReference, type ImportEntry } from "./zoteroWord";
+import { prepareZoteroWord } from "./zoteroWord";
+import { CitationMatcher } from "./citationMatcher";
+import { citationItemText, markdownText, staticReference } from "./citationText";
+import type { ImportEntry, WordCitation } from "./types";
 
 export class ImportManager {
   private importing = false;
@@ -63,53 +66,9 @@ export class ImportManager {
       if (typeof markdown !== "string") throw new Error(messages.conversionFailed);
       markdown = await this.copyMedia(markdown, temp, token);
 
-      const entries = prepared.citations.length ? await this.plugin.database.getImportEntries() : [];
-      const matcher = new CitationMatcher(entries as ImportEntry[]);
-      const notes = new LiteratureNote(this.plugin);
-      const resolved = new Map<string, { id: string; entry: ImportEntry }>();
-      const config = this.plugin.data[STORAGE_NAME];
-      const typeSetting = config.linkTemplatesGroup?.[0] ?? config;
-      let converted = 0;
-      let unresolved = prepared.malformed;
-      for (const citation of prepared.citations) {
-        // Only fields that survived conversion (e.g. not deleted text) require notes.
-        if (!markdown.includes(citation.marker)) continue;
-        const matches = citation.items.map(item => matcher.match(item));
-        let replacement = markdownText(citation.text);
-        if (matches.every(Boolean)) {
-          const links: string[] = [];
-          for (let i = 0; i < matches.length; i++) {
-            const match = matches[i]!;
-            let reference = resolved.get(match.key);
-            if (!reference) {
-              const entry = await this.plugin.database.getContentByKey(match.key, typeSetting.shortAuthorLimit);
-              if (!entry) break;
-              const useItemKey = this.plugin.data[STORAGE_NAME].useItemKey;
-              const finalKey = getLiteratureKey(entry, useItemKey);
-              let id = this.plugin.literaturePool.get(finalKey) || this.plugin.literaturePool.get(match.key);
-              if (!id) {
-                // Existing notes are reused without refreshing or touching their user data.
-                await notes.updateLiteratureNote(match.key, entry, { noConfirmUserData: false });
-                id = this.plugin.literaturePool.get(finalKey) || this.plugin.literaturePool.get(match.key);
-              }
-              if (!id) throw new Error(messages.noteFailed);
-              reference = { id, entry };
-              resolved.set(match.key, reference);
-            }
-            const index = this.plugin.literaturePool.ids.indexOf(reference.id);
-            const label = renderCiteLink(typeSetting.linkTemplate ?? defaultLinkTemplate, reference.entry, reference.id, index);
-            const text = citationItemText(citation.items[i], reference.entry, label);
-            const anchor = formatMultiCitation(text, i, matches.length, typeSetting);
-            links.push(typeSetting.customCiteText ? anchor : staticReference(reference.id, anchor));
-          }
-          if (links.length === matches.length) {
-            replacement = links.join("");
-            converted++;
-          } else unresolved++;
-        } else unresolved++;
-        // Replace literal tokens after conversion so Pandoc cannot escape SiYuan references.
-        markdown = markdown.split(citation.marker).join(replacement);
-      }
+      const resultContent = await this.convertCitations(markdown, prepared.citations, prepared.malformed, messages);
+      markdown = resultContent.markdown;
+      const { converted, unresolved } = resultContent;
       const title = file.name.replace(/\.docx$/i, "").replace(/[\/\\\r\n]/g, " ").trim() || "Word";
       const path = await this.availablePath(parent.box, parent.hpath, title);
       const result = await api.createDocWithMd(parent.box, path, markdown);
@@ -124,6 +83,57 @@ export class ImportManager {
       // Only remove this import's unique temporary conversion directory.
       try { await api.removeFile(temp); } catch (error) { console.warn("Word import cleanup failed", error); }
     }
+  }
+
+  private async convertCitations(markdown: string, citations: WordCitation[], malformed: number, messages: Record<string, string>) {
+    const entries = citations.length ? await this.plugin.database.getImportEntries() : [];
+    const matcher = new CitationMatcher(entries);
+    const notes = new LiteratureNote(this.plugin);
+    const resolved = new Map<string, { id: string; entry: ImportEntry }>();
+    const config = this.plugin.data[STORAGE_NAME];
+    const typeSetting = config.linkTemplatesGroup?.[0] ?? config;
+    let converted = 0;
+    let unresolved = malformed;
+    for (const citation of citations) {
+      // Only fields that survived conversion (e.g. not deleted text) require notes.
+      if (!markdown.includes(citation.marker)) continue;
+      const matches = citation.items.map(item => matcher.match(item));
+      let replacement = markdownText(citation.text);
+      if (matches.every(Boolean)) {
+        const links: string[] = [];
+        for (let i = 0; i < matches.length; i++) {
+          const match = matches[i]!;
+          let reference = resolved.get(match.key);
+          if (!reference) {
+            const entry = await this.plugin.database.getContentByKey(match.key, typeSetting.shortAuthorLimit);
+            if (!entry) break;
+            const useItemKey = this.plugin.data[STORAGE_NAME].useItemKey;
+            const finalKey = getLiteratureKey(entry, useItemKey);
+            let id = this.plugin.literaturePool.get(finalKey) || this.plugin.literaturePool.get(match.key);
+            if (!id) {
+              // Existing notes are reused without refreshing or touching their user data.
+              await notes.updateLiteratureNote(match.key, entry, { noConfirmUserData: false });
+              id = this.plugin.literaturePool.get(finalKey) || this.plugin.literaturePool.get(match.key);
+            }
+            if (!id) throw new Error(messages.noteFailed);
+            reference = { id, entry };
+            resolved.set(match.key, reference);
+          }
+          const index = this.plugin.literaturePool.ids.indexOf(reference.id);
+          const label = renderCiteLink(typeSetting.linkTemplate ?? defaultLinkTemplate, reference.entry, reference.id, index);
+          const text = citationItemText(citation.items[i], reference.entry, label);
+          const anchor = formatMultiCitation(text, i, matches.length, typeSetting);
+          links.push(typeSetting.customCiteText ? anchor : staticReference(reference.id, anchor));
+        }
+        if (links.length === matches.length) {
+          replacement = links.join("");
+          converted++;
+        } else unresolved++;
+      } else unresolved++;
+      // Replace literal tokens after conversion so Pandoc cannot escape SiYuan references.
+      markdown = markdown.split(citation.marker).join(replacement);
+    }
+    return { markdown, converted, unresolved };
   }
 
   private async availablePath(notebook: string, parentPath: string, title: string): Promise<string> {

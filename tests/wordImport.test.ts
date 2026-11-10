@@ -6,12 +6,15 @@ import { join } from "node:path";
 import { webcrypto } from "node:crypto";
 import { DOMParser, XMLSerializer } from "@xmldom/xmldom";
 import { zipSync, unzipSync, strToU8, strFromU8 } from "fflate";
-import { CitationMatcher, citationItemText, markdownText, prepareZoteroWord, staticReference } from "../src/import/zoteroWord";
+import { prepareZoteroWord } from "../src/import/zoteroWord";
+import { CitationMatcher } from "../src/import/citationMatcher";
+import { citationItemText, markdownText, staticReference } from "../src/import/citationText";
 import { LiteraturePool, getLiteratureKey } from "../src/references/pool";
 import { formatMultiCitation, renderCiteLink } from "../src/references/citationFormat";
 import { applyWordColors, prepareWordMarkdown } from "../src/export/wordColors";
 
 Object.assign(globalThis, { DOMParser, XMLSerializer });
+const pandocBin = process.env.PANDOC_BIN || "pandoc";
 const tests: Array<[string, () => void | Promise<void>]> = [];
 const test = (name: string, run: () => void | Promise<void>) => tests.push([name, run]);
 const ns = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
@@ -103,6 +106,15 @@ test("malformed and unterminated fields preserve visible text and report failure
   assert.match(outputXML(result.data), /unfinished/);
 });
 
+test("invalid citation item shapes are retained as text instead of aborting the import", () => {
+  for (const invalid of [[], null, {uris: "not-an-array"}, {uris: [123]}, {itemData: []}, {prefix: {}}, {itemData: {DOI: 123}}]) {
+    const result = prepareZoteroWord(archive(complex([invalid], "original citation")), "INVALID");
+    assert.equal(result.malformed, 1);
+    assert.equal(result.citations.length, 0);
+    assert.match(outputXML(result.data), /original citation/);
+  }
+});
+
 test("deleted citations do not count as active citations", () => {
   const result = prepareZoteroWord(archive(`<w:del>${complex([item()])}</w:del>` + complex([item()], "active")), "T");
   assert.equal(result.citations.length, 1);
@@ -119,7 +131,7 @@ test("citation markers use the baseline while adjacent superscripts and subscrip
   const dir = mkdtempSync(join(tmpdir(), "citation-alignment-test-"));
   try {
     writeFileSync(join(dir, "source.md"), "Ordinary x^2^ and H~2~O. CITATION\n");
-    execFileSync("pandoc", ["source.md", "-o", "source.docx"], {cwd: dir});
+    execFileSync(pandocBin, ["source.md", "-o", "source.docx"], {cwd: dir});
     const original = unzipSync(readFileSync(join(dir, "source.docx")));
     for (const alignment of ["superscript", "subscript", "inherited-superscript"]) {
       const files = {...original};
@@ -136,7 +148,7 @@ test("citation markers use the baseline while adjacent superscripts and subscrip
           '<w:rPr><w:vertAlign w:val="superscript"/></w:rPr></w:style></w:styles>'));
       const prepared = prepareZoteroWord(zipSync(files), "ALIGNMENT");
       writeFileSync(join(dir, "prepared.docx"), prepared.data);
-      const markdown = execFileSync("pandoc", ["prepared.docx", "--to=markdown", "--wrap=none"], {cwd: dir, encoding: "utf8"});
+      const markdown = execFileSync(pandocBin, ["prepared.docx", "--to=markdown", "--wrap=none"], {cwd: dir, encoding: "utf8"});
       assert.equal(prepared.citations.length, 1);
       const delimiter = alignment === "subscript" ? "~" : "^";
       assert.ok(markdown.includes(`${delimiter}L${delimiter}${prepared.citations[0].marker}${delimiter}R${delimiter}`), markdown);
@@ -152,8 +164,8 @@ test("Word author affiliations and chemical subscripts use native SiYuan marks w
   const dir = mkdtempSync(join(tmpdir(), "citation-native-script-test-"));
   try {
     writeFileSync(join(dir, "source.md"), "Author^1,2#^, Author^6\\*^\n\n^1^Institute\n\n^\\#^Equal contribution. H~2~O, x^2^, ^**bold**^ and `literal ^caret^ ~tilde~`.\n");
-    execFileSync("pandoc", ["source.md", "-o", "source.docx"], {cwd: dir});
-    const markdown = execFileSync("pandoc", ["source.docx", "--to=markdown", "--wrap=none",
+    execFileSync(pandocBin, ["source.md", "-o", "source.docx"], {cwd: dir});
+    const markdown = execFileSync(pandocBin, ["source.docx", "--to=markdown", "--wrap=none",
       "--lua-filter", join(__dirname, "../scripts/import-word.lua")], {cwd: dir, encoding: "utf8"});
     assert.ok(markdown.includes('Author<span data-type="sup">1,2#</span>'), markdown);
     assert.ok(markdown.includes('Author<span data-type="sup">6*</span>'), markdown);
@@ -172,7 +184,7 @@ test("Word RGB, inherited colors, scripts and hyperlinks survive import and DOCX
   const dir = mkdtempSync(join(tmpdir(), "citation-color-roundtrip-"));
   try {
     writeFileSync(join(dir, "source.md"), "# HEADING\n\nDIRECT\n\nCHAR\n\nPARAGRAPH\n\nAUTO\n\nSUP\n\nSUB\n\nBOLD\n\nESCAPED\n\n[LINK](https://example.com/?x=1&y=2)\n\nCITATION\n");
-    execFileSync("pandoc", ["source.md", "-o", "source.docx"], {cwd: dir});
+    execFileSync(pandocBin, ["source.md", "-o", "source.docx"], {cwd: dir});
     const files = unzipSync(readFileSync(join(dir, "source.docx")));
     const doc = new DOMParser().parseFromString(strFromU8(files["word/document.xml"]), "application/xml");
     const styles = new DOMParser().parseFromString(strFromU8(files["word/styles.xml"]), "application/xml");
@@ -222,7 +234,7 @@ test("Word RGB, inherited colors, scripts and hyperlinks survive import and DOCX
     files["word/styles.xml"] = strToU8(new XMLSerializer().serializeToString(styles));
     const prepared = prepareZoteroWord(zipSync(files), "COLORTEST");
     writeFileSync(join(dir, "prepared.docx"), prepared.data);
-    const imported = execFileSync("pandoc", ["prepared.docx", "--from=docx+styles", "--to=markdown-grid_tables-simple_tables-multiline_tables-link_attributes-header_attributes-fenced_divs-bracketed_spans-native_divs-native_spans", "--wrap=none",
+    const imported = execFileSync(pandocBin, ["prepared.docx", "--from=docx+styles", "--to=markdown-grid_tables-simple_tables-multiline_tables-link_attributes-header_attributes-fenced_divs-bracketed_spans-native_divs-native_spans", "--wrap=none",
       "--lua-filter", join(__dirname, "../scripts/import-word.lua")], {cwd: dir, encoding: "utf8"});
     assert.ok(imported.includes('<span data-type="text" style="color: #123456;">DIRECT</span>'), imported);
     assert.ok(imported.includes('<span data-type="text" style="color: #EE0000;">CHAR</span>'), imported);
@@ -235,7 +247,7 @@ test("Word RGB, inherited colors, scripts and hyperlinks survive import and DOCX
       '\n\n<span style="color: #445566">[@siyuan_cite{84}@siyuan_name{coloredCitation}}]</span>\n\n' +
       '<span style="color: rgb(17, 34, 51)">RGB</span> <span style="color: #0f0">SHORTHEX</span> <span style="color: red">NAMED</span>\n' +
       '<span data-type="sup text" style="color:#EE0000">6*</span> &amp; normal <span data-type="sup">7*</span>\n'));
-    execFileSync("pandoc", ["export.md", "-o", "export.docx", "--lua-filter", join(__dirname, "../scripts/citation.lua"),
+    execFileSync(pandocBin, ["export.md", "-o", "export.docx", "--lua-filter", join(__dirname, "../scripts/citation.lua"),
       "--lua-filter", join(__dirname, "../scripts/export-word.lua")], {cwd: dir});
     const result = unzipSync(applyWordColors(readFileSync(join(dir, "export.docx"))));
     const exportedStyles = new DOMParser().parseFromString(strFromU8(result["word/styles.xml"]), "application/xml");
@@ -321,7 +333,7 @@ test("real Pandoc import retains images, table, footnotes, citations and repeat-
   try {
     writeFileSync(join(dir, "image.png"), Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=", "base64"));
     writeFileSync(join(dir, "source.md"), '# Heading\n\nBefore CITATIONONE after. CLUSTER UNKNOWN\n\nAuthor^1,2#^ and H~2~O.\n\n| Column | Value |\n|---|---|\n| A | B |\n\n![picture](image.png)\n\nWith note[^1].\n\nBIBLIOGRAPHY\n\n[^1]: Footnote CITATIONFOOT\n');
-    execFileSync("pandoc", ["source.md", "-o", "source.docx"], {cwd: dir});
+    execFileSync(pandocBin, ["source.md", "-o", "source.docx"], {cwd: dir});
     const files = unzipSync(readFileSync(join(dir, "source.docx")));
     files["word/document.xml"] = strToU8(strFromU8(files["word/document.xml"])
       .replace("CITATIONONE", `</w:t></w:r>${complex([item()], "1", true).replace(/<w:r>/g, '<w:r><w:rPr><w:vertAlign w:val="superscript"/></w:rPr>')}<w:r><w:t>`)
@@ -356,7 +368,7 @@ test("real Pandoc import retains images, table, footnotes, citations and repeat-
         pandoc: async (subdir: string, args: string[]) => {
           writeFileSync(join(dir, "input.docx"), new Uint8Array(await storage.get(`/temp/convert/pandoc/${subdir}/input.docx`)!.arrayBuffer()));
           const params = args.map(arg => /\/scripts\/import-word\.lua$/.test(arg) ? join(__dirname, "../scripts/import-word.lua") : arg);
-          execFileSync("pandoc", params, {cwd: dir});
+          execFileSync(pandocBin, params, {cwd: dir});
           return {code: 0};
         },
         getFile: async (path: string, type: string) => {
@@ -423,7 +435,7 @@ test("real Pandoc import retains images, table, footnotes, citations and repeat-
         writeFileSync(join(dir, "exportTemp.md"), await source.text());
         const params = args.map(arg => /\/scripts\/(citation|math|export-word)\.lua$/.test(arg)
           ? join(projectRoot, "scripts", arg.split("/").pop()!) : arg);
-        execFileSync("pandoc", params, {cwd: dir});
+        execFileSync(pandocBin, params, {cwd: dir});
         return {code: 0};
       },
     }};

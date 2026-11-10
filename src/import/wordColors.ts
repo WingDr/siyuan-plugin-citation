@@ -1,11 +1,5 @@
-import { strFromU8, strToU8 } from "fflate";
-
-const WORD_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
-
-function child(element: Element | undefined, name: string): Element | undefined {
-  return element && Array.from(element.childNodes).find(node => node?.nodeType === 1 &&
-    (node as Element).namespaceURI === WORD_NS && (node as Element).localName === name) as Element | undefined;
-}
+import { strToU8 } from "fflate";
+import { parseWordXml, WORD_NS, wordChild as child } from "../word/xml";
 
 /** Pandoc drops run colors, but docx+styles preserves named character styles. */
 export class WordColorPreserver {
@@ -17,8 +11,7 @@ export class WordColorPreserver {
   private defaultColor: string | null | undefined;
 
   constructor(private files: Record<string, Uint8Array>) {
-    this.document = new DOMParser().parseFromString(files["word/styles.xml"]
-      ? strFromU8(files["word/styles.xml"]) : `<w:styles xmlns:w="${WORD_NS}"/>`, "application/xml");
+    this.document = parseWordXml(files["word/styles.xml"] ?? `<w:styles xmlns:w="${WORD_NS}"/>`, "word/styles.xml");
     for (const style of Array.from(this.document.getElementsByTagNameNS(WORD_NS, "style"))) {
       this.styles.set(style.getAttributeNS(WORD_NS, "styleId") || "", style);
       if (style.getAttributeNS(WORD_NS, "type") === "paragraph" && /^(1|true|on)$/.test(style.getAttributeNS(WORD_NS, "default") || "")) {
