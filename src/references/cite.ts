@@ -8,6 +8,7 @@ import {
     refRegDynamic, 
     refRegStatic } from "../utils/constants";
 import { generateFromTemplate } from "../utils/templates";
+import { renderCiteLink } from "./citationFormat";
 
 export class Cite {
   plugin: SiYuanPluginCitation;
@@ -45,11 +46,7 @@ export class Cite {
       return "";
     }
     if (isDev) this.logger.info("仅包含链接的模板 =>", {index, id: this.plugin.literaturePool.get(key)});
-    return generateFromTemplate(template, {
-      index,
-      citeFileID: this.plugin.literaturePool.get(key),
-      ...entry
-    });
+    return renderCiteLink(template, entry, this.plugin.literaturePool.get(key), index);
   }
   
   public async generateLiteratureName(key: string, typeSetting: any) {

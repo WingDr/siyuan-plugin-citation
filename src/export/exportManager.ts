@@ -1,6 +1,7 @@
-import { dataDir, isDev, STORAGE_NAME, workspaceDir } from "../utils/constants";
-import SiYuanPluginCitation from "../index";
+import { dataDir, isDev, STORAGE_NAME } from "../utils/constants";
+import type SiYuanPluginCitation from "../index";
 import { createLogger, type ILogger } from "../utils/simple-logger";
+import { applyWordColors, prepareWordMarkdown } from "./wordColors";
 
 export const exportTypes = ["markdown", "word", "latex"] as const;
 export type ExportType = typeof exportTypes[number];
@@ -118,8 +119,6 @@ export class ExportManager {
           const following = this.getNeighborCites(content.slice(match!.index! + match![0].length), citeBlockIDs)
           totalStr = following ? match![0] + following.totalStr : match![0];
           const keys = following ? [match![2], ...following.keys] : [match![2]];
-          const links = following ? [match![1], ...following.links] : [match![1]];
-          console.log({totalStr, keys, links})
           if (keys.length == 1) {
             if (citeBlockIDs.indexOf(keys[0]) != -1) {
               const key = this.plugin.literaturePool.get(match![2]);
@@ -143,7 +142,7 @@ export class ExportManager {
         if (iter > 1000) break;
       }
       if (isDev) this.logger.info("获得处理后的导出内容, contents=>", {content});
-      await this.plugin.kernelApi.putFile("/temp/convert/pandoc/citation/exportTemp.md", false, new Blob([content]));
+      await this.plugin.kernelApi.putFile("/temp/convert/pandoc/citation/exportTemp.md", false, new Blob([prepareWordMarkdown(content)]));
       // 添加额外参数
       const exportWordParams = this.plugin.data[STORAGE_NAME].exportWordParam as string || "";
       const additionalParams = exportWordParams ? exportWordParams.split(",") : [];
@@ -153,6 +152,7 @@ export class ExportManager {
         "-o", "exportTemp.docx",
         "--lua-filter", dataDir + "/plugins/siyuan-plugin-citation/scripts/citation.lua",
         "--lua-filter", dataDir + "/plugins/siyuan-plugin-citation/scripts/math.lua",
+        "--lua-filter", dataDir + "/plugins/siyuan-plugin-citation/scripts/export-word.lua",
         "--resource-path", dataDir,
         ...additionalParams
       ];
@@ -162,7 +162,10 @@ export class ExportManager {
       if (isDev) this.logger.info("开始调用pandoc导出word，参数=>", pandocParams);
       await this.plugin.kernelApi.pandoc("citation", pandocParams)
       res = await this.plugin.kernelApi.getFile("/temp/convert/pandoc/citation/exportTemp.docx", "any") as any;
-      const file = await (new Response(((res as any).body as ReadableStream))).blob()
+      const rawFile = await (new Response(((res as any).body as ReadableStream))).blob();
+      const file = new Blob([new Uint8Array(applyWordColors(new Uint8Array(await rawFile.arrayBuffer()))).buffer], {
+        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      });
       // 下载
       const url = window.URL.createObjectURL(file);
       const a = document.createElement('a');

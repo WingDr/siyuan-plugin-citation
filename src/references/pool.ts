@@ -1,3 +1,8 @@
+// Web API items may have no Better BibTeX citekey; never collapse them to "1_".
+export function getLiteratureKey(entry: { itemKey?: string; citekey?: string }, useItemKey: boolean): string {
+  return "1_" + ((useItemKey ? entry.itemKey : entry.citekey) || entry.itemKey || entry.citekey || "");
+}
+
 // 只能容纳key和value一对一存在的池子
 export class LiteraturePool {
   private key2idDict: {[key: string]: string};

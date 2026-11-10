@@ -12,6 +12,7 @@ import { Database, type DatabaseType } from "./database/database";
 import { Reference } from "./references/reference";
 import { InteractionManager } from "./frontEnd/interaction";
 import { ExportManager } from "./export/exportManager";
+import { ImportManager } from "./import/importManager";
 import {
     isDev,
     STORAGE_NAME,
@@ -45,6 +46,7 @@ export default class SiYuanPluginCitation extends Plugin {
     public reference!: Reference;
     public interactionManager!: InteractionManager;
     public exportManager!: ExportManager;
+    public importManager!: ImportManager;
     public kernelApi!: KernelApi;
     public eventTrigger!: EventTrigger;
     public settingTab!: SettingTab;
@@ -89,6 +91,7 @@ export default class SiYuanPluginCitation extends Plugin {
         this.interactionManager.eventBusReaction();
 
         this.exportManager = new ExportManager(this);
+        this.importManager = new ImportManager(this);
         this.database = new Database(this);
         return this.database.buildDatabase(this.data[STORAGE_NAME].database as DatabaseType)
             .then(() => {
