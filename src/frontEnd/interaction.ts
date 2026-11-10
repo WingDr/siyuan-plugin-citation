@@ -52,7 +52,7 @@ interface IMenuItemSetting {
   action?: string,
   id?: string,
   submenu?: IMenu[],
-  generateSubMenu?: (option: any) => IMenu[],
+  generateSubMenu?: (option: any, documentId: string) => IMenu[],
   disabled?: boolean
   icon?: string
   iconHTML?: string
@@ -248,7 +248,7 @@ export class InteractionManager {
     ];
     this.menuItems = [
       {
-        place: ["BreadcrumbMore", "TitleIcon"],
+        place: ["BreadcrumbMore", "TitleIcon", "DocTree"],
         iconHTML: '<svg class="b3-menu__icon"><use xlink:href="#iconDownload"></use></svg>',
         label: this.plugin.i18n.importZoteroWord,
         clickCallback: (id) => this.plugin.importManager.chooseWord(id)
@@ -275,11 +275,11 @@ export class InteractionManager {
         clickCallback: (id) => {this.plugin.reference.refreshSingleLiteratureNote(id);}
       },
       {
-        place: ["BreadcrumbMore", "TitleIcon"],
+        place: ["BreadcrumbMore", "TitleIcon", "DocTree"],
         iconHTML: '<svg class="b3-menu__icon" style><use xlink:href="#iconUpload"></use></svg>',
         label: (this.plugin.i18n.menuItems as any).export,
         // clickCallback: (id) => {this.plugin.exportManager.export(id, "markdown");},
-        generateSubMenu: this.generateExportMenu.bind(this)
+        generateSubMenu: (_detail, documentId) => this.generateExportMenu(documentId)
       },
       {
         // 绑定文档到文献
@@ -392,7 +392,7 @@ export class InteractionManager {
     this.plugin.eventTrigger.addEventBusEvent("open-menu-blockref", this.customBlockRefMenu.bind(this));
     this.plugin.eventTrigger.addEventBusEvent("paste", this.hookPaste.bind(this));
     this.plugin.eventTrigger.addEventBusEvent("open-siyuan-url-plugin", this.openURLPlugin.bind(this));
-    // this.plugin.eventTrigger.addEventBusEvent("open-menu-doctree", this.customdocTreeMenu.bind(this));
+    this.plugin.eventTrigger.addEventBusEvent("open-menu-doctree", this.customDocTreeMenu.bind(this));
     // this.plugin.eventTrigger.addEventBusEvent("open-menu-breadcrumbmore", this.customBreadcrumbMore.bind(this));
     // this.plugin.eventTrigger.addEvent("transactions", {
     //   type: "repeated",
@@ -528,8 +528,8 @@ export class InteractionManager {
           (event.detail.menu as Menu).addItem({
             iconHTML: item.iconHTML,
             label: this.plugin.i18n.prefix + item.label,
-            click: () => {item.clickCallback!(id);},
-            submenu: item.submenu ?? (item.generateSubMenu ? item.generateSubMenu(event.detail) : undefined)
+            click: () => {item.clickCallback?.(id);},
+            submenu: item.submenu ?? (item.generateSubMenu ? item.generateSubMenu(event.detail, id) : undefined)
           });
         }
       }
@@ -555,34 +555,37 @@ export class InteractionManager {
             iconHTML: item.iconHTML,
             label: this.plugin.i18n.prefix + item.label,
             click: () => {item.clickCallback!(event.detail);},
-            submenu: item.submenu ?? (item.generateSubMenu ? item.generateSubMenu(event.detail) : null)
+            submenu: item.submenu ?? (item.generateSubMenu ? item.generateSubMenu(event.detail, id) : null)
           } as IMenu);
         }
       }
     });
   }
 
-  private customdocTreeMenu(event: CustomEvent) {
+  private customDocTreeMenu(event: CustomEvent) {
     if (isDev) this.logger.info("触发eventBus：open-menu-doctree，=>", event);
 
     const place = "DocTree" as MenuPlace;
-    // const submenu = [] as IMenuItemOption[];
-    const id  = event.detail.protyle.block.rootID;
+    // Tree menus have no editor instance. Newer hosts supply items even when
+    // the selected document's row has been virtualized out of the DOM.
+    if (event.detail.type !== "doc") return;
+    const id = event.detail.items?.[0]?.id ?? event.detail.elements?.[0]?.getAttribute("data-node-id");
+    if (!id) return;
     this.menuItems.forEach(item => {
       if (!item.place || item.place.indexOf(place) != -1) {
         if (!item.check || item.check(id)) {
           (event.detail.menu as subMenu).addItem({
             iconHTML: item.iconHTML,
             label: this.plugin.i18n.prefix + item.label,
-            click: () => {item.clickCallback!(event.detail);},
-            submenu: item.submenu ?? (item.generateSubMenu ? item.generateSubMenu(event.detail) : null)
+            click: () => {item.clickCallback?.(id);},
+            submenu: item.submenu ?? (item.generateSubMenu ? item.generateSubMenu(event.detail, id) : null)
           } as IMenu);
         }
       }
     });
   }
 
-  private generateExportMenu(detail: any): IMenu[] {
+  private generateExportMenu(documentId: string): IMenu[] {
     const icons = ["iconMarkdown", "iconExact", "iconUpload"]
     return exportTypes.map((type: ExportType, index:number) => {
       return {
@@ -590,7 +593,7 @@ export class InteractionManager {
         icon: icons[index],
         id: type,
         click: () => {
-          this.plugin.exportManager.export(detail.data.id, type)
+          this.plugin.exportManager.export(documentId, type)
         }
       } as IMenu;
     })
