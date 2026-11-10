@@ -114,6 +114,39 @@ test("empty, invalid and ordinary DOCX input is handled", () => {
   assert.equal(prepareZoteroWord(archive(text("ordinary text")), "T").citations.length, 0);
 });
 
+test("citation markers use the baseline while adjacent superscripts and subscripts retain their formatting", () => {
+  const dir = mkdtempSync(join(tmpdir(), "citation-alignment-test-"));
+  try {
+    writeFileSync(join(dir, "source.md"), "Ordinary x^2^ and H~2~O. CITATION\n");
+    execFileSync("pandoc", ["source.md", "-o", "source.docx"], {cwd: dir});
+    const original = unzipSync(readFileSync(join(dir, "source.docx")));
+    for (const alignment of ["superscript", "subscript", "inherited-superscript"]) {
+      const files = {...original};
+      const inherited = alignment === "inherited-superscript";
+      const properties = inherited ? '<w:rStyle w:val="CitationNumber"/>' : `<w:vertAlign w:val="${alignment}"/>`;
+      // Deliberately put text on both sides of the field in the same styled run.
+      const run = `<w:r><w:rPr>${properties}</w:rPr><w:t>L</w:t><w:fldChar w:fldCharType="begin"/>` +
+        `<w:instrText>${escape(instruction([item()]))}</w:instrText><w:fldChar w:fldCharType="separate"/>` +
+        '<w:t>1</w:t><w:fldChar w:fldCharType="end"/><w:t>R</w:t></w:r>';
+      files["word/document.xml"] = strToU8(strFromU8(files["word/document.xml"])
+        .replace("CITATION", `</w:t></w:r>${run}<w:r><w:t>`));
+      if (inherited) files["word/styles.xml"] = strToU8(strFromU8(files["word/styles.xml"])
+        .replace("</w:styles>", '<w:style w:type="character" w:styleId="CitationNumber"><w:name w:val="CitationNumber"/>' +
+          '<w:rPr><w:vertAlign w:val="superscript"/></w:rPr></w:style></w:styles>'));
+      const prepared = prepareZoteroWord(zipSync(files), "ALIGNMENT");
+      writeFileSync(join(dir, "prepared.docx"), prepared.data);
+      const markdown = execFileSync("pandoc", ["prepared.docx", "--to=markdown", "--wrap=none"], {cwd: dir, encoding: "utf8"});
+      assert.equal(prepared.citations.length, 1);
+      const delimiter = alignment === "subscript" ? "~" : "^";
+      assert.ok(markdown.includes(`${delimiter}L${delimiter}${prepared.citations[0].marker}${delimiter}R${delimiter}`), markdown);
+      assert.ok(markdown.includes("x^2^"), markdown);
+      assert.ok(markdown.includes("H~2~O"), markdown);
+    }
+  } finally {
+    rmSync(dir, {recursive: true, force: true});
+  }
+});
+
 const entries = [
   { key: "1_Smith2024", itemKey: "ABCDEFGH", citekey: "Smith2024", DOI: "10.1000/ABC", title: "Title A", entry: {data: {id: 42, itemID: 42, libraryID: 1}} },
   { key: "1_Jones2025", itemKey: "IJKLMNOP", citekey: "Jones2025", title: "Title B", entry: {data: {id: 43, itemID: 43, libraryID: 1}} },
@@ -167,7 +200,7 @@ test("real Pandoc import retains images, table, footnotes, citations and repeat-
     execFileSync("pandoc", ["source.md", "-o", "source.docx"], {cwd: dir});
     const files = unzipSync(readFileSync(join(dir, "source.docx")));
     files["word/document.xml"] = strToU8(strFromU8(files["word/document.xml"])
-      .replace("CITATIONONE", `</w:t></w:r>${complex([item()], "[1]", true)}<w:r><w:t>`)
+      .replace("CITATIONONE", `</w:t></w:r>${complex([item()], "1", true).replace(/<w:r>/g, '<w:r><w:rPr><w:vertAlign w:val="superscript"/></w:rPr>')}<w:r><w:t>`)
       .replace("CLUSTER", `</w:t></w:r>${complex([item(), item("IJKLMNOP")], "[1,2]")}<w:r><w:t>`)
       .replace("UNKNOWN", `</w:t></w:r>${complex([item("XXXXXXXX")], "[99]")}<w:r><w:t>`)
       .replace("BIBLIOGRAPHY", `</w:t></w:r>${complex([], "Duplicate bibliography entry").replace("ZOTERO_ITEM CSL_CITATION", "ZOTERO_BIBL")}<w:r><w:t>`));

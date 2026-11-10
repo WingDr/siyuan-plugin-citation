@@ -19,6 +19,40 @@ export interface WordCitation {
   items: ZoteroCitationItem[];
 }
 
+function createCitationMarkerRun(doc: Document, marker: string): Element {
+  const run = doc.createElementNS(WORD_NS, "w:r");
+  const properties = doc.createElementNS(WORD_NS, "w:rPr");
+  const alignment = doc.createElementNS(WORD_NS, "w:vertAlign");
+  // Override both direct and inherited Word citation-number formatting.
+  alignment.setAttributeNS(WORD_NS, "w:val", "baseline");
+  properties.appendChild(alignment);
+  run.appendChild(properties);
+  const value = doc.createElementNS(WORD_NS, "w:t");
+  value.textContent = marker;
+  run.appendChild(value);
+  return run;
+}
+
+function insertCitationMarker(doc: Document, start: Element, marker: string): void {
+  const run = start.parentNode as Element;
+  const markerRun = createCitationMarkerRun(doc, marker);
+  // Field boundaries are run children in WordprocessingML. Split at the boundary
+  // so resetting the citation's baseline cannot restyle adjacent text in that run.
+  const tail = run.cloneNode(false) as Element;
+  const properties = Array.from(run.childNodes).find(node =>
+    node?.nodeType === 1 && (node as Element).namespaceURI === WORD_NS && (node as Element).localName === "rPr");
+  if (properties) tail.appendChild(properties.cloneNode(true));
+  for (let node: ChildNode | null = start; node;) {
+    const next: ChildNode | null = node.nextSibling;
+    tail.appendChild(node);
+    node = next;
+  }
+  const parent = run.parentNode!;
+  const nextRun = run.nextSibling;
+  parent.insertBefore(markerRun, nextRun);
+  parent.insertBefore(tail, nextRun);
+}
+
 /** Replace fields before Pandoc reads them: its DOCX reader discards field instructions. */
 export function prepareZoteroWord(data: Uint8Array, token: string) {
   const files = unzipSync(data);
@@ -67,11 +101,7 @@ export function prepareZoteroWord(data: Uint8Array, token: string) {
         const text = Array.from(element.getElementsByTagNameNS(WORD_NS, "t")).map(el => el.textContent).join("");
         const marker = register(instruction, text);
         if (marker) {
-          const run = doc.createElementNS(WORD_NS, "w:r");
-          const value = doc.createElementNS(WORD_NS, "w:t");
-          value.textContent = marker;
-          run.appendChild(value);
-          element.parentNode!.replaceChild(run, element);
+          element.parentNode!.replaceChild(createCitationMarkerRun(doc, marker), element);
           return;
         }
       }
@@ -90,9 +120,7 @@ export function prepareZoteroWord(data: Uint8Array, token: string) {
           }
           const marker = register(field.instruction, field.text);
           if (marker) {
-            const value = doc.createElementNS(WORD_NS, "w:t");
-            value.textContent = marker;
-            field.start.parentNode!.insertBefore(value, field.start);
+            insertCitationMarker(doc, field.start, marker);
             for (const node of field.nodes) node.parentNode?.removeChild(node);
           }
         }
