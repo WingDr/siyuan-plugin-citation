@@ -53,7 +53,7 @@ export class ImportManager {
       }
       await api.putFile(`${temp}/input.docx`, false, new Blob([new Uint8Array(prepared.data).buffer]));
       const conversion = await api.pandoc(dir, [
-        "input.docx", "--from=docx",
+        "input.docx", "--from=docx+styles",
         "--lua-filter", `${dataDir}/plugins/siyuan-plugin-citation/scripts/import-word.lua`,
         "--to=markdown-grid_tables-simple_tables-multiline_tables-link_attributes-header_attributes-fenced_divs-bracketed_spans-native_divs-native_spans",
         "--wrap=none", "--extract-media=media", "--output=output.md",

@@ -1,4 +1,5 @@
 import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
+import { WordColorPreserver } from "./wordColors";
 
 const WORD_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 
@@ -57,6 +58,7 @@ function insertCitationMarker(doc: Document, start: Element, marker: string): vo
 export function prepareZoteroWord(data: Uint8Array, token: string) {
   const files = unzipSync(data);
   if (!files["word/document.xml"]) throw new Error("Invalid DOCX: word/document.xml");
+  const colors = new WordColorPreserver(files);
   const citations: WordCitation[] = [];
   let malformed = 0;
   let removedBibliographies = 0;
@@ -143,8 +145,10 @@ export function prepareZoteroWord(data: Uint8Array, token: string) {
     };
     visit(doc.documentElement);
     malformed += stack.filter(field => /ZOTERO_ITEM/.test(field.instruction)).length;
+    colors.preserve(doc, new Set(citations.map(citation => citation.marker)));
     files[path] = strToU8(new XMLSerializer().serializeToString(doc));
   }
+  colors.save();
   return { data: zipSync(files), citations, malformed, removedBibliographies };
 }
 

@@ -9,6 +9,7 @@ import { zipSync, unzipSync, strToU8, strFromU8 } from "fflate";
 import { CitationMatcher, citationItemText, markdownText, prepareZoteroWord, staticReference } from "../src/import/zoteroWord";
 import { LiteraturePool, getLiteratureKey } from "../src/references/pool";
 import { formatMultiCitation, renderCiteLink } from "../src/references/citationFormat";
+import { applyWordColors, prepareWordMarkdown } from "../src/export/wordColors";
 
 Object.assign(globalThis, { DOMParser, XMLSerializer });
 const tests: Array<[string, () => void | Promise<void>]> = [];
@@ -167,6 +168,109 @@ test("Word author affiliations and chemical subscripts use native SiYuan marks w
   }
 });
 
+test("Word RGB, inherited colors, scripts and hyperlinks survive import and DOCX re-export", () => {
+  const dir = mkdtempSync(join(tmpdir(), "citation-color-roundtrip-"));
+  try {
+    writeFileSync(join(dir, "source.md"), "# HEADING\n\nDIRECT\n\nCHAR\n\nPARAGRAPH\n\nAUTO\n\nSUP\n\nSUB\n\nBOLD\n\nESCAPED\n\n[LINK](https://example.com/?x=1&y=2)\n\nCITATION\n");
+    execFileSync("pandoc", ["source.md", "-o", "source.docx"], {cwd: dir});
+    const files = unzipSync(readFileSync(join(dir, "source.docx")));
+    const doc = new DOMParser().parseFromString(strFromU8(files["word/document.xml"]), "application/xml");
+    const styles = new DOMParser().parseFromString(strFromU8(files["word/styles.xml"]), "application/xml");
+    const targets = new Map(Array.from(doc.getElementsByTagNameNS(ns, "t")).map(node => [node.textContent, node]));
+    const property = (parent: any, name: string, value: string) => {
+      const node = doc.createElementNS(ns, `w:${name}`);
+      node.setAttributeNS(ns, "w:val", value);
+      parent.appendChild(node);
+    };
+    const runProperty = (text: string, name: string, value: string) => {
+      const run = targets.get(text)!.parentNode! as any;
+      let props = run.getElementsByTagNameNS(ns, "rPr")[0];
+      if (!props) {props = doc.createElementNS(ns, "w:rPr"); run.insertBefore(props, run.firstChild);}
+      property(props, name, value);
+    };
+    const paragraphStyle = (text: string) => {
+      let paragraph = targets.get(text)!.parentNode! as any;
+      while (paragraph.localName !== "p") paragraph = paragraph.parentNode;
+      const props = paragraph.getElementsByTagNameNS(ns, "pPr")[0];
+      const current = props.getElementsByTagNameNS(ns, "pStyle")[0];
+      if (current) current.setAttributeNS(ns, "w:val", "ColoredParagraph");
+      else property(props, "pStyle", "ColoredParagraph");
+    };
+    const additions = new DOMParser().parseFromString(`<w:styles xmlns:w="${ns}">
+      <w:style w:type="character" w:styleId="BaseRed"><w:name w:val="BaseRed"/><w:rPr><w:color w:val="EE0000"/></w:rPr></w:style>
+      <w:style w:type="character" w:styleId="InheritedRed"><w:name w:val="InheritedRed"/><w:basedOn w:val="BaseRed"/></w:style>
+      <w:style w:type="paragraph" w:styleId="ColoredParagraph"><w:name w:val="ColoredParagraph"/><w:basedOn w:val="Normal"/><w:rPr><w:color w:val="335577"/></w:rPr></w:style>
+    </w:styles>`, "application/xml");
+    for (const style of Array.from(additions.getElementsByTagNameNS(ns, "style"))) styles.documentElement.appendChild(styles.importNode(style, true));
+    runProperty("HEADING", "color", "EE0000");
+    runProperty("DIRECT", "color", "123456");
+    runProperty("CHAR", "rStyle", "InheritedRed");
+    paragraphStyle("PARAGRAPH");
+    paragraphStyle("AUTO"); runProperty("AUTO", "color", "auto");
+    runProperty("SUP", "color", "EE0000"); runProperty("SUP", "vertAlign", "superscript");
+    runProperty("SUB", "color", "334455"); runProperty("SUB", "vertAlign", "subscript");
+    runProperty("BOLD", "color", "EE0000"); runProperty("BOLD", "b", "true");
+    runProperty("ESCAPED", "color", "AABBCC"); targets.get("ESCAPED")!.textContent = "<red & blue>";
+    runProperty("LINK", "color", "EE0000");
+    paragraphStyle("CITATION");
+    const sourceRun = targets.get("CITATION")!.parentNode!;
+    const field = new DOMParser().parseFromString(xml(complex([item()], "1")), "application/xml");
+    const fieldParagraph = field.getElementsByTagNameNS(ns, "p")[0];
+    for (const run of Array.from(fieldParagraph.childNodes)) sourceRun.parentNode!.insertBefore(doc.importNode(run, true), sourceRun);
+    sourceRun.parentNode!.removeChild(sourceRun);
+    files["word/document.xml"] = strToU8(new XMLSerializer().serializeToString(doc));
+    files["word/styles.xml"] = strToU8(new XMLSerializer().serializeToString(styles));
+    const prepared = prepareZoteroWord(zipSync(files), "COLORTEST");
+    writeFileSync(join(dir, "prepared.docx"), prepared.data);
+    const imported = execFileSync("pandoc", ["prepared.docx", "--from=docx+styles", "--to=markdown-grid_tables-simple_tables-multiline_tables-link_attributes-header_attributes-fenced_divs-bracketed_spans-native_divs-native_spans", "--wrap=none",
+      "--lua-filter", join(__dirname, "../scripts/import-word.lua")], {cwd: dir, encoding: "utf8"});
+    assert.ok(imported.includes('<span data-type="text" style="color: #123456;">DIRECT</span>'), imported);
+    assert.ok(imported.includes('<span data-type="text" style="color: #EE0000;">CHAR</span>'), imported);
+    assert.ok(imported.includes('<span data-type="text" style="color: #335577;">PARAGRAPH</span>'), imported);
+    assert.ok(imported.includes('<span data-type="sup text" style="color: #EE0000;">SUP</span>'), imported);
+    assert.ok(imported.includes('<span data-type="sub text" style="color: #334455;">SUB</span>'), imported);
+    assert.ok(imported.includes('&lt;red &amp; blue&gt;'), imported);
+    assert.doesNotMatch(imported, /SiyuanCitationColor_|data-custom-style|>AUTO<|>SIYUANCITATION/);
+    writeFileSync(join(dir, "export.md"), prepareWordMarkdown(imported.replace(prepared.citations[0].marker, '[@siyuan_cite{42}@siyuan_name{refresh}}]') +
+      '\n\n<span style="color: #445566">[@siyuan_cite{84}@siyuan_name{coloredCitation}}]</span>\n\n' +
+      '<span style="color: rgb(17, 34, 51)">RGB</span> <span style="color: #0f0">SHORTHEX</span> <span style="color: red">NAMED</span>\n' +
+      '<span data-type="sup text" style="color:#EE0000">6*</span> &amp; normal <span data-type="sup">7*</span>\n'));
+    execFileSync("pandoc", ["export.md", "-o", "export.docx", "--lua-filter", join(__dirname, "../scripts/citation.lua"),
+      "--lua-filter", join(__dirname, "../scripts/export-word.lua")], {cwd: dir});
+    const result = unzipSync(applyWordColors(readFileSync(join(dir, "export.docx"))));
+    const exportedStyles = new DOMParser().parseFromString(strFromU8(result["word/styles.xml"]), "application/xml");
+    const styleColors = new Map(Array.from(exportedStyles.getElementsByTagNameNS(ns, "style")).map(style => [
+      style.getAttributeNS(ns, "styleId"), style.getElementsByTagNameNS(ns, "color")[0]?.getAttributeNS(ns, "val"),
+    ]));
+    const exportedDoc = new DOMParser().parseFromString(strFromU8(result["word/document.xml"]), "application/xml");
+    const runs = Array.from(exportedDoc.getElementsByTagNameNS(ns, "r")).map(run => ({
+      text: Array.from(run.getElementsByTagNameNS(ns, "t")).map(node => node.textContent).join(""),
+      color: run.getElementsByTagNameNS(ns, "color")[0]?.getAttributeNS(ns, "val") || styleColors.get(run.getElementsByTagNameNS(ns, "rStyle")[0]?.getAttributeNS(ns, "val")),
+      alignment: run.getElementsByTagNameNS(ns, "vertAlign")[0]?.getAttributeNS(ns, "val"),
+      bold: run.getElementsByTagNameNS(ns, "b").length > 0,
+    }));
+    for (const [text, color] of [["HEADING", "EE0000"], ["DIRECT", "123456"], ["CHAR", "EE0000"], ["PARAGRAPH", "335577"], ["BOLD", "EE0000"], ["LINK", "EE0000"]]) {
+      assert.equal(runs.find(run => run.text === text)?.color, color, text);
+    }
+    assert.equal(runs.find(run => run.text === "SUP")?.alignment, "superscript");
+    assert.equal(runs.find(run => run.text === "SUP")?.color, "EE0000");
+    assert.equal(runs.find(run => run.text === "SUB")?.alignment, "subscript");
+    assert.equal(runs.find(run => run.text === "SUB")?.color, "334455");
+    assert.ok(runs.find(run => run.text === "BOLD")?.bold);
+    assert.equal(runs.find(run => run.text === "coloredCitation")?.color, "445566");
+    assert.equal(runs.find(run => run.text === "RGB")?.color, "112233");
+    assert.equal(runs.find(run => run.text === "SHORTHEX")?.color, "00FF00");
+    assert.equal(runs.find(run => run.text === "NAMED")?.color, "FF0000");
+    assert.equal(runs.find(run => run.text === "6*")?.alignment, "superscript");
+    assert.ok(runs.some(run => run.text.includes("& normal") && run.alignment !== "superscript"));
+    assert.equal(runs.filter(run => run.color === "AABBCC").map(run => run.text).join(""), "<red & blue>");
+    assert.ok(exportedDoc.getElementsByTagNameNS(ns, "hyperlink").length > 0);
+    assert.match(strFromU8(result["word/document.xml"]), /ZOTERO_ITEM CSL_CITATION/);
+  } finally {
+    rmSync(dir, {recursive: true, force: true});
+  }
+});
+
 const entries = [
   { key: "1_Smith2024", itemKey: "ABCDEFGH", citekey: "Smith2024", DOI: "10.1000/ABC", title: "Title A", entry: {data: {id: 42, itemID: 42, libraryID: 1}} },
   { key: "1_Jones2025", itemKey: "IJKLMNOP", citekey: "Jones2025", title: "Title B", entry: {data: {id: 43, itemID: 43, libraryID: 1}} },
@@ -283,7 +387,7 @@ test("real Pandoc import retains images, table, footnotes, citations and repeat-
     assert.deepEqual(errors, []);
     assert.equal(created.length, 1);
     const md = created[0].md;
-    assert.match(md, /# Heading/);
+    assert.match(md, /# <span data-type="text" style="color: #[A-F0-9]{6};">Heading<\/span>/);
     assert.match(md, /\| Column/);
     assert.ok(md.includes('Before ((20261110000000-aaaaaaa "(Smith, Nature, 2024)")) after'));
     assert.ok(md.includes('Author<span data-type="sup">1,2#</span> and H<span data-type="sub">2</span>O.'), md);
@@ -306,7 +410,8 @@ test("real Pandoc import retains images, table, footnotes, citations and repeat-
       (_, id, anchor) => `[\\\\exportRef{${anchor}}](siyuan://blocks/${id})`);
     const projectRoot = join(__dirname, "..");
     (globalThis as any).document = {createElement: () => ({click() {}})};
-    (globalThis as any).window.URL = {createObjectURL: () => "blob:word-test", revokeObjectURL() {}};
+    let downloaded: Blob | undefined;
+    (globalThis as any).window.URL = {createObjectURL: (blob: Blob) => {downloaded = blob; return "blob:word-test";}, revokeObjectURL() {}};
     (globalThis as any).window.siyuan.config.export = {};
     const exportPlugin = {...plugin, kernelApi: {
       ...plugin.kernelApi,
@@ -316,15 +421,16 @@ test("real Pandoc import retains images, table, footnotes, citations and repeat-
       pandoc: async (_: string, args: string[]) => {
         const source = storage.get("/temp/convert/pandoc/citation/exportTemp.md")!;
         writeFileSync(join(dir, "exportTemp.md"), await source.text());
-        const params = args.map(arg => /\/scripts\/(citation|math)\.lua$/.test(arg)
-          ? join(projectRoot, "scripts", arg.endsWith("citation.lua") ? "citation.lua" : "math.lua") : arg);
+        const params = args.map(arg => /\/scripts\/(citation|math|export-word)\.lua$/.test(arg)
+          ? join(projectRoot, "scripts", arg.split("/").pop()!) : arg);
         execFileSync("pandoc", params, {cwd: dir});
         return {code: 0};
       },
     }};
     const { ExportManager } = require("../src/export/exportManager");
     await new ExportManager(exportPlugin).export("imported", "word");
-    const roundtrip = prepareZoteroWord(readFileSync(join(dir, "exportTemp.docx")), "ROUNDTRIP");
+    assert.ok(downloaded);
+    const roundtrip = prepareZoteroWord(new Uint8Array(await downloaded.arrayBuffer()), "ROUNDTRIP");
     assert.equal(roundtrip.citations.length, 3);
     assert.deepEqual(roundtrip.citations.map(cite => cite.items.map(item => item.id)), [[42], [42, 43], [42]]);
     const doc = new DOMParser().parseFromString(outputXML(roundtrip.data), "application/xml");
