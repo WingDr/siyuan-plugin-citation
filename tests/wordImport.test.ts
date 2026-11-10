@@ -57,27 +57,27 @@ test("simple fields, multiple citations, tables and footnotes are recognized", (
   assert.deepEqual(unzipSync(result.data)["word/media/image.png"], new Uint8Array([1, 2, 3]));
 });
 
-test("Zotero bibliography fields are omitted without removing surrounding text or other fields", () => {
+test("Zotero bibliography fields retain their displayed entries and surrounding text", () => {
   const body = text("Before bibliography ") + complex([item()], "Bibliography entry").replace("ZOTERO_ITEM CSL_CITATION", "ZOTERO_BIBL") +
     text(" after bibliography") +
     `<w:fldSimple w:instr=" ADDIN ZOTERO_BIBL {} CSL_BIBLIOGRAPHY">${text("Simple bibliography entry")}</w:fldSimple>` +
     `<w:fldSimple w:instr="PAGE">${text("4")}</w:fldSimple>`;
   const result = prepareZoteroWord(archive(body), "T");
   assert.equal(result.citations.length, 0);
-  assert.equal(result.removedBibliographies, 2);
-  assert.doesNotMatch(outputXML(result.data), /ZOTERO_BIBL|Bibliography entry|Simple bibliography entry/);
+  assert.match(outputXML(result.data), /Bibliography entry/);
+  assert.match(outputXML(result.data), /Simple bibliography entry/);
   assert.match(outputXML(result.data), /Before bibliography /);
   assert.match(outputXML(result.data), / after bibliography/);
   assert.match(outputXML(result.data), /PAGE/);
 });
 
-test("multi-paragraph bibliography is omitted while ordinary reference text is retained", () => {
+test("multi-paragraph bibliography and ordinary reference text are retained in order", () => {
   const bibliography = complex([item()], "BIBLIOGRAPHYENTRIES")
     .replace("ZOTERO_ITEM CSL_CITATION", "ZOTERO_BIBL")
     .replace("BIBLIOGRAPHYENTRIES", "Entry one</w:t></w:r></w:p><w:p><w:r><w:t>Entry two");
   const result = prepareZoteroWord(archive(text("Plain bibliography text") + bibliography + text("After list")), "T");
-  assert.equal(result.removedBibliographies, 1);
-  assert.doesNotMatch(outputXML(result.data), /Entry one|Entry two/);
+  assert.equal(result.citations.length, 0);
+  assert.match(outputXML(result.data), /Entry one[\s\S]*Entry two/);
   assert.match(outputXML(result.data), /Plain bibliography text/);
   assert.match(outputXML(result.data), /After list/);
 });
@@ -339,7 +339,7 @@ test("real Pandoc import retains images, table, footnotes, citations and repeat-
       .replace("CITATIONONE", `</w:t></w:r>${complex([item()], "1", true).replace(/<w:r>/g, '<w:r><w:rPr><w:vertAlign w:val="superscript"/></w:rPr>')}<w:r><w:t>`)
       .replace("CLUSTER", `</w:t></w:r>${complex([item(), item("IJKLMNOP")], "[1,2]")}<w:r><w:t>`)
       .replace("UNKNOWN", `</w:t></w:r>${complex([item("XXXXXXXX")], "[99]")}<w:r><w:t>`)
-      .replace("BIBLIOGRAPHY", `</w:t></w:r>${complex([], "Duplicate bibliography entry").replace("ZOTERO_ITEM CSL_CITATION", "ZOTERO_BIBL")}<w:r><w:t>`));
+      .replace("BIBLIOGRAPHY", `</w:t></w:r>${complex([], "Bibliography entry").replace("ZOTERO_ITEM CSL_CITATION", "ZOTERO_BIBL")}<w:r><w:t>`));
     files["word/footnotes.xml"] = strToU8(strFromU8(files["word/footnotes.xml"])
       .replace("CITATIONFOOT", `</w:t></w:r>${complex([item()], "(Smith, 2024, p. 12)")}<w:r><w:t>`));
     const file = new File([new Uint8Array(zipSync(files)).buffer], "Example.docx");
@@ -411,7 +411,8 @@ test("real Pandoc import retains images, table, footnotes, citations and repeat-
     assert.match(md, /Footnote/);
     assert.match(md, /Footnote \(\(20261110000000-aaaaaaa "\(Smith, Nature, 2024\)"\)\)/);
     assert.match(md, /assets\/word-[a-f0-9]+-media-media-[^)]+\.png/);
-    assert.doesNotMatch(md, /SIYUANCITATION|ZOTERO_ITEM|CSL_CITATION|ZOTERO_BIBL|Duplicate bibliography entry/);
+    assert.doesNotMatch(md, /SIYUANCITATION|ZOTERO_ITEM|CSL_CITATION|ZOTERO_BIBL/);
+    assert.equal(md.split("Bibliography entry").length - 1, 1);
     assert.ok([...storage.keys()].some(path => path.startsWith("/data/assets/word-")));
     assert.equal(noteCreations, 2);
     assert.deepEqual(notices.find(([message]) => message === messages.wordImport.done)?.[1], {converted: 3, unresolved: 1});
@@ -448,7 +449,8 @@ test("real Pandoc import retains images, table, footnotes, citations and repeat-
     const doc = new DOMParser().parseFromString(outputXML(roundtrip.data), "application/xml");
     const visibleText = Array.from(doc.getElementsByTagNameNS(ns, "t")).map(node => node.textContent).join("");
     // Both the per-item parentheses and any cluster punctuation were inside refs.
-    assert.doesNotMatch(visibleText, /[();]|Smith|Jones|Duplicate bibliography entry/);
+    assert.doesNotMatch(visibleText, /[();]|Smith|Jones/);
+    assert.equal(visibleText.split("Bibliography entry").length - 1, 1);
 
     await manager.importWord(file, "parent");
     assert.deepEqual(errors, []);

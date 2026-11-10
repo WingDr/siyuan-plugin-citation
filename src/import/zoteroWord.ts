@@ -66,8 +66,6 @@ export function prepareZoteroWord(data: Uint8Array, token: string) {
   const colors = new WordColorPreserver(files);
   const citations: WordCitation[] = [];
   let malformed = 0;
-  let removedBibliographies = 0;
-  const isBibliography = (instruction: string) => /^\s*ADDIN\s+ZOTERO_BIBL\b/.test(instruction);
   for (const path of Object.keys(files)) {
     // Footnotes/endnotes can contain citations too; do not import deleted revisions.
     if (!/^word\/(document|footnotes|endnotes)\.xml$/.test(path)) continue;
@@ -101,11 +99,6 @@ export function prepareZoteroWord(data: Uint8Array, token: string) {
       if (word && (name === "del" || name === "moveFrom")) return;
       if (word && name === "fldSimple") {
         const instruction = element.getAttributeNS(WORD_NS, "instr") || "";
-        if (isBibliography(instruction)) {
-          element.parentNode!.removeChild(element);
-          removedBibliographies++;
-          return;
-        }
         const text = Array.from(element.getElementsByTagNameNS(WORD_NS, "t")).map(el => el.textContent).join("");
         const marker = register(instruction, text);
         if (marker) {
@@ -121,11 +114,6 @@ export function prepareZoteroWord(data: Uint8Array, token: string) {
         if (field && type === "separate") field.result = true;
         if (field && type === "end") {
           stack.pop();
-          if (isBibliography(field.instruction)) {
-            for (const node of field.nodes) node.parentNode?.removeChild(node);
-            removedBibliographies++;
-            return;
-          }
           const marker = register(field.instruction, field.text);
           if (marker) {
             insertCitationMarker(doc, field.start, marker);
@@ -155,5 +143,5 @@ export function prepareZoteroWord(data: Uint8Array, token: string) {
     files[path] = strToU8(new XMLSerializer().serializeToString(doc));
   }
   colors.save();
-  return { data: zipSync(files), citations, malformed, removedBibliographies };
+  return { data: zipSync(files), citations, malformed };
 }
