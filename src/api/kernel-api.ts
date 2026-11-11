@@ -445,6 +445,19 @@ class KernelApi extends BaseApi {
     return await this.siyuanRequest("/api/query/sql", params);
   }
 
+  /**
+   * 从数据库块的 markdown 中解析 avID。
+   *
+   * @param blockID 数据库块 ID
+   * @returns avID；块不存在或不是数据库块时返回空字符串
+   */
+  public async resolveAttributeViewID(blockID: string): Promise<string> {
+    const res = await this.getBlock(blockID);
+    const markdown = (res.data as any[])?.[0]?.markdown;
+    if (typeof markdown !== "string") return "";
+    return markdown.match(/data-av-id="(.*?)"/)?.[1] ?? "";
+  }
+
   public async getAttributeView(avID: string) {
     return await this.siyuanRequest("/api/av/getAttributeView", {id: avID});
   }

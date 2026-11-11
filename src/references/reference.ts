@@ -3,12 +3,12 @@ import SiYuanPluginCitation from "../index";
 import { type SiyuanData } from "../api/base-api";
 import {
   STORAGE_NAME, isDev, citeLinkStatic, citeLinkDynamic, 
-  DISALLOWED_FILENAME_CHARACTERS_RE, 
   refReg
 } from "../utils/constants";
 import {
-  generateFromTemplate
-} from "../utils/templates";
+  buildDbValueMap,
+  renderLiteratureTitle
+} from "../utils/literatureTitle";
 import { type ILogger, createLogger } from "../utils/simple-logger";
 import { loadLocalRef, sleep } from "../utils/util";
 import { Cite } from "./cite";
@@ -219,6 +219,40 @@ export class Reference {
     return Promise.all(update);
   }
 
+  /**
+   * 读取文献文档在数据库中的列值。
+   *
+   * 数据库块未配置、块内找不到 av-id、行不存在或接口失败时返回空对象，
+   * 由 renderLiteratureTitle 回退到文献标题。
+   *
+   * @param literatureId 文献内容文档块 ID
+   * @returns 列名/列 ID 到单元格文本的映射
+   */
+  private async _loadTitleDbValues(literatureId: string): Promise<Record<string, string>> {
+    const attrViewBlock = String(this.plugin.data[STORAGE_NAME].attrViewBlock || "").trim();
+    if (!attrViewBlock) return {};
+    try {
+      const avID = await this.plugin.kernelApi.resolveAttributeViewID(attrViewBlock);
+      if (!avID) return {};
+      const avRes = await this.plugin.kernelApi.getAttributeView(avID);
+      const av = (avRes.data as any)?.av;
+      if (!av?.keyValues) return {};
+      const idsRes = await this.plugin.kernelApi.getAttributeViewItemIDsByBoundIDs(avID, [literatureId]);
+      const itemID = String((idsRes.data as Record<string, string>)?.[literatureId] ?? "");
+      if (!itemID) return {};
+      const db = buildDbValueMap(
+        av,
+        itemID,
+        this.plugin.data[STORAGE_NAME].attrViewColumnConfigs ?? [],
+      );
+      if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("生成标题数据库列值 =>", {literatureId, itemID, db});
+      return db;
+    } catch (error) {
+      this.logger.warn("读取数据库列值失败，标题将回退到文献标题", error);
+      return {};
+    }
+  }
+
   public async refreshSingleLiteratureNoteTitles(literatureId: string, titleTemplate: string = this.plugin.data[STORAGE_NAME].titleTemplate as string, batchOperation = false) {
     const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;
     const key = this.plugin.literaturePool.get(literatureId);
@@ -236,8 +270,8 @@ export class Reference {
       await this.plugin.kernelApi.renameDoc(notebookId, (res.data as any[])[0].path , "\u274C "+(res.data as any[])[0].content);
       return null;
     }
-    const noteTitle = generateFromTemplate(titleTemplate, entry);
-    noteTitle.replace(DISALLOWED_FILENAME_CHARACTERS_RE, "_");
+    const db = await this._loadTitleDbValues(literatureId);
+    const noteTitle = renderLiteratureTitle(titleTemplate, entry, db);
     // 不对的时候才更新标题
     const res = await this.plugin.kernelApi.getBlock(literatureId);
     if (!(res.data as any[]).length) {
