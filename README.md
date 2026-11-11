@@ -228,6 +228,20 @@ If you use Zotero/Juris-M (debug-bridge) as the data source for literature, you 
 
 For more variables, check the "entry-data" attribute of the literature content document after importing, which includes all the information imported for that literature.
 
+### Database column variables
+
+The literature note **title** template can also read columns from the database configured in the plugin settings (the database block ID on the "Data" tab):
+
+- `{{db["summary"]}}` reads the column whose current name is `summary`.
+- `{{db["20250906165019-pggrgbl"]}}` reads the column with that ID; this form is useful when column names are duplicated or when you need a stable reference.
+- Only text, number, single-select and multi-select columns are readable. Other column types produce an empty string.
+- Use the "Insert variable" control next to the title template to insert a column name; the column ID is shown for reference.
+- When a literature note is created, its database row does not exist yet, so use `|| title` to fall back to the paper title:
+  `{{db["summary"] || title}} ({{citekey}})`
+- Combine several columns: `{{db["短评"]}} — {{db["another column"]}} ({{citekey}})`.
+- Column renames keep working: the plugin remembers the column name saved with the database settings and updates the name in the template when the settings page sees the new name. The column ID form is always stable.
+- Titles are recalculated only when you run "Refresh All Literature Note Titles" (or the right-click refresh action), not when a database cell changes.
+
 ### Advanced Template Syntax
 
 In version 0.0.6, the template handling section utilizes [template.js](https://github.com/yanhaijing/template.js). To accommodate the template syntax commonly used by general users, before performing variable calculations and replacements, all `{{ }}` will be replaced with `<%= %>` for template.js to process the templates. Therefore, besides using the existing `{{variable}}` syntax, there are many advanced usage methods available:

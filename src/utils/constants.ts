@@ -19,7 +19,6 @@ export const eqrefIcon = `<symbol id="iconLatexEqref" viewBox="0 0 1024 1024">
   </symbol>`;
 export const citeLinkStatic = "<span data-type=\"block-ref\" custom-cite-type=\"${cite_type}\" data-id=\"${id}\" data-subtype=\"s\">${link}</span>";
 export const citeLinkDynamic = "<span data-type=\"block-ref\" custom-cite-type=\"${cite_type}\" data-id=\"${id}\" data-subtype=\"d\">${link}</span>";
-export const DISALLOWED_FILENAME_CHARACTERS_RE = /[\/]/g;
 export const refReg = /\(\((.*?)\)\)/;
 export const refRegStatic = /\(\((.*?)\"(.*?)\"\)\)/g;
 export const refRegDynamic = /\(\((.*?)\'(.*?)\'\)\)/g;

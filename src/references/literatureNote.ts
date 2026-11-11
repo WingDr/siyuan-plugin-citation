@@ -1,5 +1,4 @@
 import { 
-    DISALLOWED_FILENAME_CHARACTERS_RE, 
     STORAGE_NAME, 
     isDev, 
     refRegDynamic, 
@@ -9,6 +8,7 @@ import {
 import SiYuanPluginCitation from "../index";
 import { type ILogger, createLogger } from "../utils/simple-logger";
 import { generateFromTemplate } from "../utils/templates";
+import { renderLiteratureTitle } from "../utils/literatureTitle";
 import { cleanEmptyKey } from "../utils/util";
 import { confirm, getFrontend } from "siyuan";
 import { NoteProcessor } from "./noteProcessor";
@@ -244,12 +244,10 @@ export class LiteratureNote {
       const attrViewTemplate = this.plugin.data[STORAGE_NAME].attrViewTemplate;
       if (!attrViewBlock || !attrViewTemplate || !attrViewBlock.length || !attrViewTemplate.length) return;
       const blockID = this.plugin.literaturePool.get(key);
-      let res = await this.plugin.kernelApi.getBlock(attrViewBlock);
-      const content = (res.data as any[])[0].markdown as string;
-      const avIdReg = /.*data-av-id=\"(.*?)\".*/;
-      const avID = content.match(avIdReg)![1];
+      const avID = await this.plugin.kernelApi.resolveAttributeViewID(attrViewBlock);
+      if (!avID) return;
       // 检查块是否在数据库中
-      res = await this.plugin.kernelApi.getAttributeViewItemIDsByBoundIDs(avID, [blockID]);
+      let res = await this.plugin.kernelApi.getAttributeViewItemIDsByBoundIDs(avID, [blockID]);
       if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("获取到块在数据库中的绑定情况", res.data);
       const findItem = (res.data as any)[blockID];
       // 返回值是一个对象，键是块ID，值是itemID
@@ -608,8 +606,7 @@ export class LiteratureNote {
     private async _createEmptyNote(key: string, entry: any): Promise<string> {
       const titleTemplate = this.plugin.data[STORAGE_NAME].titleTemplate as string;
       //文件不存在就新建文件
-      let noteTitle = generateFromTemplate(titleTemplate, entry);
-      noteTitle = noteTitle.replace(DISALLOWED_FILENAME_CHARACTERS_RE, "_");
+      let noteTitle = renderLiteratureTitle(titleTemplate, entry, {});
       if (isDev || this.plugin.data[STORAGE_NAME].consoleDebug) this.logger.info("生成文件标题 =>", noteTitle);
       // 创建新文档
       const notebookId = this.plugin.data[STORAGE_NAME].referenceNotebook as string;

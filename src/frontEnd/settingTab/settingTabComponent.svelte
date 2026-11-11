@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
+  import { onMount, onDestroy, tick } from "svelte";
   import { showMessage, confirm } from "siyuan";
 
   import SiYuanPluginCitation from "../../index";
@@ -14,6 +14,11 @@
   import { loadLocalRef } from "../../utils/util";
   import { type ILogger } from "../../utils/simple-logger";
   import { type DatabaseType } from "../../database/database";
+  import {
+    TITLE_COLUMN_TYPES,
+    buildColumnRenames,
+    rewriteDbColumnTokens
+  } from "../../utils/literatureTitle";
 
   import { ItemType, type IOptions } from "./item/item";
   import {
@@ -542,6 +547,44 @@
   let isDebugBridge = $derived(_checkDebugBridge(database));
   let isWebAPI = $derived(_checkWebAPI(database));
 
+  // 标题模板的数据库列变量
+  let titleTemplateElement = $state<HTMLInputElement | null>(null);
+  let titleDbColumnKeyID = $state("");
+  let titleDbColumns = $derived(attrViewColumnConfigs.filter((col) => TITLE_COLUMN_TYPES.has(col.type)));
+  let selectedTitleDbColumn = $derived(titleDbColumns.find((col) => col.keyID === titleDbColumnKeyID) ?? null);
+  let titleDbDuplicateName = $derived(
+    selectedTitleDbColumn
+      ? titleDbColumns.filter((col) => col.name === selectedTitleDbColumn.name).length > 1
+      : false,
+  );
+  let titleDbHint = $derived.by(() => {
+    const literatureI18n = (plugin.i18n.settingTab as any).templates.literatureNote;
+    if (attrViewLoadState === "loading") return getAttrViewConfigI18n().loading;
+    if (attrViewLoadState === "error") return getAttrViewConfigI18n().loadError;
+    if (attrViewLoadState !== "ready") return literatureI18n.titleDbVariableNeedDatabase;
+    if (!titleDbColumns.length) return literatureI18n.titleDbVariableNoColumns;
+    if (titleDbDuplicateName) return literatureI18n.titleDbVariableDuplicateName;
+    return "";
+  });
+
+  async function insertTitleDbColumnToken() {
+    const column = selectedTitleDbColumn;
+    if (!column) return;
+    const selector = !column.name.trim() || titleDbDuplicateName ? column.keyID : column.name;
+    const token = `{{db[${JSON.stringify(selector)}]}}`;
+    const element = titleTemplateElement;
+    const currentValue = element?.value ?? titleTemplate;
+    const start = element?.selectionStart ?? currentValue.length;
+    const end = element?.selectionEnd ?? start;
+    titleTemplate = `${currentValue.slice(0, start)}${token}${currentValue.slice(end)}`;
+    await tick();
+    if (element) {
+      const caret = start + token.length;
+      element.focus();
+      element.setSelectionRange(caret, caret);
+    }
+  }
+
   async function getAttrViewSuggests(requestedBlock: string, initial = false) {
     const blockID = requestedBlock.trim();
     const requestId = ++attrViewRequestId;
@@ -560,14 +603,10 @@
 
     attrViewLoadState = "loading";
     try {
-      let res = await plugin.kernelApi.getBlock(blockID);
-      if (!res.data || !(res.data as any[]).length) throw new Error("attribute view block not found");
+      const avID = await plugin.kernelApi.resolveAttributeViewID(blockID);
+      if (!avID) throw new Error("attribute view block or id not found");
 
-      const content = (res.data as any[])[0].markdown as string;
-      const match = content.match(/.*data-av-id=\"(.*?)\".*/);
-      if (!match?.[1]) throw new Error("attribute view id not found");
-
-      res = await plugin.kernelApi.getAttributeView(match[1]);
+      const res = await plugin.kernelApi.getAttributeView(avID);
       const av = (res.data as any)?.av;
       if (!av?.keyValues) throw new Error("attribute view columns not found");
       if (requestId !== attrViewRequestId) return;
@@ -597,6 +636,13 @@
         attrViewLoadState = "error";
         attrViewMigrationError = true;
         return;
+      }
+
+      // 列改名后把标题模板里的旧列名同步成新列名；token 仍按 keyID 解析。
+      const renames = buildColumnRenames(sourceData.configs, reconciled.configs);
+      if (renames.length) {
+        const updatedTemplate = rewriteDbColumnTokens(titleTemplate, renames);
+        if (updatedTemplate !== titleTemplate) titleTemplate = updatedTemplate;
       }
 
       attrViewBlock = blockID;
@@ -1205,6 +1251,7 @@
                 settingKey="Text"
                 settingValue={titleTemplate}
                 placeholder="Input the title template"
+                bind:element={titleTemplateElement}
                 onchanged={(event) => {
                   if (isDev)
                     logger.info(
@@ -1213,6 +1260,35 @@
                   titleTemplate = event.detail.value;
                 }}
               />
+              <div class="fn__flex" style="gap:8px; align-items:center; margin-top:8px; flex-wrap:wrap;">
+                <select
+                  class="b3-select"
+                  style="width:auto; max-width:18em;"
+                  bind:value={titleDbColumnKeyID}
+                  disabled={attrViewLoadState !== "ready" || !titleDbColumns.length}
+                >
+                  <option value="">{(plugin.i18n.settingTab as any).templates.literatureNote.titleDbVariableSelectPlaceholder}</option>
+                  {#each titleDbColumns as col (col.keyID)}
+                    <option value={col.keyID}>{col.name || col.keyID}</option>
+                  {/each}
+                </select>
+                <button
+                  type="button"
+                  class="b3-button b3-button--outline"
+                  disabled={!selectedTitleDbColumn || attrViewLoadState !== "ready"}
+                  onclick={insertTitleDbColumnToken}
+                >
+                  {(plugin.i18n.settingTab as any).templates.literatureNote.titleDbVariableInsert}
+                </button>
+                {#if selectedTitleDbColumn}
+                  <code style="font-size:12px; color:var(--b3-theme-on-surface-light);">
+                    {(plugin.i18n.settingTab as any).templates.literatureNote.titleDbVariableKeyID}: {selectedTitleDbColumn.keyID}
+                  </code>
+                {/if}
+              </div>
+              {#if titleDbHint}
+                <div class="b3-label__text" style="margin-top:4px;">{titleDbHint}</div>
+              {/if}
                 {/snippet}
           </Item>
           <!-- 刷新全部文档标题 -->

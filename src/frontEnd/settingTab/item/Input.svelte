@@ -36,6 +36,7 @@
         limits?: ILimits; // Use it if type is number/slider
         height?: number; // Use it if type is textarea
         rows?: number;
+        element?: HTMLInputElement | null; // Bound input element, used to insert text at the caret
         onchanged?: (event: {detail: {key: string, value: any, event: Event}}) => void;
         onclicked?: (event: {detail: {event: MouseEvent}}) => void;
     }
@@ -52,6 +53,7 @@
         limits = { min: 0, max: 100, step: 1 },
         height = 0,
         rows = 0,
+        element = $bindable(null),
         onchanged,
         onclicked
     }: Props = $props();
@@ -93,6 +95,7 @@
         class:fn__size200={!block && normal}
         class:fn__flex-center={!block}
         {placeholder}
+        bind:this={element}
         bind:value={settingValue}
         onchange={changed}
     />
